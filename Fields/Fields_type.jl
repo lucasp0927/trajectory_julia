@@ -1,9 +1,12 @@
 # type definitions
 export ComplexOrFloat
-export Field, VectorField, ScalarField
+export Field, AbstractVectorField, AbstractScalarField, VectorField, ScalarField, VectorFieldNode, ScalarFieldNode, FieldNode
 ComplexOrFloat = Union{Complex{Float64},Float64}
 abstract Field
-type VectorField{T <: ComplexOrFloat, N} <: Field
+abstract AbstractVectorField <: Field
+abstract AbstractScalarField <: Field
+
+type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     field::Array{T}
     position::Tuple{Vararg{Float64}}
     size::Tuple{Vararg{Float64}}
@@ -14,7 +17,7 @@ type VectorField{T <: ComplexOrFloat, N} <: Field
     end
 end
 
-type ScalarField{T <: ComplexOrFloat,N} <: Field
+type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     field::Array{T,N}
     position::Tuple{Vararg{Float64}}
     size::Tuple{Vararg{Float64}}
@@ -25,11 +28,20 @@ type ScalarField{T <: ComplexOrFloat,N} <: Field
     end
 end
 
-abstract FieldNode <: Field
-type VectorFieldNode <: FieldNode
-    fields::Vector{Union{VectorFieldNode, VectorField}}
+type VectorFieldNode{N} <: AbstractVectorField
+    fields::Vector{AbstractVectorField}
+    dim::Integer
+    function VectorFieldNode{T<:AbstractVectorField}(f::Vector{T}) 
+        all(x->x.dim==N,f)?new(f,N):error("dimension error!")
+    end
 end
 
-type ScalarFieldNode <: FieldNode
+type ScalarFieldNode{N} <: AbstractScalarField
     fields::Vector{Field}
+    dim::Integer
+    function ScalarFieldNode{T<:Field}(f::Vector{T}) 
+        all(x->x.dim==N,f)?new(f,N):error("dimension error!")
+    end
 end
+FieldNode = Union{VectorFieldNode,ScalarFieldNode}
+

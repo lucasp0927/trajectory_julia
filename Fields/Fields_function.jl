@@ -1,26 +1,21 @@
 # functions
-function initialize(res::Tuple{Integer,Integer}, sz::Tuple{Real,Real})
+function initialize(res::Tuple{Integer,Integer}, sz::Tuple{Real,Real};dim = 2)
     global resolution, size, fields
     resolution = res
     size = sz
     U_total = zero(ScalarField{Float64,2},res,(0,0),size)
-    fields = ScalarFieldNode(Vector{Field}())
+    fields = ScalarFieldNode{dim}(Vector{Field}())
 end
 
-function composite(f::ScalarFieldNode)
+function geometry{T<:FieldNode}(f::T)
+    #find the new optimal position and size
+    #minimum(cat(2,[1,2,3],[2,3,4]),2)
+    minpos::Vector{Float64} = vec(minimum(cat(2,map(x->collect(geometry(x)[1]),f.fields)...),2))
+    maxpos::Vector{Float64} = vec(maximum(cat(2,map(x->(collect(geometry(x)[1]).+collect(geometry(x)[2])),f.fields)...),2))
+    return tuple(minpos...), tuple((maxpos-minpos)...)
 end
 
-function composite(f::VectorFieldNode)
-    #find the optimal new position and size, and return the composite vectorfield
-    new_min_x = minimum(map((x)->getfield(x,:position)[1],f.fields))
-    new_min_y = minimum(map((x)->getfield(x,:position)[2],f.fields))
-    new_max_x = maximum(map((x)->(getfield(x,:position)[1]+getfield(x,:size)[1]),f.fields))
-    new_max_y = maximum(map((x)->(getfield(x,:position)[2]+getfield(x,:size)[2]),f.fields))
-    return new_min_x, new_min_y, new_max_x, new_max_y
-end
-
-composite(f::ScalarField) = f
-composite(f::VectorField) = f
+geometry{T<:Union{VectorField,ScalarField}}(f::T) = f.position,f.size
 
 # utility functions, for simple fields
 function zero{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},res::Tuple{Vararg{Integer}},pos::Tuple{Vararg{Real}},size::Tuple{Vararg{Real}};scaling::Real = 1.0)
