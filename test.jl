@@ -1,4 +1,4 @@
-push!(LOAD_PATH, pwd())
+push!(LOAD_PATH, "./Fields")
 using Fields
 using MAT
 function readfields(filename::AbstractString,variable::AbstractString)
