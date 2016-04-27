@@ -15,11 +15,8 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     dim::Integer
     function VectorField(f::Array{T},pos::Tuple{Vararg{Real}},sz::Tuple{Vararg{Real}};scaling::Function = t->1.0)
         res = tuple((collect(sz)./(collect(size(f))[1:N]-1))...)
-        if all(x->x!=0,res)
-            length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,res,scaling,N):error("dimension error!")
-        else
-            error("zero resolution!")
-        end
+        @assert all(x->x!=0,res) "zero resolution!"
+        length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,res,scaling,N):error("dimension error!")
     end
 end
 
@@ -32,11 +29,8 @@ type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     dim::Integer
     function ScalarField(f::Array{T,N},pos::Tuple{Vararg{Real}},sz::Tuple{Vararg{Real}};scaling::Function = t->1.0)
         res = tuple((collect(sz)./(collect(size(f))[1:N]-1))...)
-        if all(x->x!=0,res)
-            length(pos)==length(sz)==N==ndims(f)?new(f,pos,sz,res,scaling,N):error("dimension error!")
-        else
-            error("zero resolution!")
-        end
+        @assert all(x->x!=0,res) "zero resolution!"        
+        length(pos)==length(sz)==N==ndims(f)?new(f,pos,sz,res,scaling,N):error("dimension error!")
     end
 end
 
@@ -44,8 +38,9 @@ type VectorFieldNode{N} <: AbstractVectorField
     fields::Vector{AbstractVectorField}
     scaling::Function
     dim::Integer
-    function VectorFieldNode{T<:AbstractVectorField}(f::Vector{T};scaling::Function = t->1.0) 
-        all(x->x.dim==N,f)?new(f,scaling,N):error("dimension error!")
+    function VectorFieldNode{T<:AbstractVectorField}(f::Vector{T};scaling::Function = t->1.0)
+        @assert all(x->x.dim==N,f) "dimension error!"
+        new(f,scaling,N)
     end
 end
 
@@ -53,8 +48,9 @@ type ScalarFieldNode{N} <: AbstractScalarField
     fields::Vector{Field}
     scaling::Function
     dim::Integer
-    function ScalarFieldNode{T<:Field}(f::Vector{T},scaling::Function = t->1.0) 
-        all(x->x.dim==N,f)?new(f,scaling,N):error("dimension error!")
+    function ScalarFieldNode{T<:Field}(f::Vector{T},scaling::Function = t->1.0)
+        @assert all(x->x.dim==N,f) "dimension error!"        
+        new(f,scaling,N)
     end
 end
 FieldNode = Union{VectorFieldNode,ScalarFieldNode}

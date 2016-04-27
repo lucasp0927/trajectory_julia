@@ -2,55 +2,25 @@
 include("Fields_geometry.jl")
 include("Fields_typeof.jl")
 include("Fields_composite.jl")
-function initialize(res::Tuple{Integer,Integer}, sz::Tuple{Real,Real};dim = 2)
-    global fields
-    fields = ScalarFieldNode{dim}(Vector{Field}())
+include("Fields_utility.jl")
+# function initialize(res::Tuple{Integer,Integer}, sz::Tuple{Real,Real};dim = 2)
+#     global fields
+#     fields = ScalarFieldNode{dim}(Vector{Field}())
+# end
+
+function align_field_tree{T<:FieldNode}(f::T)
+    unalign_geo = geometry(f)
+    println("unalign_geo:",unalign_geo)
+    arr_sz = floor(Integer,collect(unalign_geo["size"])./collect(unalign_geo["res"]))
+    new_sz = arr_sz.*collect(unalign_geo["res"])
+    align_geo = unalign_geo
+    align_geo["size"] = tuple(new_sz...)
+    println("align_geo",align_geo)
 end
 
-# utility functions, for simple fields
-function zero{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},res::Tuple{Vararg{Integer}},pos::Tuple{Vararg{Real}},size::Tuple{Vararg{Real}};scaling::Function = t->1.0)
-    return ScalarField{T,N}(zeros(T,res),pos,size,scaling=scaling)
+function align_field{T<:FieldNode}(f::T,res::Tuple{Vararg{Float64}},pos::Tuple{Vararg{Float64}})
+    
 end
 
-function zero{T<:ComplexOrFloat,N}(::Type{VectorField{T,N}},res::Tuple{Vararg{Integer}},pos::Tuple{Vararg{Real}},size::Tuple{Vararg{Real}};scaling::Function = t->1.0)
-    return VectorField{T,N}(zeros(T,(res...,3)),pos,size,scaling = scaling)
+function align_field{T<:ComplexOrFloat,N}(f::ScalarField{T,N})
 end
-
-function func2field{T<:ComplexOrFloat}(::Type{ScalarField{T,2}},func::Function,res::Tuple{Integer,Integer},pos::Tuple{Real,Real},size::Tuple{Real,Real};scaling::Function = t->1.0)
-    xx = linspace(pos[1],pos[1]+size[1],res[1])
-    yy = linspace(pos[2],pos[2]+size[2],res[2])
-    f = [func(x,y)::T for x in xx, y in yy]
-    return ScalarField{T,2}(f::Array{T,2},pos,size,scaling=scaling)    
-end
-
-function func2field{T<:ComplexOrFloat}(::Type{ScalarField{T,3}},func::Function,res::Tuple{Integer,Integer,Integer},pos::Tuple{Real,Real,Real},size::Tuple{Real,Real,Real};scaling::Function = t->1.0)
-    xx = linspace(pos[1],pos[1]+size[1],res[1])
-    yy = linspace(pos[2],pos[2]+size[2],res[2])
-    zz = linspace(pos[3],pos[3]+size[3],res[3])
-    f = [func(x,y,z)::T for x in xx, y in yy, z in zz]
-    return ScalarField{T,3}(f::Array{T,3},pos,size,scaling=scaling)    
-end
-
-function func2field{T<:ComplexOrFloat}(::Type{VectorField{T,2}},func::Function,res::Tuple{Integer,Integer},pos::Tuple{Real,Real},size::Tuple{Real,Real};scaling::Function = t->1.0)
-    xx = linspace(pos[1],pos[1]+size[1],res[1])
-    yy = linspace(pos[2],pos[2]+size[2],res[2])
-    f = zeros(T,(res...,3))
-    for x in enumerate(xx), y in enumerate(yy)
-        v = func(x[2],y[2])::Vector{T}
-        f[x[1],y[1],:] = v
-    end
-    return VectorField{T,2}(f::Array{T,3},pos,size,scaling=scaling)    
-end
-
-function func2field{T<:ComplexOrFloat}(::Type{VectorField{T,3}},func::Function,res::Tuple{Integer,Integer,Integer},pos::Tuple{Real,Real,Real},size::Tuple{Real,Real,Real};scaling::Real = 1.0)
-    xx = linspace(pos[1],pos[1]+size[1],res[1])
-    yy = linspace(pos[2],pos[2]+size[2],res[2])
-    zz = linspace(pos[3],pos[3]+size[3],res[3])
-    f = zeros(T,(res...,3))
-    for x in enumerate(xx), y in enumerate(yy), z in enumerate(zz)
-        v = func(x[2],y[2],z[2])::Vector{T}
-        f[x[1],y[1],z[1],:] = v
-    end
-    return VectorField{T,3}(f::Array{T,4},pos,size,scaling=scaling)    
-end
-# file2field?
