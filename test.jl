@@ -53,3 +53,5 @@ function main()
     println(Fields.geometry(sfn3))
 end
 main()
+@time main()
+
