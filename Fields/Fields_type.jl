@@ -10,10 +10,16 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     field::Array{T}
     position::Tuple{Vararg{Float64}}
     size::Tuple{Vararg{Float64}}
+    res::Tuple{Vararg{Float64}}
     scaling::Float64
     dim::Integer
     function VectorField(f::Array{T},pos::Tuple{Vararg{Real}},sz::Tuple{Vararg{Real}};scaling::Real = 1.0)
-        length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,scaling,N):error("dimension error!")
+        res = tuple((collect(sz)./(collect(size(f))[1:N]-1))...)
+        if all(x->x!=0,res)
+            length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,res,scaling,N):error("dimension error!")
+        else
+            error("zero resolution!")
+        end
     end
 end
 
@@ -21,10 +27,16 @@ type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     field::Array{T,N}
     position::Tuple{Vararg{Float64}}
     size::Tuple{Vararg{Float64}}
+    res::Tuple{Vararg{Float64}}
     scaling::Float64
     dim::Integer
     function ScalarField(f::Array{T,N},pos::Tuple{Vararg{Real}},sz::Tuple{Vararg{Real}};scaling::Real = 1.0)
-        length(pos)==length(sz)==N==ndims(f)?new(f,pos,sz,scaling,N):error("dimension error!")
+        res = tuple((collect(sz)./(collect(size(f))[1:N]-1))...)
+        if all(x->x!=0,res)
+            length(pos)==length(sz)==N==ndims(f)?new(f,pos,sz,res,scaling,N):error("dimension error!")
+        else
+            error("zero resolution!")
+        end
     end
 end
 

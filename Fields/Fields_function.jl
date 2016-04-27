@@ -1,13 +1,16 @@
 # functions
 include("Fields_geometry.jl")
 function initialize(res::Tuple{Integer,Integer}, sz::Tuple{Real,Real};dim = 2)
-    global resolution, size, fields
-    resolution = res
-    size = sz
-    U_total = zero(ScalarField{Float64,2},res,(0,0),size)
+    global fields
     fields = ScalarFieldNode{dim}(Vector{Field}())
 end
 
+#####composition: for FieldNode object return composite field
+composite{T<:Union{VectorField,ScalarField}}(f::T) = f
+function composite(f::ScalarFieldNode)
+    geo = geometry(f)
+    
+end
 
 # utility functions, for simple fields
 function zero{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},res::Tuple{Vararg{Integer}},pos::Tuple{Vararg{Real}},size::Tuple{Vararg{Real}};scaling::Real = 1.0)
@@ -32,7 +35,6 @@ function func2field{T<:ComplexOrFloat}(::Type{ScalarField{T,3}},func::Function,r
     f = [func(x,y,z)::T for x in xx, y in yy, z in zz]
     return ScalarField{T,3}(f::Array{T,3},pos,size,scaling=scaling)    
 end
-
 
 function func2field{T<:ComplexOrFloat}(::Type{VectorField{T,2}},func::Function,res::Tuple{Integer,Integer},pos::Tuple{Real,Real},size::Tuple{Real,Real};scaling::Real = 1.0)
     xx = linspace(pos[1],pos[1]+size[1],res[1])

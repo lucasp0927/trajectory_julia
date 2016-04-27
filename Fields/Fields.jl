@@ -4,6 +4,5 @@ include("Fields_type.jl")
 # variables
 export fields, U_total, resolution, size
 global fields, U_total
-global resolution, size
 include("Fields_function.jl")
 end
