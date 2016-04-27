@@ -1,30 +1,10 @@
 # functions
 include("Fields_geometry.jl")
+include("Fields_typeof.jl")
+include("Fields_composite.jl")
 function initialize(res::Tuple{Integer,Integer}, sz::Tuple{Real,Real};dim = 2)
     global fields
     fields = ScalarFieldNode{dim}(Vector{Field}())
-end
-
-#####composition: for FieldNode object return composite field at time t, replace scaling with x->1.0
-function composite{T<:Union{VectorField,ScalarField}}(f::T,t::Real) 
-    T(f.field*f.scaling(t),f.position,f.size,scaling = t->1.0)
-end
-
-function composite{N}(f::ScalarFieldNode{N})
-    #TODO: implement ability to output both float64 and complex field
-    #output scalar field, for now only output float64 field
-    #remember scaling
-    geo = geometry(f)
-    res = geo["res"]
-    pos = geo["pos"]
-    sz = geo["size"]
-    arr_sz = floor(Integer,collect(sz)./collect(res))
-    new_sz = arr_sz.*collect(res)
-    output = Array{Float64,N}(arr_sz...)
-    ####handle output
-    ff = map(x->composite(x),f.fields)
-    ####
-    ScalarField{Float64,N}(output,pos,new_sz;scaling = t->1.0)
 end
 
 # utility functions, for simple fields
