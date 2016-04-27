@@ -7,8 +7,20 @@ end
 
 #####composition: for FieldNode object return composite field
 composite{T<:Union{VectorField,ScalarField}}(f::T) = f
-function composite(f::ScalarFieldNode)
+function composite{N}(f::ScalarFieldNode{N})
+    #TODO: implement ability to output both float64 and complex field
+    #output scalar field, for now only output float64 field
+    #remember scaling
     geo = geometry(f)
+    res = geo["res"]
+    pos = geo["pos"]
+    sz = geo["size"]
+    arr_sz = floor(Integer,collect(sz)./collect(res))
+    new_sz = arr_sz.*collect(res)
+    output = Array{Float64,N}(arr_sz...)
+    ####handle output
+    ff = map(x->composite(x),f.fields)
+    ####
     
 end
 

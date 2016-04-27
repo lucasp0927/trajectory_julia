@@ -1,4 +1,5 @@
 module Fields
+using Interpolations
 #TODO: resample field, for faster interpolation
 include("Fields_type.jl")
 # variables
