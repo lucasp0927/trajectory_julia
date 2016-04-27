@@ -5,8 +5,11 @@ function initialize(res::Tuple{Integer,Integer}, sz::Tuple{Real,Real};dim = 2)
     fields = ScalarFieldNode{dim}(Vector{Field}())
 end
 
-#####composition: for FieldNode object return composite field
-composite{T<:Union{VectorField,ScalarField}}(f::T) = f
+#####composition: for FieldNode object return composite field at time t, replace scaling with x->1.0
+function composite{T<:Union{VectorField,ScalarField}}(f::T,t::Real) 
+    T(f.field*f.scaling(t),f.position,f.size,scaling = t->1.0)
+end
+
 function composite{N}(f::ScalarFieldNode{N})
     #TODO: implement ability to output both float64 and complex field
     #output scalar field, for now only output float64 field
@@ -21,26 +24,26 @@ function composite{N}(f::ScalarFieldNode{N})
     ####handle output
     ff = map(x->composite(x),f.fields)
     ####
-    
+    ScalarField{Float64,N}(output,pos,new_sz;scaling = t->1.0)
 end
 
 # utility functions, for simple fields
-function zero{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},res::Tuple{Vararg{Integer}},pos::Tuple{Vararg{Real}},size::Tuple{Vararg{Real}};scaling::Real = 1.0)
+function zero{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},res::Tuple{Vararg{Integer}},pos::Tuple{Vararg{Real}},size::Tuple{Vararg{Real}};scaling::Function = t->1.0)
     return ScalarField{T,N}(zeros(T,res),pos,size,scaling=scaling)
 end
 
-function zero{T<:ComplexOrFloat,N}(::Type{VectorField{T,N}},res::Tuple{Vararg{Integer}},pos::Tuple{Vararg{Real}},size::Tuple{Vararg{Real}};scaling::Real = 1.0)
+function zero{T<:ComplexOrFloat,N}(::Type{VectorField{T,N}},res::Tuple{Vararg{Integer}},pos::Tuple{Vararg{Real}},size::Tuple{Vararg{Real}};scaling::Function = t->1.0)
     return VectorField{T,N}(zeros(T,(res...,3)),pos,size,scaling = scaling)
 end
 
-function func2field{T<:ComplexOrFloat}(::Type{ScalarField{T,2}},func::Function,res::Tuple{Integer,Integer},pos::Tuple{Real,Real},size::Tuple{Real,Real};scaling::Real = 1.0)
+function func2field{T<:ComplexOrFloat}(::Type{ScalarField{T,2}},func::Function,res::Tuple{Integer,Integer},pos::Tuple{Real,Real},size::Tuple{Real,Real};scaling::Function = t->1.0)
     xx = linspace(pos[1],pos[1]+size[1],res[1])
     yy = linspace(pos[2],pos[2]+size[2],res[2])
     f = [func(x,y)::T for x in xx, y in yy]
     return ScalarField{T,2}(f::Array{T,2},pos,size,scaling=scaling)    
 end
 
-function func2field{T<:ComplexOrFloat}(::Type{ScalarField{T,3}},func::Function,res::Tuple{Integer,Integer,Integer},pos::Tuple{Real,Real,Real},size::Tuple{Real,Real,Real};scaling::Real = 1.0)
+function func2field{T<:ComplexOrFloat}(::Type{ScalarField{T,3}},func::Function,res::Tuple{Integer,Integer,Integer},pos::Tuple{Real,Real,Real},size::Tuple{Real,Real,Real};scaling::Function = t->1.0)
     xx = linspace(pos[1],pos[1]+size[1],res[1])
     yy = linspace(pos[2],pos[2]+size[2],res[2])
     zz = linspace(pos[3],pos[3]+size[3],res[3])
@@ -48,7 +51,7 @@ function func2field{T<:ComplexOrFloat}(::Type{ScalarField{T,3}},func::Function,r
     return ScalarField{T,3}(f::Array{T,3},pos,size,scaling=scaling)    
 end
 
-function func2field{T<:ComplexOrFloat}(::Type{VectorField{T,2}},func::Function,res::Tuple{Integer,Integer},pos::Tuple{Real,Real},size::Tuple{Real,Real};scaling::Real = 1.0)
+function func2field{T<:ComplexOrFloat}(::Type{VectorField{T,2}},func::Function,res::Tuple{Integer,Integer},pos::Tuple{Real,Real},size::Tuple{Real,Real};scaling::Function = t->1.0)
     xx = linspace(pos[1],pos[1]+size[1],res[1])
     yy = linspace(pos[2],pos[2]+size[2],res[2])
     f = zeros(T,(res...,3))
