@@ -18,7 +18,8 @@ function composite{N}(f::ScalarFieldNode{N},t::Real)
     vf = filter(x->typeof(x)<:AbstractVectorField,ff)
     sf = filter(x->typeof(x)<:AbstractScalarField,ff)
     println(map(typeof,vf))
-    println(map(typeof,sf))    
+    println(map(typeof,sf))
+    
     ####
     #ScalarField{Float64,N}(output,pos,new_sz;scaling = t->1.0)
 end
