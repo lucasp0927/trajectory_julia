@@ -9,6 +9,7 @@ function zero{T<:ComplexOrFloat,N}(::Type{VectorField{T,N}},res::Tuple{Vararg{In
     return VectorField{T,N}(zeros(T,(res...,3)),pos,size,scaling = scaling)
 end
 
+#TODO: rewrite func2field with Base.cartesian
 function func2field{T<:ComplexOrFloat}(::Type{ScalarField{T,2}},func::Function,res::Tuple{Integer,Integer},pos::Tuple{Real,Real},size::Tuple{Real,Real};scaling::Function = t->1.0)
     xx = linspace(pos[1],pos[1]+size[1],res[1])
     yy = linspace(pos[2],pos[2]+size[2],res[2])
