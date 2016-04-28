@@ -20,7 +20,6 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     end
 end
 
-
 type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     field::Array{T,N}
     position::Tuple{Vararg{Float64}}
