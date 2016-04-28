@@ -5,7 +5,6 @@ function align_field_tree!{T<:FieldNode}(f::T)
     align_geo = unalign_geo
     align_geo["size"] = tuple(new_sz...)
     align_field!(f,align_geo["res"],align_geo["pos"])
-    gc()
 end
 
 function align_field!{T<:FieldNode}(f::T,res::Tuple{Vararg{Float64}},pos::Tuple{Vararg{Float64}})
@@ -30,7 +29,9 @@ function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Tuple{Vararg
     old_field_itp = interpolate(old_field, BSpline(Cubic(Flat())), OnGrid())
     itp_field!(new_field,old_field_itp,unalign_geo,align_geo)
     setfield!(f,new_field,align_geo["pos"],align_geo["size"],scaling=f.scaling)
-    @assert f.res == align_geo["res"] "resolution check failed!"
+    #check
+    res_delta = mean((collect(f.res).-collect(align_geo["res"]))./collect(f.res))
+    @assert res_delta<=1e-10 "resolution check failed!"
 end
 
 function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Tuple{Vararg{Float64}},pos::Tuple{Vararg{Float64}})
@@ -51,7 +52,9 @@ function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Tuple{Vararg
         itp_field!(myslice(new_field,i),old_field_itp,unalign_geo,align_geo)
     end
     setfield!(f,new_field,align_geo["pos"],align_geo["size"],scaling=f.scaling)
-    @assert f.res == align_geo["res"] "resolution check failed!"
+    #check
+    res_delta = mean((collect(f.res).-collect(align_geo["res"]))./collect(f.res))
+    @assert res_delta<=1e-10 "resolution check failed!"    
 end
 
 #TODO clean this up with meta programming?
@@ -60,6 +63,8 @@ function myslice{T<:ComplexOrFloat,N}(A::Array{T,N},i::Integer)
         return slice(A,:,:,i)
     elseif N == 4
         return slice(A,:,:,:,i)
+    else
+        error("unknown dimension!")
     end
 end
 
@@ -81,7 +86,7 @@ end
         apos::Vector{Float64} = collect(align_geo["pos"])
         ares::Vector{Float64} = collect(align_geo["res"])
         uapos::Vector{Float64} = collect(unalign_geo["pos"])
-        uares::Vector{Float64} = collect(unalign_geo["res"])                                
+        uares::Vector{Float64} = collect(unalign_geo["res"])
         @nloops $N i new_field begin
             old_idx = transform_coordinate(apos,ares,uapos,uares,collect((@ntuple $N i)))
             (@nref $N new_field i) = old_field_itp[old_idx...]
