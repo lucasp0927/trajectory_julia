@@ -29,7 +29,7 @@ function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Tuple{Vararg
     old_field = f.field
     old_field_itp = interpolate(old_field, BSpline(Cubic(Flat())), OnGrid())
     itp_field!(new_field,old_field_itp,unalign_geo,align_geo)
-    setfield!(f,new_field,align_geo["pos"],align_geo["size"],scaling=t->1.0)
+    setfield!(f,new_field,align_geo["pos"],align_geo["size"],scaling=f.scaling)
     @assert f.res == align_geo["res"] "resolution check failed!"
 end
 
@@ -50,7 +50,7 @@ function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Tuple{Vararg
         old_field_itp = interpolate(myslice(old_field,i), BSpline(Cubic(Flat())), OnGrid())
         itp_field!(myslice(new_field,i),old_field_itp,unalign_geo,align_geo)
     end
-    setfield!(f,new_field,align_geo["pos"],align_geo["size"],scaling=t->1.0)
+    setfield!(f,new_field,align_geo["pos"],align_geo["size"],scaling=f.scaling)
     @assert f.res == align_geo["res"] "resolution check failed!"
 end
 
