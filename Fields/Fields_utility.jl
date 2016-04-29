@@ -6,7 +6,7 @@ end
 
 function zero{T<:ComplexOrFloat,N}(::Type{VectorField{T,N}},res::Tuple{Vararg{Integer}},pos::Tuple{Vararg{Real}},size::Tuple{Vararg{Real}};scaling::Function = t->1.0)
     @assert length(res) ==  length(pos) == length(size) "dimension mismatch"    
-    return VectorField{T,N}(zeros(T,(res...,3)),pos,size,scaling = scaling)
+    return VectorField{T,N}(zeros(T,(3,res...)),pos,size,scaling = scaling)
 end
 
 #TODO: rewrite func2field with Base.cartesian
@@ -28,10 +28,10 @@ end
 function func2field{T<:ComplexOrFloat}(::Type{VectorField{T,2}},func::Function,res::Tuple{Integer,Integer},pos::Tuple{Real,Real},size::Tuple{Real,Real};scaling::Function = t->1.0)
     xx = linspace(pos[1],pos[1]+size[1],res[1])
     yy = linspace(pos[2],pos[2]+size[2],res[2])
-    f = zeros(T,(res...,3))
+    f = zeros(T,(3,res...))
     for x in enumerate(xx), y in enumerate(yy)
         v = func(x[2],y[2])::Vector{T}
-        f[x[1],y[1],:] = v
+        f[:,x[1],y[1]] = v
     end
     return VectorField{T,2}(f::Array{T,3},pos,size,scaling=scaling)    
 end
@@ -40,10 +40,10 @@ function func2field{T<:ComplexOrFloat}(::Type{VectorField{T,3}},func::Function,r
     xx = linspace(pos[1],pos[1]+size[1],res[1])
     yy = linspace(pos[2],pos[2]+size[2],res[2])
     zz = linspace(pos[3],pos[3]+size[3],res[3])
-    f = zeros(T,(res...,3))
+    f = zeros(T,(3,res...))
     for x in enumerate(xx), y in enumerate(yy), z in enumerate(zz)
         v = func(x[2],y[2],z[2])::Vector{T}
-        f[x[1],y[1],z[1],:] = v
+        f[:,x[1],y[1],z[1]] = v
     end
     return VectorField{T,3}(f::Array{T,4},pos,size,scaling=scaling)    
 end

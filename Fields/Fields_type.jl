@@ -14,7 +14,7 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     scaling::Function
     dim::Integer
     function VectorField(f::Array{T},pos::Tuple{Vararg{Real}},sz::Tuple{Vararg{Real}};scaling::Function = t->1.0)
-        res = tuple((collect(sz)./(collect(size(f))[1:N]-1))...)
+        res = tuple((collect(sz)./(collect(size(f))[2:N+1]-1))...)
         @assert all(x->x!=0,res) "zero resolution!"
         length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,res,scaling,N):error("dimension error!")
     end
@@ -47,7 +47,7 @@ function setfield!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},A::Array{T},pos::Tup
 end
 
 function setfield!{T<:ComplexOrFloat,N}(f::VectorField{T,N},A::Array{T},pos::Tuple{Vararg{Real}},sz::Tuple{Vararg{Real}};scaling::Function = t->1.0)
-    res = tuple((collect(sz)./(collect(size(A))[1:N]-1))...)
+    res = tuple((collect(sz)./(collect(size(A))[2:N+1]-1))...)
     @assert all(x->x!=0,res) "zero resolution!"
     @assert length(pos)==length(sz)==N==ndims(A)-1 "dimension error!"
     f.field = A

@@ -44,7 +44,7 @@ function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Tuple{Vararg
     align_geo = Dict("pos"=>tuple(new_pos...),"size"=>tuple(new_size...),"res"=>res)
     ##### interpolate field
     new_arr_size = round(Int64,new_size ./ collect(res))+one(Int64)
-    new_field = Array(T,new_arr_size...,3)
+    new_field = Array(T,3,new_arr_size...)
     old_field = f.field
     #loop over three components
     for i = 1:3
@@ -60,9 +60,9 @@ end
 #TODO clean this up with meta programming?
 function myslice{T<:ComplexOrFloat,N}(A::Array{T,N},i::Integer)
     if N == 3
-        return slice(A,:,:,i)
+        return slice(A,i,:,:)
     elseif N == 4
-        return slice(A,:,:,:,i)
+        return slice(A,i,:,:,:)
     else
         error("unknown dimension!")
     end
