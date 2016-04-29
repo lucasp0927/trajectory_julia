@@ -17,14 +17,22 @@ function composite{N}(f::ScalarFieldNode{N},t::Real)
     ff = map(x->composite(x,t),f.fields)
     vf_arr = filter(x->typeof(x)<:AbstractVectorField,ff)
     sf_arr = filter(x->typeof(x)<:AbstractScalarField,ff)
-    #####process scalar fields
-    for sf in sf_arr
+    for sf in sf_arr ##loop over scalar fields
         sf_geo = geometry(sf)
         sf_pos = collect(sf_geo["pos"])
         sf_sz = collect(sf_geo["size"])
         sf_start_idx = map(x->convert(Int64,x),((sf_pos.-pos)./res)+1)
         sf_end_idx = map(x->convert(Int64,x),((sf_pos.+sf_sz.-pos)./res)+1)
         @time fill_field!(output,sf.field,sf_start_idx,sf_end_idx)
+    end
+    vf_output = zeros(output_type,(arr_sz...,3))
+    for vf in vf_arr ##loop over vector fields
+        vf_geo = geometry(vf)
+        vf_pos = collect(vf_geo["pos"])
+        vf_sz = collect(vf_geo["size"])
+        vf_start_idx = map(x->convert(Int64,x),((vf_pos.-pos)./res)+1)
+        vf_end_idx = map(x->convert(Int64,x),((vf_pos.+vf_sz.-pos)./res)+1)
+        
     end
     println(mean(output))
     #ScalarField{Float64,N}(output,pos,new_sz;scaling = t->1.0)
