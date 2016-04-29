@@ -24,23 +24,17 @@ function composite{N}(f::ScalarFieldNode{N},t::Real)
         sf_sz = collect(sf_geo["size"])
         sf_start_idx = map(x->convert(Int64,x),((sf_pos.-pos)./res)+1)
         sf_end_idx = map(x->convert(Int64,x),((sf_pos.+sf_sz.-pos)./res)+1)
-        fill_field!(output,sf.field,sf_start_idx,ndims(sf.field))
-        # if N ==2
-        #     output[sf_start_idx[1]:sf_end_idx[1],sf_start_idx[2]:sf_end_idx[2]] += sf.field
-        # elseif N==3
-        #     output[sf_start_idx[1]:sf_end_idx[1],sf_start_idx[2]:sf_end_idx[2],sf_start_idx[3]:sf_end_idx[3]] += sf.field
-        # end
-        end
-    println(mean(output))        
+        @time fill_field!(output,sf.field,sf_start_idx,sf_end_idx)
+    end
+    println(mean(output))
     #ScalarField{Float64,N}(output,pos,new_sz;scaling = t->1.0)
 end
 
-@generated function fill_field!(output::Array,field::Array,sf_start_idx::Vector,dim::Int64)
-    N::Int64=ndims(field)
-    quote
-        @nloops $N i field begin
-            idx = collect((@ntuple $N i)).+sf_start_idx-1
-            output[idx...]=(@nref $N field i)
-        end
+@generated function fill_field!{T<:ComplexOrFloat,K<:ComplexOrFloat,N}(output::Array{T,N},field::Array{K,N},sf_start_idx::Vector,sf_end_idx::Vector)
+    ex_str = "output["
+    for i = 1:N
+        ex_str = ex_str*"sf_start_idx[$i]:sf_end_idx[$i],"
     end
+    parse(ex_str[1:end-1]*"]+=field")
 end
+
