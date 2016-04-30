@@ -32,6 +32,7 @@ function composite{N}(f::ScalarFieldNode{N},t::Real)
         vf_sz = collect(vf_geo["size"])
         vf_start_idx = map(x->convert(Int64,x),((vf_pos.-pos)./res)+1)
         vf_end_idx = map(x->convert(Int64,x),((vf_pos.+vf_sz.-pos)./res)+1)
+        ### add all vector fields
         
     end
     println(mean(output))
