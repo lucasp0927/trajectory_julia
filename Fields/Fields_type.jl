@@ -72,7 +72,7 @@ type ScalarFieldNode{N} <: AbstractScalarField
     fields::Vector{Field}
     scaling::Function
     dim::Integer
-    function ScalarFieldNode{T<:Field}(f::Vector{T},scaling::Function = t->1.0)
+    function ScalarFieldNode{T<:Field}(f::Vector{T};scaling::Function = t->1.0)
         @assert all(x->x.dim==N,f) "dimension error!"        
         new(f,scaling,N)
     end

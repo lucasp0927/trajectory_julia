@@ -24,10 +24,11 @@ function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Tuple{Vararg
     align_geo = Dict("pos"=>tuple(new_pos...),"size"=>tuple(new_size...),"res"=>res)
     ##### interpolate field
     new_arr_size = round(Int64,new_size ./ collect(res))+one(Int64)
-    new_field = Array(T,new_arr_size...)
     old_field = f.field
     old_field_itp = interpolate(old_field, BSpline(Cubic(Flat())), OnGrid())
+    new_field = Array(T,new_arr_size...)
     itp_field!(new_field,old_field_itp,unalign_geo,align_geo)
+    @assert collect(size(new_field)) == new_arr_size
     setfield!(f,new_field,align_geo["pos"],align_geo["size"],scaling=f.scaling)
     #check
     res_delta = mean((collect(f.res).-collect(align_geo["res"]))./collect(f.res))
@@ -44,17 +45,18 @@ function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Tuple{Vararg
     align_geo = Dict("pos"=>tuple(new_pos...),"size"=>tuple(new_size...),"res"=>res)
     ##### interpolate field
     new_arr_size = round(Int64,new_size ./ collect(res))+one(Int64)
-    new_field = Array(T,3,new_arr_size...)
     old_field = f.field
     #loop over three components
+    new_field = Array(T,3,new_arr_size...)
     for i = 1:3
         old_field_itp = interpolate(myslice(old_field,i), BSpline(Cubic(Flat())), OnGrid())
-        itp_field!(myslice(new_field,i),old_field_itp,unalign_geo,align_geo)
+        itp_field!(myslice(new_field,i),old_field_itp,unalign_geo,align_geo)        
     end
+    @assert collect(size(new_field)[2:end]) == new_arr_size
     setfield!(f,new_field,align_geo["pos"],align_geo["size"],scaling=f.scaling)
     #check
     res_delta = mean((collect(f.res).-collect(align_geo["res"]))./collect(f.res))
-    @assert res_delta<=1e-10 "resolution check failed!"    
+    @assert res_delta<=1e-10 "resolution check failed!"
 end
 
 #TODO clean this up with meta programming?
@@ -72,7 +74,7 @@ end
     #test
     @devec    un_idx_pos = uapos.+ uares.*(old_idx-1)
     @assert   un_idx_pos == idx_pos "coordinate transform check"
-    return tuple(old_idx...)
+    return old_idx
 end
 
 @generated function itp_field!{T<:Union{Array,SubArray}}(new_field::T,old_field_itp::Interpolations.BSplineInterpolation,unalign_geo,align_geo)
@@ -82,18 +84,11 @@ end
         ares::Vector{Float64} = collect(align_geo["res"])
         uapos::Vector{Float64} = collect(unalign_geo["pos"])
         uares::Vector{Float64} = collect(unalign_geo["res"])
+        start_idx = transform_coordinate(apos,ares,uapos,uares,ones(Int64,$N))
+        end_idx = transform_coordinate(apos,ares,uapos,uares,collect(size(new_field)))
+        @nexprs $N j-> x_j = linspace(start_idx[j],end_idx[j],size(new_field,j))
         @nloops $N i new_field begin
-            old_idx = transform_coordinate(apos,ares,uapos,uares,collect((@ntuple $N i)))
-            (@nref $N new_field i) = old_field_itp[old_idx...]
+            (@nref $N new_field i) = (@nref $N old_field_itp j->x_j[i_j])
         end
     end
 end
-
-# @generated function itp_field!{T<:ComplexOrFloat,N}(new_field::SubArray{T,N},old_field_itp::Interpolations.BSplineInterpolation,unalign_geo,align_geo)
-#     quote
-#         @nloops $N i new_field begin
-#             old_idx = transform_coordinate(unalign_geo,align_geo,(@ntuple $N i))
-#             (@nref $N new_field i) = old_field_itp[old_idx...]
-#         end
-#     end
-# end
