@@ -14,7 +14,6 @@ function readfields(filename::AbstractString,variable::AbstractString)
 end
 
 function main()
-    ##########3D test
     println("######################################")
     println("2D composite test")
     println("building sf1")

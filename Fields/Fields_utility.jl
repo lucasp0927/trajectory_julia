@@ -43,12 +43,12 @@ end
     quote
         @assert length(res)==length(pos)==length(size)==N        
         @nexprs $N j->(x_j = linspace(pos[j],pos[j]+size[j],res[j]))
-        f = zeros(T,($N+1,res...))
+        f = zeros(T,(3,res...))
         @nloops $N i j->1:length(x_j) begin
             v = func((@ntuple $N k->x_k[i_k])...)
             f[:,(@ntuple $N k->i_k)...] = v
         end
-        return VectorField{T,2}(f::Array{T,$N+1},pos,size,scaling=scaling)        
+        return VectorField{T,$N}(f::Array{T,$N+1},pos,size,scaling=scaling)        
     end
 end
 

@@ -58,14 +58,9 @@ function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Tuple{Vararg
 end
 
 #TODO clean this up with meta programming?
-function myslice{T<:ComplexOrFloat,N}(A::Array{T,N},i::Integer)
-    if N == 3
-        return slice(A,i,:,:)
-    elseif N == 4
-        return slice(A,i,:,:,:)
-    else
-        error("unknown dimension!")
-    end
+@generated function myslice{T<:ComplexOrFloat,N}(A::Array{T,N},i::Integer)
+    ex_str = "slice(A,i"*repeat(",:",N-1)*")"
+    parse(ex_str)
 end
 
 @inbounds function transform_coordinate(apos::Vector{Float64},ares::Vector{Float64},uapos::Vector{Float64},uares::Vector{Float64},index::Vector{Int64})
