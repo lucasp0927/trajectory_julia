@@ -3,6 +3,30 @@ function composite{T<:Union{VectorField,ScalarField}}(f::T,t::Real)
     return T(f.field*f.scaling(t),f.position,f.size,scaling = t->1.0)
 end
 
+function composite{N}(f::VectorFieldNode{N},t::Real)
+    #remember scaling
+    output_type = typeoffield(f)
+    geo = geometry(f)
+    res = collect(geo["res"])
+    pos = collect(geo["pos"])
+    sz = collect(geo["size"])
+    arr_sz = round(Int64,sz./res+1)
+    output = zeros(output_type,(arr_sz...))
+    ####handle output
+    ff = map(x->composite(x,t),f.fields)
+    vf_output = zeros(output_type,(3,arr_sz...))
+    for vf in ff ##loop over vector fields
+        vf_geo = geometry(vf)
+        vf_pos = collect(vf_geo["pos"])
+        vf_sz = collect(vf_geo["size"])
+        vf_start_idx = map(x->convert(Int64,x),((vf_pos.-pos)./res)+1)
+        vf_end_idx = map(x->convert(Int64,x),((vf_pos.+vf_sz.-pos)./res)+1)
+        ### add all vector fields
+        fill_field_vec!(vf_output,vf.field,vf_start_idx,vf_end_idx)
+    end
+    return VectorField{output_type,N}(vf_output::Array{output_type,N+1},tuple(pos...),tuple(sz...);scaling = t->1.0)        
+end
+
 function composite{N}(f::ScalarFieldNode{N},t::Real)
     #remember scaling
     output_type = typeoffield(f)
@@ -38,7 +62,6 @@ function composite{N}(f::ScalarFieldNode{N},t::Real)
     #abs2 vf_output
     vf_output_abs2::Array{output_type,N} = squeeze(sumabs2(vf_output,1),1)
     output = (output.+vf_output_abs2)*f.scaling(t)
-    println(mean(output))
     if sum(imag(output)) == 0
         output = real(output)
         return ScalarField{Float64,N}(output::Array{Float64,N},tuple(pos...),tuple(sz...);scaling = t->1.0)
@@ -47,7 +70,8 @@ function composite{N}(f::ScalarFieldNode{N},t::Real)
     end
 end
 
-@generated function fill_field_vec!{T<:ComplexOrFloat,K<:ComplexOrFloat,N}(output::Array{T,N},field::Array{K,N},vf_start_idx::Vector,vf_end_idx::Vector)
+#TODO:rewrite this with better metaprogramming
+@generated  function fill_field_vec!{T<:ComplexOrFloat,K<:ComplexOrFloat,N}(output::Array{T,N},field::Array{K,N},vf_start_idx::Vector,vf_end_idx::Vector)
     ex_str = "output[:,"
     for i = 1:N-1
         ex_str = ex_str*"vf_start_idx[$i]:vf_end_idx[$i],"

@@ -21,7 +21,7 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
 end
 
 type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
-    field::Array{T,N}
+    field::Array{T}
     position::Tuple{Vararg{Float64}}
     size::Tuple{Vararg{Float64}}
     res::Tuple{Vararg{Float64}}
@@ -38,6 +38,7 @@ function setfield!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},A::Array{T},pos::Tup
     res = tuple((collect(sz)./(collect(size(A))[1:N]-1))...)
     @assert all(x->x!=0,res) "zero resolution!"
     @assert length(pos)==length(sz)==N==ndims(A) "dimension error!"
+    f.field = Array(T,1)
     f.field = A
     f.position = pos
     f.size = sz
@@ -50,6 +51,7 @@ function setfield!{T<:ComplexOrFloat,N}(f::VectorField{T,N},A::Array{T},pos::Tup
     res = tuple((collect(sz)./(collect(size(A))[2:N+1]-1))...)
     @assert all(x->x!=0,res) "zero resolution!"
     @assert length(pos)==length(sz)==N==ndims(A)-1 "dimension error!"
+    f.field = Array(T,1)
     f.field = A
     f.position = pos
     f.size = sz
