@@ -64,9 +64,9 @@ end
 
 function main()
     test()
-    #Profile.clear()
-    #test()
-    #open("profile.bin", "w") do f serialize(f, Profile.retrieve()) end
+    # Profile.clear()
+    # test()
+    # open("profile.bin", "w") do f serialize(f, Profile.retrieve()) end
     ##########3D test
 
 #     println("######################################")

@@ -71,19 +71,37 @@ function composite{N}(f::ScalarFieldNode{N},t::Real)
 end
 
 #TODO:rewrite this with better metaprogramming
-@generated  function fill_field_vec!{T<:ComplexOrFloat,K<:ComplexOrFloat,N}(output::Array{T,N},field::Array{K,N},vf_start_idx::Vector,vf_end_idx::Vector)
-    ex_str = "output[:,"
-    for i = 1:N-1
-        ex_str = ex_str*"vf_start_idx[$i]:vf_end_idx[$i],"
+@generated function fill_field_vec!{T<:ComplexOrFloat,K<:ComplexOrFloat,N}(output::Array{T,N},field::Array{K,N},vf_start_idx::Vector,vf_end_idx::Vector)
+    quote
+        @nloops $(N-1) i j->1:size(field,j+1) begin
+            for j = 1:3
+                (@nref $N output k->k==1?j:vf_start_idx[k-1]+i_{k-1}-1)+=(@nref $N field k->k==1?j:i_{k-1})
+            end
+        end
     end
-    parse(ex_str[1:end-1]*"]+=field")
 end
 
 @generated function fill_field!{T<:ComplexOrFloat,K<:ComplexOrFloat,N}(output::Array{T,N},field::Array{K,N},sf_start_idx::Vector,sf_end_idx::Vector)
-    ex_str = "output["
-    for i = 1:N
-        ex_str = ex_str*"sf_start_idx[$i]:sf_end_idx[$i],"
-    end
-    parse(ex_str[1:end-1]*"]+=field")
+    quote
+        @nloops $N i field begin
+            (@nref $N output k->sf_start_idx[k]+i_k-1)+=(@nref $N field k->i_k)
+        end
+    end    
 end
+
+# @generated  function fill_field_vec!{T<:ComplexOrFloat,K<:ComplexOrFloat,N}(output::Array{T,N},field::Array{K,N},vf_start_idx::Vector,vf_end_idx::Vector)
+#     ex_str = "output[:,"
+#     for i = 1:N-1
+#         ex_str = ex_str*"vf_start_idx[$i]:vf_end_idx[$i],"
+#     end
+#     parse(ex_str[1:end-1]*"]+=field")
+# end
+
+# @generated function fill_field!{T<:ComplexOrFloat,K<:ComplexOrFloat,N}(output::Array{T,N},field::Array{K,N},sf_start_idx::Vector,sf_end_idx::Vector)
+#     ex_str = "output["
+#     for i = 1:N
+#         ex_str = ex_str*"sf_start_idx[$i]:sf_end_idx[$i],"
+#     end
+#     parse(ex_str[1:end-1]*"]+=field")
+# end
 
