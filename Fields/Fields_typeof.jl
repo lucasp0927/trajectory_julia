@@ -18,3 +18,13 @@ function typeoffield(f::ScalarFieldNode)
 #        return Float64
 #    end
 end
+
+function set_typeof!{T<:FieldNode}(f::T)
+    #memoize typeof
+    f.typeof = typeoffield(f)
+    for ff in f.fields
+        if typeof(ff) <: FieldNode
+            set_typeof!(ff)
+        end
+    end    
+end

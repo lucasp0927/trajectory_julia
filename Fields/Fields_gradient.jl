@@ -41,10 +41,10 @@ function sample(f::VectorFieldNode{2},pos::Vector{Float64},t::Real;order::Intege
     output_type = typeoffield(f)
     output = zeros(output_type,(3,4,4))
     for vf in f.fields
-        vf_geo = geometry(vf)
-        fpos = collect(vf_geo["pos"])
-        fsize = collect(vf_geo["size"])
-        fres = collect(vf_geo["res"])
+#        vf_geo = geometry(vf)
+        fpos = collect(vf.position)
+        fsize = collect(vf.size)
+        fres = collect(vf.res)
         rel_pos = pos-fpos
         if all(i->fres[i]<rel_pos[i]<fsize[i]-fres[i],1:length(fsize))
             output += sample(vf,pos,t;order=order)
@@ -70,10 +70,9 @@ function sample(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Intege
     sf_arr = filter(x->typeof(x)<:AbstractScalarField,f.fields)
     vf_output = zeros(output_type,(3,4,4))
     for sf in sf_arr
-        sf_geo = geometry(sf)
-        fpos = collect(sf_geo["pos"])
-        fsize = collect(sf_geo["size"])
-        fres = collect(sf_geo["res"])
+        fpos = collect(sf.position)
+        fsize = collect(sf.size)
+        fres = collect(sf.res)
         rel_pos = pos-fpos
         if all(i->fres[i]<rel_pos[i]<fsize[i]-fres[i],1:length(fsize))
             output += sample(sf,pos,t;order=order)
@@ -87,10 +86,9 @@ function sample(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Intege
         end
     end
     for vf in vf_arr
-        vf_geo = geometry(vf)
-        fpos = collect(vf_geo["pos"])
-        fsize = collect(vf_geo["size"])
-        fres = collect(vf_geo["res"])
+        fpos = collect(vf.position)
+        fsize = collect(vf.size)
+        fres = collect(vf.res)
         rel_pos = pos-fpos
         if all(i->fres[i]<rel_pos[i]<fsize[i]-fres[i],1:length(fsize))
             vf_output += sample(vf,pos,t;order=order)
@@ -112,8 +110,7 @@ end
 function value(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
     A = sample(f,pos,t;order=order)
     A = float(real(A)) #TODO: change this
-    geo = geometry(f)
-    res = collect(geo["res"])
+    res = f.res
     x_1 = rem(pos[1],res[1])/res[1]
     x_2 = rem(pos[2],res[2])/res[2]
     itp = interpolate(A, BSpline(Cubic(Line())), OnGrid())
