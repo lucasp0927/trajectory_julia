@@ -7,6 +7,7 @@ function sample{T<:ComplexOrFloat}(f::ScalarField{T,2},pos::Vector{Float64},t::R
     rel_pos = pos-fpos
     pidx = round(Int64,div(rel_pos,fres)+1)
     #2D
+#    output = sub(f.field,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2)
     output = f.field[pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2]
     output *= f.scaling(t)
     return output
@@ -25,7 +26,7 @@ function sample{T<:ComplexOrFloat}(f::VectorField{T,2},pos::Vector{Float64},t::R
     return output
 #    return T(f.field*f.scaling(t),f.position,f.size,scaling = t->1.0)
 end
-
+#=
 function sample_rel{T<:ComplexOrFloat}(f::VectorField{T,2},rel_pos::Vector{Float64},t::Real;order::Integer = 3)
     fres = collect(f.res)
     pidx = round(Int64,div(rel_pos,fres)+1)
@@ -35,102 +36,56 @@ function sample_rel{T<:ComplexOrFloat}(f::VectorField{T,2},rel_pos::Vector{Float
     return output
 #    return T(f.field*f.scaling(t),f.position,f.size,scaling = t->1.0)
 end
+=#
 
 function sample(f::VectorFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
     # get (order+1)x(order+1) pixels of local field
     output_type = f.typeof
-    output = zeros(output_type,(3,4,4))
-    loop_field!(f.fields,pos,t,output)
-#    println(mean(output))
-#=
-    for vf in f.fields
-#        vf_geo = geometry(vf)
-        fpos = collect(vf.position)
-        fsize = collect(vf.size)
-        fres = collect(vf.res)
-        rel_pos = pos-fpos
-        if all(i->fres[i]<rel_pos[i]<fsize[i]-fres[i],1:length(fsize))
-             output += sample(vf,pos,t;order=order)
-            # if typeof(vf) <: VectorField
-            #     println("vectorfield")
-            #     output += sample_rel(vf,rel_pos,t;order = order)
-            # else
-            #     println("vectorfield node")
-            #     output += sample(vf,pos,t;order = order)
-            # end
-        end
-    end
-=#
-    output *= f.scaling(t)
-    return output
+    return sample_inner(output_type,f,pos,t,order=order)
 end
 
-function loop_field!{T<:AbstractVectorField,K<:ComplexOrFloat}(f_arr::Vector{T},pos::Vector{Float64},t::Real,output::Array{K,3};order::Integer = 3)
-
-    for vf in f_arr
-#        vf_geo = geometry(vf)
-        fpos = collect(vf.position)
-        fsize = collect(vf.size)
-        fres = collect(vf.res)
-        rel_pos = pos-fpos
-        if all(i->fres[i]<rel_pos[i]<fsize[i]-fres[i],1:length(fsize))
-            #fill!(output,one(K))
-            output[:,:] += sample(vf,pos,t;order=order)[:,:]
-            # if typeof(vf) <: VectorField
-            #     println("vectorfield")
-            #     output += sample_rel(vf,rel_pos,t;order = order)
-            # else
-            #     println("vectorfield node")
-            #     output += sample(vf,pos,t;order = order)
-            # end
-        end
-    end
+function sample_inner{T<:ComplexOrFloat}(::Type{T},f::VectorFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
+    output = zeros(T,(3,4,4))
+    loop_field!(f.fields,pos,t,output)
+    output *= f.scaling(t)
+    return output    
 end
 
 function sample(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
     # get (order+1)x(order+1) pixels of local field
     output_type = f.typeof
-    output = zeros(output_type,(4,4))
+    return sample_inner(output_type,f,pos,t,order=order)
+end
+
+function sample_inner{T<:ComplexOrFloat}(::Type{T},f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
+    output = zeros(Float64,(4,4))#TODO: Float64 should be T
     vf_arr = filter(x->typeof(x)<:AbstractVectorField,f.fields)
     sf_arr = filter(x->typeof(x)<:AbstractScalarField,f.fields)
-    vf_output = zeros(output_type,(3,4,4))
-    for sf in sf_arr
-        fpos = collect(sf.position)
-        fsize = collect(sf.size)
-        fres = collect(sf.res)
-        rel_pos = pos-fpos
-        if all(i->fres[i]<rel_pos[i]<fsize[i]-fres[i],1:length(fsize))
-            output += sample(sf,pos,t;order=order)
-            # if typeof(vf) <: VectorField
-            #     println("vectorfield")
-            #     output += sample_rel(vf,rel_pos,t;order = order)
-            # else
-            #     println("vectorfield node")
-            #     output += sample(vf,pos,t;order = order)
-            # end
-        end
-    end
-    for vf in vf_arr
-        fpos = collect(vf.position)
-        fsize = collect(vf.size)
-        fres = collect(vf.res)
-        rel_pos = pos-fpos
-        if all(i->fres[i]<rel_pos[i]<fsize[i]-fres[i],1:length(fsize))
-            vf_output += sample(vf,pos,t;order=order)
-            # if typeof(vf) <: VectorField
-            #     println("vectorfield")
-            #     output += sample_rel(vf,rel_pos,t;order = order)
-            # else
-            #     println("vectorfield node")
-            #     output += sample(vf,pos,t;order = order)
-            # end
-        end
-    end
+    vf_output = zeros(T,(3,4,4))
+    loop_field!(sf_arr,pos,t,output)
+    loop_field!(vf_arr,pos,t,vf_output)    
     vf_output_abs2::Array{Float64,2} = squeeze(sumabs2(vf_output,1),1)
     output = output + vf_output_abs2 #TODO: type not stable
     output *= f.scaling(t)
-    return output
+    return output    
 end
+
+
+function in_field{T<:Field}(f::T,pos::Vector{Float64})
+    fpos = collect(f.position)
+    fsize = collect(f.size)
+    fres = collect(f.res)
+    rel_pos = pos-fpos
+    return all(i->fres[i]<rel_pos[i]<fsize[i]-fres[i],1:length(fsize))
+end
+
+function loop_field!{T<:Field,K<:ComplexOrFloat}(f_arr::Vector{T},pos::Vector{Float64},t::Real,output::Array{K};order::Integer = 3)
+    ff = filter(x->in_field(x,pos),f_arr)
+    for vf in ff
+        output[:] += sample(vf,pos,t;order=order)[:]
+    end
+end
+
 
 function value(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
     A = sample(f,pos,t;order=order)
