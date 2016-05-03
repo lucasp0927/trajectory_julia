@@ -64,9 +64,12 @@ type VectorFieldNode{N} <: AbstractVectorField
     fields::Vector{AbstractVectorField}
     scaling::Function
     dim::Integer
+    position::Tuple{Vararg{Float64}}
+    size::Tuple{Vararg{Float64}}
+    res::Tuple{Vararg{Float64}}    
     function VectorFieldNode{T<:AbstractVectorField}(f::Vector{T};scaling::Function = t->1.0)
         @assert all(x->x.dim==N,f) "dimension error!"
-        new(f,scaling,N)
+        new(f,scaling,N,(),(),())
     end
 end
 
@@ -74,9 +77,12 @@ type ScalarFieldNode{N} <: AbstractScalarField
     fields::Vector{Field}
     scaling::Function
     dim::Integer
+    position::Tuple{Vararg{Float64}}
+    size::Tuple{Vararg{Float64}}
+    res::Tuple{Vararg{Float64}}    
     function ScalarFieldNode{T<:Field}(f::Vector{T};scaling::Function = t->1.0)
         @assert all(x->x.dim==N,f) "dimension error!"        
-        new(f,scaling,N)
+        new(f,scaling,N,(),(),())
     end
 end
 FieldNode = Union{VectorFieldNode,ScalarFieldNode}

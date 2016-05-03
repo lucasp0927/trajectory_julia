@@ -61,7 +61,7 @@ function composite{N}(f::ScalarFieldNode{N},t::Real)
     end
     #abs2 vf_output
     vf_output_abs2::Array{output_type,N} = squeeze(sumabs2(vf_output,1),1)
-    output = (output.+vf_output_abs2)*f.scaling(t)
+    output = (output.+vf_output_abs2)*f.scaling(t) #TODO: type not stable
     if sum(imag(output)) == 0
         output = real(output)
         return ScalarField{Float64,N}(output::Array{Float64,N},tuple(pos...),tuple(sz...);scaling = t->1.0)

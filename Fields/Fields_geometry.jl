@@ -1,3 +1,15 @@
+function set_geometry!{T<:FieldNode}(f::T)
+    geo = geometry(f)
+    f.position = geo["pos"]
+    f.size = geo["size"]
+    f.res = geo["res"]    
+    for ff in f.fields
+        if typeof(ff) <: FieldNode
+            set_geometry(ff)
+        end
+    end
+end
+
 function geometry{T<:FieldNode}(f::T;lowest_res=true)
     #find the new optimal position and size
     #minimum(cat(2,[1,2,3],[2,3,4]),2)
