@@ -47,7 +47,8 @@ end
 function sample_inner{T<:ComplexOrFloat}(::Type{T},f::VectorFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
     output = zeros(T,(3,4,4))
     loop_field!(f.fields,pos,t,output)
-    output *= f.scaling(t)
+    scal = f.scaling(t)
+    output .*= scal
     return output    
 end
 
@@ -70,7 +71,8 @@ function sample_inner{T<:ComplexOrFloat}(::Type{T},f::ScalarFieldNode{2},pos::Ve
     end    
     vf_output_abs2::Array{Float64,2} = squeeze(sumabs2(vf_output,1),1)
     output = output + vf_output_abs2 #TODO: type not stable
-    output *= f.scaling(t)
+    scal = f.scaling(t)
+    output .*= scal
     return output    
 end
 
@@ -85,11 +87,12 @@ end
 
 function loop_field!{T<:Field,K<:ComplexOrFloat}(f_arr::Vector{T},pos::Vector{Float64},t::Real,output::Array{K};order::Integer = 3)
     ff = filter(x->in_field(x,pos),f_arr)
+    
     for vf in ff
-        output[:] += sample(vf,pos,t;order=order)[:]
+        tmp = sample(vf,pos,t;order=order)[:]
+        output[:] += tmp[:]
     end
 end
-
 
 function value(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
     A = sample(f,pos,t;order=order)
