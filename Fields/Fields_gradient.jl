@@ -112,7 +112,8 @@ function value(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Integer
     res = f.res
     x_1 = rem(pos[1],res[1])/res[1]
     x_2 = rem(pos[2],res[2])/res[2]
-    return itp_spline(A,(2.0+x_1,2.0+x_2))
+    return itp_bicubic(A,(x_1,x_2))
+#    return itp_spline(A,(2.0+x_1,2.0+x_2))
 end
 
 function itp_spline(A::Array,pos::Tuple)
@@ -121,9 +122,24 @@ function itp_spline(A::Array,pos::Tuple)
 end
 
 function itp_bicubic(A::Array,pos::Tuple)
-    
+    return bicubicInterpolate(A,pos[1],pos[2])
 end
 
+@fastmath @inbounds function cubicInterpolate{T<:ComplexOrFloat}(p::Array{T,1},x::Float64)
+#    @assert length(p) == 4 "wrong length"
+    return p[2] + 0.5 * x*(p[3] - p[1] + x*(2.0*p[1] - 5.0*p[2] + 4.0*p[3] - p[4] + x*(3.0*(p[2] - p[3]) + p[4] - p[1])));
+end
+
+function bicubicInterpolate{T<:ComplexOrFloat}(p::Array{T,2},x::Float64,y::Float64)
+#    @assert size(p) == (4,4) "wrong size"
+    arr = Array(T,4)
+    @nexprs 4 j->(arr[j] = cubicInterpolate(p[:,j], x);)
+    # arr[1] = cubicInterpolate(vec(p[1,:]), y);
+    # arr[2] = cubicInterpolate(vec(p[2,:]), y);
+    # arr[3] = cubicInterpolate(vec(p[3,:]), y);
+    # arr[4] = cubicInterpolate(vec(p[4,:]), y);
+    return cubicInterpolate(arr, y);
+end
 #=
 double cubicInterpolate (double p[4], double x) {
 return p[1] + 0.5 * x*(p[2] - p[0] + x*(2.0*p[0] - 5.0*p[1] + 4.0*p[2] - p[3] + x*(3.0*(p[1] - p[2]) + p[3] - p[0])));
