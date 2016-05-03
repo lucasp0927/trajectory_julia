@@ -7,10 +7,10 @@ function sample{T<:ComplexOrFloat}(f::ScalarField{T,2},pos::Vector{Float64},t::R
     rel_pos = pos-fpos
     pidx = round(Int64,div(rel_pos,fres)+1)
     #2D
-#    output = sub(f.field,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2)
-    output = f.field[pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2]
-    output *= f.scaling(t)
-    return output
+    output = sub(f.field,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2)
+#    output = f.field[pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2]
+#    output *= f.scaling(t)
+    return output*f.scaling(t)
 #    return T(f.field*f.scaling(t),f.position,f.size,scaling = t->1.0)
 end
 
@@ -21,9 +21,9 @@ function sample{T<:ComplexOrFloat}(f::VectorField{T,2},pos::Vector{Float64},t::R
     rel_pos = pos-fpos
     pidx = round(Int64,div(rel_pos,fres)+1)
     #2D
-    output = f.field[:,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2]
-    output *= f.scaling(t)
-    return output
+    output = sub(f.field,:,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2)
+#    output *= f.scaling(t)
+    return output*f.scaling(t)
 #    return T(f.field*f.scaling(t),f.position,f.size,scaling = t->1.0)
 end
 #=
@@ -58,25 +58,29 @@ function sample(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Intege
 end
 
 function sample_inner{T<:ComplexOrFloat}(::Type{T},f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
+    vf_arr = filter(x->isa(x,AbstractVectorField),f.fields)
+    sf_arr = filter(x->isa(x,AbstractScalarField),f.fields)
     output = zeros(Float64,(4,4))#TODO: Float64 should be T
-    vf_arr = filter(x->typeof(x)<:AbstractVectorField,f.fields)
-    sf_arr = filter(x->typeof(x)<:AbstractScalarField,f.fields)
     vf_output = zeros(T,(3,4,4))
-    loop_field!(sf_arr,pos,t,output)
-    loop_field!(vf_arr,pos,t,vf_output)    
+    if ~isempty(sf_arr)
+        loop_field!(sf_arr,pos,t,output)
+    end
+    if ~isempty(vf_arr)
+        loop_field!(vf_arr,pos,t,vf_output)
+    end    
     vf_output_abs2::Array{Float64,2} = squeeze(sumabs2(vf_output,1),1)
     output = output + vf_output_abs2 #TODO: type not stable
     output *= f.scaling(t)
     return output    
 end
 
-
 function in_field{T<:Field}(f::T,pos::Vector{Float64})
-    fpos = collect(f.position)
-    fsize = collect(f.size)
-    fres = collect(f.res)
-    rel_pos = pos-fpos
-    return all(i->fres[i]<rel_pos[i]<fsize[i]-fres[i],1:length(fsize))
+    # fpos = collect(f.position)
+    # fsize = collect(f.size)
+    # fres = collect(f.res)
+    # rel_pos = pos-fpos
+    # return all(i->fres[i]<rel_pos[i]<fsize[i]-fres[i],1:length(fsize))
+    return all(i->f.res[i]<(pos[i]-f.position[i])<(f.size[i]-f.res[i]),1:length(pos))    
 end
 
 function loop_field!{T<:Field,K<:ComplexOrFloat}(f_arr::Vector{T},pos::Vector{Float64},t::Real,output::Array{K};order::Integer = 3)
