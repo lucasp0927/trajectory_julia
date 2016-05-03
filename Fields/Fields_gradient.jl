@@ -1,6 +1,6 @@
 #1.use cubic spline interpolation
 #2.use bicubic interpolation 4x4 pixels
-function sample{T<:ComplexOrFloat}(f::ScalarField{T,2},pos::Vector{Float64},t::Real;order::Integer = 3)
+@inbounds function sample{T<:ComplexOrFloat}(f::ScalarField{T,2},pos::Vector{Float64},t::Real;order::Integer = 3)
     fpos = collect(f.position)
     fres = collect(f.res)
     fsize = collect(f.size)
@@ -14,7 +14,7 @@ function sample{T<:ComplexOrFloat}(f::ScalarField{T,2},pos::Vector{Float64},t::R
 #    return T(f.field*f.scaling(t),f.position,f.size,scaling = t->1.0)
 end
 
-function sample{T<:ComplexOrFloat}(f::VectorField{T,2},pos::Vector{Float64},t::Real;order::Integer = 3)
+@inbounds function sample{T<:ComplexOrFloat}(f::VectorField{T,2},pos::Vector{Float64},t::Real;order::Integer = 3)
     fpos = collect(f.position)
     fres = collect(f.res)
     fsize = collect(f.size)
@@ -76,16 +76,16 @@ function sample_inner{T<:ComplexOrFloat}(::Type{T},f::ScalarFieldNode{2},pos::Ve
     return output    
 end
 
-function in_field{T<:Field}(f::T,pos::Vector{Float64})
+@inbounds @fastmath function in_field{T<:Field}(f::T,pos::Vector{Float64})
     # fpos = collect(f.position)
     # fsize = collect(f.size)
     # fres = collect(f.res)
     # rel_pos = pos-fpos
     # return all(i->fres[i]<rel_pos[i]<fsize[i]-fres[i],1:length(fsize))
-    return all(i->f.res[i]<(pos[i]-f.position[i])<(f.size[i]-f.res[i]),1:length(pos))    
+    return all(i->f.res[i]::Float64<(pos[i]-f.position[i]::Float64)<(f.size[i]::Float64-f.res[i]::Float64),1:length(pos))    
 end
 
-function loop_field!{T<:Field,K<:ComplexOrFloat}(f_arr::Vector{T},pos::Vector{Float64},t::Real,output::Array{K};order::Integer = 3)
+@inbounds @fastmath function loop_field!{T<:Field,K<:ComplexOrFloat}(f_arr::Vector{T},pos::Vector{Float64},t::Real,output::Array{K};order::Integer = 3)
     ff = filter(x->in_field(x,pos),f_arr)
     
     for vf in ff
@@ -98,8 +98,7 @@ function value(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Integer
     A = sample(f,pos,t;order=order)
     A = float(real(A)) #TODO: change this
     res = f.res
-    x_1 = rem(pos[1],res[1])/res[1]
-    x_2 = rem(pos[2],res[2])/res[2]
+    @nexprs 2 j->x_j = rem(pos[j],res[j])/res[j]    
     return itp_bicubic(A,(x_1,x_2))
 #    return itp_spline(A,(2.0+x_1,2.0+x_2))
 end
@@ -120,7 +119,7 @@ end
     return p[2] + 0.5 * x*(p[3] - p[1] + x*(2.0*p[1] - 5.0*p[2] + 4.0*p[3] - p[4] + x*(3.0*(p[2] - p[3]) + p[4] - p[1])));
 end
 
-function bicubicInterpolate{T<:ComplexOrFloat}(p::Array{T,2},x::Float64,y::Float64)
+@fastmath @inbounds function bicubicInterpolate{T<:ComplexOrFloat}(p::Array{T,2},x::Float64,y::Float64)
 #    @assert size(p) == (4,4) "wrong size"
     arr = Array(T,4)
     @nexprs 4 j->(arr[j] = cubicInterpolate(p[:,j], x);)

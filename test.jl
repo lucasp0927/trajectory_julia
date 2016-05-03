@@ -60,7 +60,7 @@ function test()
     @time    Fields.sample(sfn,[1000.0,1000.0],1.0)
     @time    Fields.sample(sfn,[49140.0,24147.0],1.0)
     println("diff: ",mean(output1-output2))
-    @time itp_test(sfn)
+    @time @profile itp_test(sfn)
     ######composite
 # @time    f_out = Fields.composite(sfn,0.0)
 #     file = matopen("comp_0.0.mat", "w")
