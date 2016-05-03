@@ -40,6 +40,9 @@ function sample(f::VectorFieldNode{2},pos::Vector{Float64},t::Real;order::Intege
     # get (order+1)x(order+1) pixels of local field
     output_type = f.typeof
     output = zeros(output_type,(3,4,4))
+    loop_field!(f.fields,pos,t,output)
+#    println(mean(output))
+#=
     for vf in f.fields
 #        vf_geo = geometry(vf)
         fpos = collect(vf.position)
@@ -47,7 +50,7 @@ function sample(f::VectorFieldNode{2},pos::Vector{Float64},t::Real;order::Intege
         fres = collect(vf.res)
         rel_pos = pos-fpos
         if all(i->fres[i]<rel_pos[i]<fsize[i]-fres[i],1:length(fsize))
-            output += sample(vf,pos,t;order=order)
+             output += sample(vf,pos,t;order=order)
             # if typeof(vf) <: VectorField
             #     println("vectorfield")
             #     output += sample_rel(vf,rel_pos,t;order = order)
@@ -57,8 +60,31 @@ function sample(f::VectorFieldNode{2},pos::Vector{Float64},t::Real;order::Intege
             # end
         end
     end
+=#
     output *= f.scaling(t)
     return output
+end
+
+function loop_field!{T<:AbstractVectorField,K<:ComplexOrFloat}(f_arr::Vector{T},pos::Vector{Float64},t::Real,output::Array{K,3};order::Integer = 3)
+
+    for vf in f_arr
+#        vf_geo = geometry(vf)
+        fpos = collect(vf.position)
+        fsize = collect(vf.size)
+        fres = collect(vf.res)
+        rel_pos = pos-fpos
+        if all(i->fres[i]<rel_pos[i]<fsize[i]-fres[i],1:length(fsize))
+            #fill!(output,one(K))
+            output[:,:] += sample(vf,pos,t;order=order)[:,:]
+            # if typeof(vf) <: VectorField
+            #     println("vectorfield")
+            #     output += sample_rel(vf,rel_pos,t;order = order)
+            # else
+            #     println("vectorfield node")
+            #     output += sample(vf,pos,t;order = order)
+            # end
+        end
+    end
 end
 
 function sample(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
@@ -126,7 +152,9 @@ function itp_bicubic(A::Array,pos::Tuple)
 end
 
 @fastmath @inbounds function cubicInterpolate{T<:ComplexOrFloat}(p::Array{T,1},x::Float64)
-#    @assert length(p) == 4 "wrong length"
+    #    @assert length(p) == 4 "wrong length"
+    #   p1 p2 p3 p4
+    #x= -1 0  1  2
     return p[2] + 0.5 * x*(p[3] - p[1] + x*(2.0*p[1] - 5.0*p[2] + 4.0*p[3] - p[4] + x*(3.0*(p[2] - p[3]) + p[4] - p[1])));
 end
 

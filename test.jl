@@ -91,7 +91,7 @@ function itp_test(sfn)
 end
 
 function main()
-    Profile.init(delay=0.01)
+#    Profile.init(delay=0.01)
     test()
     Profile.clear()
     test()

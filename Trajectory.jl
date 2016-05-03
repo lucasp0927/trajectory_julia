@@ -1,7 +1,6 @@
 module Trajectory
 using Sundials
 
-
 @everywhere function pcalc_trajectory!(result::SharedArray{Float64}, traj_num::Int64,t_span::Vector{Float64}, init_xv::SharedArray{Float64,2}, args::Tuple, progress::SharedArray{Bool}, solver::Vector{ASCIIString}, tol::Vector{Float64})
     idx = indexpids(result)
     if idx == 0
