@@ -38,7 +38,7 @@ end
 
 function sample(f::VectorFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
     # get (order+1)x(order+1) pixels of local field
-    output_type = typeoffield(f)
+    output_type = f.typeof
     output = zeros(output_type,(3,4,4))
     for vf in f.fields
 #        vf_geo = geometry(vf)
@@ -61,10 +61,9 @@ function sample(f::VectorFieldNode{2},pos::Vector{Float64},t::Real;order::Intege
     return output
 end
 
-
 function sample(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
     # get (order+1)x(order+1) pixels of local field
-    output_type = typeoffield(f)
+    output_type = f.typeof
     output = zeros(output_type,(4,4))
     vf_arr = filter(x->typeof(x)<:AbstractVectorField,f.fields)
     sf_arr = filter(x->typeof(x)<:AbstractScalarField,f.fields)
@@ -113,6 +112,38 @@ function value(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Integer
     res = f.res
     x_1 = rem(pos[1],res[1])/res[1]
     x_2 = rem(pos[2],res[2])/res[2]
-    itp = interpolate(A, BSpline(Cubic(Line())), OnGrid())
-    return itp[2.0+x_1,2.0+x_2]
+    return itp_spline(A,(2.0+x_1,2.0+x_2))
 end
+
+function itp_spline(A::Array,pos::Tuple)
+    itp = interpolate(A, BSpline(Cubic(Line())), OnGrid())
+    return itp[pos...]
+end
+
+function itp_bicubic(A::Array,pos::Tuple)
+    
+end
+
+#=
+double cubicInterpolate (double p[4], double x) {
+return p[1] + 0.5 * x*(p[2] - p[0] + x*(2.0*p[0] - 5.0*p[1] + 4.0*p[2] - p[3] + x*(3.0*(p[1] - p[2]) + p[3] - p[0])));
+}
+
+double bicubicInterpolate (double p[4][4], double x, double y) {
+double arr[4];
+arr[0] = cubicInterpolate(p[0], y);
+arr[1] = cubicInterpolate(p[1], y);
+arr[2] = cubicInterpolate(p[2], y);
+arr[3] = cubicInterpolate(p[3], y);
+return cubicInterpolate(arr, x);
+}
+
+double tricubicInterpolate (double p[4][4][4], double x, double y, double z) {
+double arr[4];
+arr[0] = bicubicInterpolate(p[0], y, z);
+arr[1] = bicubicInterpolate(p[1], y, z);
+arr[2] = bicubicInterpolate(p[2], y, z);
+arr[3] = bicubicInterpolate(p[3], y, z);
+return cubicInterpolate(arr, x);
+}
+=#
