@@ -62,7 +62,7 @@ function test()
     @time    benchmark_smp(vfn)
     println("benchmark sampling sfn")
     @profile    benchmark_smp(sfn)    
-    println("benchmark value sfn")
+    println("benchmark value2 sfn")
     @time    benchmark_value(sfn)
     println("diff: ",mean(output1-output2))
     @time    itp_test(sfn)
@@ -82,13 +82,13 @@ function test()
 end
 function benchmark_smp(f)
     for i = 1:1000000
-        Fields.sample(f,[50000.0+rand()*10.0,25000.0+rand()*10.0],1.0*rand())
+        Fields.sample2!(f,[50000.0+rand()*10.0,25000.0+rand()*10.0],1.0*rand())
     end
 end
 
 function benchmark_value(f)
     for i = 1:1000000
-        Fields.value(f,[50000.0+rand()*10.0,25000.0+rand()*10.0],1.0*rand())
+        Fields.value2(f,[50000.0+rand()*10.0,25000.0+rand()*10.0],1.0*rand())
     end
 end
 
@@ -99,7 +99,7 @@ function itp_test(sfn)
     output = zeros(Float64,(N,N))
     for x in enumerate(xx)
         for y in enumerate(yy)
-            output[x[1],y[1]] = Fields.value(sfn::ScalarFieldNode,[x[2],y[2]],0.5)
+            output[x[1],y[1]] = Fields.value2(sfn::ScalarFieldNode,[x[2],y[2]],0.5)
         end
     end
     file = matopen("out.mat", "w")
