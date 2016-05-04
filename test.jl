@@ -37,7 +37,7 @@ function test()
     file = matopen("D2_TE.mat")
     gm_field = read(file, "gm") # note that this does NOT introduce a variable ``varname`` into scope
     close(file)
-    gm = ScalarField{Float64,2}(gm_field,((6666*15.0)/2.0-1854.625,(3333*15.0)/2.0-1850.0),(3690.75,3690.75),scaling=t->10)
+    gm = ScalarField{Float64,2}(gm_field,((6666*15.0)/2.0-1854.625,(3333*15.0)/2.0-1850.0),(3690.75,3690.75),scaling=t->10.0)
     #########
     sfn = Fields.ScalarFieldNode{2}([vfn,gm])
     println("aligning...")
@@ -57,10 +57,12 @@ function test()
     @time    Fields.sample(gm,[49140.0,24147.0],1.0)
     @time    output1 = Fields.sample(vfn,[1000.0,1000.0],1.0)
     @time    output2 = Fields.sample(vfn1,[1000.0,1000.0],1.0)
-    @time    Fields.sample(sfn,[1000.0,1000.0],1.0)
-    @time    Fields.sample(sfn,[49140.0,24147.0],1.0)
+    println("sampling vfn")
+    @profile    benchmark(vfn)
+    println("sampling sfn")    
+    @time    Fields.sample(sfn,[50000.0,25000.0],1.0)
     println("diff: ",mean(output1-output2))
-    @time @profile itp_test(sfn)
+    @time    itp_grad_test(sfn)
     ######composite
 # @time    f_out = Fields.composite(sfn,0.0)
 #     file = matopen("comp_0.0.mat", "w")
@@ -75,14 +77,34 @@ function test()
 #     write(file, "field", f_out.field)
 #     close(file)
 end
-
+function benchmark(f)
+    for i = 1:10000
+        Fields.sample(f,[50000.0,25000.0],1.0)        
+    end
+end
 function itp_test(sfn)
-    xx = linspace(48000,52000,500)
-    yy = linspace(23000,27000,500)
-    output = zeros(Float64,(500,500))
+    N = 500
+    xx = linspace(48000,52000,N)
+    yy = linspace(23000,27000,N)
+    output = zeros(Float64,(N,N))
     for x in enumerate(xx)
         for y in enumerate(yy)
-            output[x[1],y[1]] = Fields.value(sfn,[x[2],y[2]],0.0)
+            output[x[1],y[1]] = Fields.value(sfn,[x[2],y[2]],0.5)
+        end
+    end
+    file = matopen("out.mat", "w")
+    write(file, "itp", output)
+    close(file)
+end
+
+function itp_grad_test(sfn)
+    N = 500
+    xx = linspace(48000,52000,N)
+    yy = linspace(23000,27000,N)
+    output = zeros(Float64,(2,N,N))
+    for x in enumerate(xx)
+        for y in enumerate(yy)
+            output[:,x[1],y[1]] = Fields.gradient(sfn,[x[2],y[2]],0.5)
         end
     end
     file = matopen("out.mat", "w")
