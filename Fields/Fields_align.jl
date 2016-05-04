@@ -1,29 +1,29 @@
 function align_field_tree!{T<:FieldNode}(f::T)
     unalign_geo = geometry(f)
-    arr_sz = floor(Integer,collect(unalign_geo["size"])./collect(unalign_geo["res"]))
-    new_sz = arr_sz.*collect(unalign_geo["res"])
+    arr_sz = floor(Integer,unalign_geo["size"]./unalign_geo["res"])
+    new_sz = arr_sz.*unalign_geo["res"]
     align_geo = unalign_geo
-    align_geo["size"] = tuple(new_sz...)
+    align_geo["size"] = new_sz
     align_field!(f,align_geo["res"],align_geo["pos"])
 end
 
-function align_field!{T<:FieldNode}(f::T,res::Tuple{Vararg{Float64}},pos::Tuple{Vararg{Float64}})
+function align_field!{T<:FieldNode}(f::T,res::Vector{Float64},pos::Vector{Float64})
     @assert length(res) == length(pos) "dimension mismatch!"
     for ff in f.fields
         align_field!(ff,res,pos)
     end
 end
 
-function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Tuple{Vararg{Float64}},pos::Tuple{Vararg{Float64}})
+function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Vector{Float64},pos::Vector{Float64})
     @assert length(res) == length(pos) "dimension mismatch!"
     unalign_geo = geometry(f)
-    new_pos = ceil(collect(unalign_geo["pos"])./collect(res)).*collect(res)
-    old_end = collect(unalign_geo["pos"]).+collect(unalign_geo["size"])
-    new_end = floor(collect(old_end)./collect(res)).*collect(res)
+    new_pos = ceil(unalign_geo["pos"]./res).*res
+    old_end = unalign_geo["pos"].+unalign_geo["size"]
+    new_end = floor(old_end./res).*res
     new_size = new_end.-new_pos
-    align_geo = Dict("pos"=>tuple(new_pos...),"size"=>tuple(new_size...),"res"=>res)
+    align_geo = Dict("pos"=>new_pos,"size"=>new_size,"res"=>res)
     ##### interpolate field
-    new_arr_size = round(Int64,new_size ./ collect(res))+one(Int64)
+    new_arr_size = round(Int64,new_size ./ res)+one(Int64)
     old_field = f.field
     old_field_itp = interpolate(old_field, BSpline(Cubic(Flat())), OnGrid())
     new_field = Array(T,new_arr_size...)
@@ -31,20 +31,20 @@ function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Tuple{Vararg
     @assert collect(size(new_field)) == new_arr_size
     setfield!(f,new_field,align_geo["pos"],align_geo["size"],scaling=f.scaling)
     #check
-    res_delta = mean((collect(f.res).-collect(align_geo["res"]))./collect(f.res))
+    res_delta = mean((f.res.-align_geo["res"])./f.res)
     @assert res_delta<=1e-10 "resolution check failed!"
 end
 
-function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Tuple{Vararg{Float64}},pos::Tuple{Vararg{Float64}})
+function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Vector{Float64},pos::Vector{Float64})
     @assert length(res) == length(pos) "dimension mismatch!"
     unalign_geo = geometry(f)
-    new_pos = ceil(collect(unalign_geo["pos"])./collect(res)).*collect(res)
-    old_end = collect(unalign_geo["pos"]).+collect(unalign_geo["size"])
-    new_end = floor(collect(old_end)./collect(res)).*collect(res)
+    new_pos = ceil(unalign_geo["pos"]./res).*res
+    old_end = unalign_geo["pos"].+unalign_geo["size"]
+    new_end = floor(old_end./res).*res
     new_size = new_end.-new_pos
-    align_geo = Dict("pos"=>tuple(new_pos...),"size"=>tuple(new_size...),"res"=>res)
+    align_geo = Dict("pos"=>new_pos,"size"=>new_size,"res"=>res)
     ##### interpolate field
-    new_arr_size = round(Int64,new_size ./ collect(res))+one(Int64)
+    new_arr_size = round(Int64,new_size ./ res)+one(Int64)
     old_field = f.field
     #loop over three components
     new_field = Array(T,3,new_arr_size...)
@@ -55,7 +55,7 @@ function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Tuple{Vararg
     @assert collect(size(new_field)[2:end]) == new_arr_size
     setfield!(f,new_field,align_geo["pos"],align_geo["size"],scaling=f.scaling)
     #check
-    res_delta = mean((collect(f.res).-collect(align_geo["res"]))./collect(f.res))
+    res_delta = mean((f.res.-align_geo["res"])./f.res)
     @assert res_delta<=1e-10 "resolution check failed!"
 end
 
@@ -80,10 +80,10 @@ end
 @generated function itp_field!{T<:Union{Array,SubArray}}(new_field::T,old_field_itp::Interpolations.BSplineInterpolation,unalign_geo,align_geo)
     N::Int64 = ndims(new_field)
     quote
-        apos::Vector{Float64} = collect(align_geo["pos"])
-        ares::Vector{Float64} = collect(align_geo["res"])
-        uapos::Vector{Float64} = collect(unalign_geo["pos"])
-        uares::Vector{Float64} = collect(unalign_geo["res"])
+        apos::Vector{Float64} = align_geo["pos"]
+        ares::Vector{Float64} = align_geo["res"]
+        uapos::Vector{Float64} = unalign_geo["pos"]
+        uares::Vector{Float64} = unalign_geo["res"]
         start_idx = transform_coordinate(apos,ares,uapos,uares,ones(Int64,$N))
         end_idx = transform_coordinate(apos,ares,uapos,uares,collect(size(new_field)))
         @nexprs $N j-> x_j = linspace(start_idx[j],end_idx[j],size(new_field,j))

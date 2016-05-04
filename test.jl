@@ -17,33 +17,33 @@ function test()
     println("######################################")
     println("2D composite test")
     println("building sf1")
-    sf1 = Fields.func2field(ScalarField{Complex{Float64},2},(x,y)->sin(x/900.0*2pi),(1000,1000),(0,0),(900,900))
+    sf1 = Fields.func2field(ScalarField{Complex{Float64},2},(x,y)->sin(x/900.0*2pi),[1000,1000],[0.0,0.0],[900.0,900.0])
     println("building sf2")
-    sf2 = Fields.func2field(ScalarField{Complex{Float64},2},(x,y)->-sin(x/900.0*2pi),(101,101),(299,299),(300,300))
+    sf2 = Fields.func2field(ScalarField{Complex{Float64},2},(x,y)->-sin(x/900.0*2pi),[101,101],[299.0,299.0],[300.0,300.0])
     println("building lattice beams")
     println("left beam")
     file = matopen("lattice_left.mat")
     lb_field = read(file, "beam_left") # note that this does NOT introduce a variable ``varname`` into scope
     close(file)
-    lb = VectorField{Complex{Float64},2}(lb_field,(0.0,0.0),(6666*15.0,3333*15.0),scaling=t->1.0)
+    lb = VectorField{Complex{Float64},2}(lb_field,[0.0,0.0],[6666*15.0,3333*15.0],scaling=t->1.0)
     println("right beam")
     file = matopen("lattice_right.mat")
     rb_field = read(file, "beam_right") # note that this does NOT introduce a variable ``varname`` into scope
     close(file)
-    rb = VectorField{Complex{Float64},2}(rb_field,(0.0,0.0),(6666*15.0,3333*15.0),scaling=t->exp(1.0im*t*2pi))
+    rb = VectorField{Complex{Float64},2}(rb_field,[0.0,0.0],[6666*15.0,3333*15.0],scaling=t->exp(1.0im*t*2pi))
     vfn = Fields.VectorFieldNode{2}([lb,rb])
     vfn1 = Fields.VectorFieldNode{2}([vfn])
     println("building gm")
     file = matopen("D2_TE.mat")
     gm_field = read(file, "gm") # note that this does NOT introduce a variable ``varname`` into scope
     close(file)
-    gm = ScalarField{Float64,2}(gm_field,((6666*15.0)/2.0-1854.625,(3333*15.0)/2.0-1850.0),(3690.75,3690.75),scaling=t->10.0)
+    gm = ScalarField{Float64,2}(gm_field,[(6666*15.0)/2.0-1854.625,(3333*15.0)/2.0-1850.0],[3690.75,3690.75],scaling=t->10.0)
     #########
     sfn = Fields.ScalarFieldNode{2}([vfn,gm])
     println("aligning...")
     @time Fields.align_field_tree!(sfn)
     @time Fields.set_geometry!(sfn)
-    @time Fields.set_typeof!(sfn)    
+    @time Fields.set_typeof!(sfn)
     gc()
     println("geometry of lb")
     println(Fields.geometry(lb))
@@ -57,12 +57,15 @@ function test()
     @time    Fields.sample(gm,[49140.0,24147.0],1.0)
     @time    output1 = Fields.sample(vfn,[1000.0,1000.0],1.0)
     @time    output2 = Fields.sample(vfn1,[1000.0,1000.0],1.0)
-    println("sampling vfn")
-    @profile    benchmark(vfn)
-    println("sampling sfn")    
-    @time    Fields.sample(sfn,[50000.0,25000.0],1.0)
+
+    println("benchmark sampling vfn")
+    @time    benchmark_smp(vfn)
+    println("benchmark sampling sfn")
+    @profile    benchmark_smp(sfn)    
+    println("benchmark value sfn")
+    @time    benchmark_value(sfn)
     println("diff: ",mean(output1-output2))
-    @time    itp_grad_test(sfn)
+    @time    itp_test(sfn)
     ######composite
 # @time    f_out = Fields.composite(sfn,0.0)
 #     file = matopen("comp_0.0.mat", "w")
@@ -77,11 +80,18 @@ function test()
 #     write(file, "field", f_out.field)
 #     close(file)
 end
-function benchmark(f)
-    for i = 1:10000
-        Fields.sample(f,[50000.0,25000.0],1.0)        
+function benchmark_smp(f)
+    for i = 1:1000000
+        Fields.sample(f,[50000.0+rand()*10.0,25000.0+rand()*10.0],1.0*rand())
     end
 end
+
+function benchmark_value(f)
+    for i = 1:1000000
+        Fields.value(f,[50000.0+rand()*10.0,25000.0+rand()*10.0],1.0*rand())
+    end
+end
+
 function itp_test(sfn)
     N = 500
     xx = linspace(48000,52000,N)
@@ -89,7 +99,7 @@ function itp_test(sfn)
     output = zeros(Float64,(N,N))
     for x in enumerate(xx)
         for y in enumerate(yy)
-            output[x[1],y[1]] = Fields.value(sfn,[x[2],y[2]],0.5)
+            output[x[1],y[1]] = Fields.value(sfn::ScalarFieldNode,[x[2],y[2]],0.5)
         end
     end
     file = matopen("out.mat", "w")

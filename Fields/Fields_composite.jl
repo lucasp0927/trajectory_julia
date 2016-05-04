@@ -7,9 +7,9 @@ function composite{N}(f::VectorFieldNode{N},t::Real)
     #remember scaling
     output_type = typeoffield(f)
     geo = geometry(f)
-    res = collect(geo["res"])
-    pos = collect(geo["pos"])
-    sz = collect(geo["size"])
+    res = geo["res"]
+    pos = geo["pos"]
+    sz = geo["size"]
     arr_sz = round(Int64,sz./res+1)
     output = zeros(output_type,(arr_sz...))
     ####handle output
@@ -17,23 +17,23 @@ function composite{N}(f::VectorFieldNode{N},t::Real)
     vf_output = zeros(output_type,(3,arr_sz...))
     for vf in ff ##loop over vector fields
         vf_geo = geometry(vf)
-        vf_pos = collect(vf_geo["pos"])
-        vf_sz = collect(vf_geo["size"])
+        vf_pos = vf_geo["pos"]
+        vf_sz = vf_geo["size"]
         vf_start_idx = map(x->convert(Int64,x),((vf_pos.-pos)./res)+1)
         vf_end_idx = map(x->convert(Int64,x),((vf_pos.+vf_sz.-pos)./res)+1)
         ### add all vector fields
         fill_field_vec!(vf_output,vf.field,vf_start_idx,vf_end_idx)
     end
-    return VectorField{output_type,N}(vf_output::Array{output_type,N+1},tuple(pos...),tuple(sz...);scaling = t->1.0)        
+    return VectorField{output_type,N}(vf_output::Array{output_type,N+1},pos,sz;scaling = t->1.0)        
 end
 
 function composite{N}(f::ScalarFieldNode{N},t::Real)
     #remember scaling
     output_type = typeoffield(f)
     geo = geometry(f)
-    res = collect(geo["res"])
-    pos = collect(geo["pos"])
-    sz = collect(geo["size"])
+    res = geo["res"]
+    pos = geo["pos"]
+    sz = geo["size"]
     arr_sz = round(Int64,sz./res+1)
     output = zeros(output_type,(arr_sz...))
     ####handle output
@@ -42,8 +42,8 @@ function composite{N}(f::ScalarFieldNode{N},t::Real)
     sf_arr = filter(x->typeof(x)<:AbstractScalarField,ff)
     for sf in sf_arr ##loop over scalar fields
         sf_geo = geometry(sf)
-        sf_pos = collect(sf_geo["pos"])
-        sf_sz = collect(sf_geo["size"])
+        sf_pos = sf_geo["pos"]
+        sf_sz = sf_geo["size"]
         sf_start_idx = map(x->convert(Int64,x),((sf_pos.-pos)./res)+1)
         sf_end_idx = map(x->convert(Int64,x),((sf_pos.+sf_sz.-pos)./res)+1)
         fill_field!(output,sf.field,sf_start_idx,sf_end_idx)
@@ -52,8 +52,8 @@ function composite{N}(f::ScalarFieldNode{N},t::Real)
     vf_output = zeros(output_type,(3,arr_sz...))
     for vf in vf_arr ##loop over vector fields
         vf_geo = geometry(vf)
-        vf_pos = collect(vf_geo["pos"])
-        vf_sz = collect(vf_geo["size"])
+        vf_pos = vf_geo["pos"]
+        vf_sz = vf_geo["size"]
         vf_start_idx = map(x->convert(Int64,x),((vf_pos.-pos)./res)+1)
         vf_end_idx = map(x->convert(Int64,x),((vf_pos.+vf_sz.-pos)./res)+1)
         ### add all vector fields
@@ -64,9 +64,9 @@ function composite{N}(f::ScalarFieldNode{N},t::Real)
     output = (output.+vf_output_abs2)*f.scaling(t) #TODO: type not stable
     if sum(imag(output)) == 0
         output = real(output)
-        return ScalarField{Float64,N}(output::Array{Float64,N},tuple(pos...),tuple(sz...);scaling = t->1.0)
+        return ScalarField{Float64,N}(output::Array{Float64,N},pos,sz;scaling = t->1.0)
     else
-        return ScalarField{Complex{Float64},N}(output::Array{Complex{Float64},N},tuple(pos...),tuple(sz...);scaling = t->1.0)        
+        return ScalarField{Complex{Float64},N}(output::Array{Complex{Float64},N},pos,sz;scaling = t->1.0)        
     end
 end
 
