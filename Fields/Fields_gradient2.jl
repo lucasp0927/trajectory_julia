@@ -1,12 +1,16 @@
 using Base.LinAlg.BLAS
 @fastmath @inbounds function sample2!{T<:ComplexOrFloat}(f::ScalarField{T,2},pos::Vector{Float64},t::Real)
-    rel_pos::Vector{Float64} = pos-f.position::Vector{Float64}
-    pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64}))
+    f.rel_pos[1] = pos[1]-f.position[1]::Float64
+    f.rel_pos[2] = pos[2]-f.position[2]::Float64
+    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))
+    f.pidx[2] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))
+#    rel_pos::Vector{Float64} = pos-f.position::Vector{Float64}
+#    pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64}))
     # pidx = Array(Int64,2)
     # pidx[1] = round(Int64,cld(rel_pos[1],f.res[1]::Float64))
     # pidx[2] = round(Int64,cld(rel_pos[2],f.res[2]::Float64))
     s::Float64 = f.scaling(t)::Float64
-    sample_field(f,pidx,s)
+    sample_field(f,f.pidx,s)
 end
 
 @inbounds function sample_field{T<:ComplexOrFloat}(f::ScalarField,pidx::Vector{Int64},s::T)
@@ -22,14 +26,18 @@ end
 end
 
 @fastmath @inbounds function sample2!{T<:ComplexOrFloat}(f::VectorField{T,2},pos::Vector{Float64},t::Real)
-    rel_pos::Vector{Float64} = pos-f.position::Vector{Float64}
-    pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64}))
+    f.rel_pos[1] = pos[1]-f.position[1]::Float64
+    f.rel_pos[2] = pos[2]-f.position[2]::Float64
+    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))
+    f.pidx[2] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))    
+    # rel_pos::Vector{Float64} = pos-f.position::Vector{Float64}
+    # pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64}))
     # pidx = Array(Int64,2)
     # pidx[1] = round(Int64,cld(rel_pos[1],f.res[1]::Float64))
     # pidx[2] = round(Int64,cld(rel_pos[2],f.res[2]::Float64))
     s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))
 #    s = f.scaling(t)
-    sample_field(f,pidx,s)
+    sample_field(f,f.pidx,s)
 end
 
 @inbounds function sample_field{T<:ComplexOrFloat}(f::VectorField,pidx::Vector{Int64},s::T)

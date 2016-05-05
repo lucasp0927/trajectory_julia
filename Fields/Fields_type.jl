@@ -14,10 +14,12 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     scaling::Function
     dim::Integer
     sample::Array{T,3}
+    rel_pos::Vector{Float64}
+    pidx::Vector{Int64}
     function VectorField(f::Array{T},pos::Vector{Float64},sz::Vector{Float64};scaling::Function = t->1.0)
         res = sz./(collect(size(f))[2:N+1]-1)
         @assert all(x->x!=0,res) "zero resolution!"
-        length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,res,scaling,N,zeros(T,(3,4,4))):error("dimension error!")
+        length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,res,scaling,N,zeros(T,(3,4,4)),[0.0,0.0],[0,0]):error("dimension error!")
     end
 end
 
@@ -28,11 +30,13 @@ type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     res::Vector{Float64}
     scaling::Function
     dim::Integer
-    sample::Array{T,2}    
+    sample::Array{T,2}
+    rel_pos::Vector{Float64}
+    pidx::Vector{Int64}
     function ScalarField(f::Array{T,N},pos::Vector{Float64},sz::Vector{Float64};scaling::Function = t->1.0)
         res = sz./(collect(size(f))[1:N]-1)
-        @assert all(x->x!=0,res) "zero resolution!"        
-        length(pos)==length(sz)==N==ndims(f)?new(f,pos,sz,res,scaling,N,zeros(T,(4,4))):error("dimension error!")
+        @assert all(x->x!=0,res) "zero resolution!"
+        length(pos)==length(sz)==N==ndims(f)?new(f,pos,sz,res,scaling,N,zeros(T,(4,4)),[0.0,0.0],[0,0]):error("dimension error!")
     end
 end
 
@@ -86,11 +90,10 @@ type ScalarFieldNode{N} <: AbstractScalarField
     res::Vector{Float64}
     typeof::DataType
     sample::Array{Float64,2}
-    vf_sample::Array{Complex{Float64},3}    
+    vf_sample::Array{Complex{Float64},3}
     function ScalarFieldNode{T<:Field}(f::Vector{T};scaling::Function = t->1.0)
-        @assert all(x->x.dim==N,f) "dimension error!"        
+        @assert all(x->x.dim==N,f) "dimension error!"
         new(f,scaling,N,[],[],[],Complex{Float64},zeros(Float64,(4,4)),zeros(Complex{Float64},(3,4,4)))
     end
 end
 FieldNode = Union{VectorFieldNode,ScalarFieldNode}
-
