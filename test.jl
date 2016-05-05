@@ -54,6 +54,7 @@ function test()
     println("geometry of sfn")
     println(Fields.geometry(sfn))
     ######gradient
+    #=
     @time    Fields.sample(gm,[49140.0,24147.0],1.0)
     @time    output1 = Fields.sample(vfn,[1000.0,1000.0],1.0)
     @time    output2 = Fields.sample(vfn1,[1000.0,1000.0],1.0)
@@ -61,11 +62,15 @@ function test()
     println("benchmark sampling vfn")
     @time    benchmark_smp(vfn)
     println("benchmark sampling sfn")
-    @profile    benchmark_smp(sfn)    
+=#
+@time    @profile    benchmark_smp(sfn)    
     println("benchmark value2 sfn")
+    #=
     @time    benchmark_value(sfn)
     println("diff: ",mean(output1-output2))
-    @time    itp_test(sfn)
+    =#
+    println("output")
+    @time   itp_test(sfn)
     ######composite
 # @time    f_out = Fields.composite(sfn,0.0)
 #     file = matopen("comp_0.0.mat", "w")
@@ -93,13 +98,13 @@ function benchmark_value(f)
 end
 
 function itp_test(sfn)
-    N = 500
+    N = 1000
     xx = linspace(48000,52000,N)
     yy = linspace(23000,27000,N)
     output = zeros(Float64,(N,N))
     for x in enumerate(xx)
         for y in enumerate(yy)
-            output[x[1],y[1]] = Fields.value2(sfn::ScalarFieldNode,[x[2],y[2]],0.5)
+            output[x[1],y[1]] = Fields.value2(sfn::ScalarFieldNode,[x[2],y[2]],0.25)
         end
     end
     file = matopen("out.mat", "w")

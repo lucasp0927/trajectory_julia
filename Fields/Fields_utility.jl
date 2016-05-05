@@ -1,10 +1,10 @@
 # utility functions, for simple fields
-function zero{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling::Function = t->1.0)
+function zero_field{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling::Function = t->1.0)
     @assert length(res) ==  length(pos) == length(size) "dimension mismatch"
     return ScalarField{T,N}(zeros(T,res),pos,size,scaling=scaling)
 end
 
-function zero{T<:ComplexOrFloat,N}(::Type{VectorField{T,N}},res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling::Function = t->1.0)
+function zero_field{T<:ComplexOrFloat,N}(::Type{VectorField{T,N}},res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling::Function = t->1.0)
     @assert length(res) ==  length(pos) == length(size) "dimension mismatch"    
     return VectorField{T,N}(zeros(T,(3,res...)),pos,size,scaling = scaling)
 end

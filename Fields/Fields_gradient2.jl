@@ -1,21 +1,48 @@
+using Base.LinAlg.BLAS
 @inbounds function sample2!{T<:ComplexOrFloat}(f::ScalarField{T,2},pos::Vector{Float64},t::Real)
     rel_pos::Vector{Float64} = pos-f.position::Vector{Float64}
-    pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64})+1)
-    # scale = f.scaling(t)
-    # for j = 1:4, i = 1:4
-    #     f.sample[i:j] = f.field[pidx[1]-2+i,pidx[2]-2+j]*scale
+    pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64})+1.0)
+    # pidx = Array(Int64,2)
+    # pidx[1] = round(Int64,cld(rel_pos[1],f.res[1]::Float64))
+    # pidx[2] = round(Int64,cld(rel_pos[2],f.res[2]::Float64))        
+    s::Float64 = f.scaling(t)::Float64
+    sample_field(f,pidx,s)
+end
+
+@fastmath @inbounds function sample_field{T<:ComplexOrFloat}(f::ScalarField,pidx::Vector{Int64},s::T)
+#    blascopy!(16,f.field[pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2],1,f.sample,1)
+    copy!(f.sample,sub(f.field,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2))    
+    scal!(16,s,f.sample,1)            
+    # for j=1:4,i=1:4
+    #     f.sample[i,j] = f.field[pidx[1]-2+i,pidx[2]-2+j]
     # end
-    f.sample[:] = (sub(f.field,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2)*f.scaling(t))[:]    
+    # for i in eachindex(f.sample)
+    #     f.sample[i] *=s
+    # end    
 end
 
 @inbounds function sample2!{T<:ComplexOrFloat}(f::VectorField{T,2},pos::Vector{Float64},t::Real)
     rel_pos::Vector{Float64} = pos-f.position::Vector{Float64}
-    pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64})+1)
-#    scale = f.scaling(t)
-    # for j = 1:4, i = 1:4,k=1:3
-    #     f.sample[k,i:j] = f.field[k,pidx[1]-2+i,pidx[2]-2+j]*scale
+    pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64})+1.0)
+    # pidx = Array(Int64,2)
+    # pidx[1] = round(Int64,cld(rel_pos[1],f.res[1]::Float64))
+    # pidx[2] = round(Int64,cld(rel_pos[2],f.res[2]::Float64))    
+    s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))    
+#    s = f.scaling(t)
+    sample_field(f,pidx,s)
+end
+
+@fastmath @inbounds function sample_field{T<:ComplexOrFloat}(f::VectorField,pidx::Vector{Int64},s::T)
+#    blascopy!(48,f.field[:,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2],1,f.sample,1)
+    #    f.sample[:,:,:] = sub(f.field,:,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2)
+    copy!(f.sample,sub(f.field,:,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2))
+    # for j=1:4,i=1:4,k=1:3
+    #     f.sample[k,i,j] = f.field[k,pidx[1]-2+i,pidx[2]-2+j]
     # end    
-    f.sample[:] = (sub(f.field,:,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2)*f.scaling(t))[:]
+    scal!(48,s,f.sample,1)        
+    # for i in eachindex(f.sample)
+    #     f.sample[i] *=s
+    # end        
 end
 
 function sample2!(f::VectorFieldNode{2},pos::Vector{Float64},t::Real)
@@ -23,10 +50,18 @@ function sample2!(f::VectorFieldNode{2},pos::Vector{Float64},t::Real)
     for ff in f.fields
         if in_field(ff,pos)
             sample2!(ff,pos,t)
-            f.sample[:] .+= ff.sample[:]
+            add_sample!(f.sample,ff.sample)
         end
-    end    
-    f.sample *= f.scaling(t) 
+    end
+    s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))
+    scal!(48,s,f.sample,1)    
+#    scale_sample!(f.sample,s)
+end
+
+function add_sample!{T<:ComplexOrFloat}(sample1::Array{T,3},sample2::Array{T,3})
+    for i in eachindex(sample1)
+        sample1[i] += sample2[i]
+    end
 end
 
 function sample2!(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real)
@@ -35,18 +70,43 @@ function sample2!(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real)
     for ff in f.fields
         if in_field(ff,pos)
             sample2!(ff,pos,t)
-            add_fields(ff,f.sample,f.vf_sample)
+            add_fields!(ff,f.sample,f.vf_sample)
         end
     end
-    f.sample[:] .+= squeeze(sumabs2(f.vf_sample,1),1)[:]
+    add_vector_field!(f.sample,f.vf_sample)
+    s = f.scaling(t)::Float64
+    scal!(16,s,f.sample,1)
+#    scale_sample!(f.sample,s)
 end
 
-function add_fields{T<:AbstractVectorField}(f::T,sample::Array{Float64,2},vf_sample::Array{Complex{Float64},3})
-    vf_sample[:] .+= f.sample[:]
+function add_vector_field!{T<:ComplexOrFloat}(sample::Array{Float64,2},vf_sample::Array{T,3})
+    for j = 1:4, i = 1:4
+        #        sample[i,j] += sumabs2(vf_sample[:,i,j])
+        @simd        for k = 1:3
+            sample[i,j] += abs2(vf_sample[k,i,j])
+        end
+    end
+    #    f.sample[:,:] .+= squeeze(sumabs2(f.vf_sample,1),1)[:,:]    
 end
 
-function add_fields{T<:AbstractScalarField}(f::T,sample::Array{Float64,2},vf_sample::Array{Complex{Float64},3})
-    sample[:] .+= f.sample[:]
+function scale_sample!{T<:ComplexOrFloat,N,K<:ComplexOrFloat}(sample::Array{T,N},s::K)
+    for i in eachindex(sample)
+        sample[i] *=s
+    end                    
+end
+
+function add_fields!{T<:AbstractVectorField}(f::T,sample::Array{Float64,2},vf_sample::Array{Complex{Float64},3})
+    for i in eachindex(vf_sample)
+        vf_sample[i] += f.sample[i]
+    end    
+#    vf_sample[:] .+= f.sample[:]
+end
+
+function add_fields!{T<:AbstractScalarField}(f::T,sample::Array{Float64,2},vf_sample::Array{Complex{Float64},3})
+    for i in eachindex(sample)
+        sample[i] += f.sample[i]
+    end        
+#    sample[:] .+= f.sample[:]
 end
 
 function value2(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real)
