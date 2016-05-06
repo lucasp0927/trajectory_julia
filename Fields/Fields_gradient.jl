@@ -116,13 +116,16 @@ function itp_bicubic_grad{T<:ComplexOrFloat}(A::Array{T},pos::Vector{Float64},re
     return [gx,gy]
 end
 
+let
+    
 @fastmath @inbounds function cubicInterpolate{T<:ComplexOrFloat}(p::Array{T,1},x::Float64)
     #    @assert length(p) == 4 "wrong length"
     #   p1 p2 p3 p4
     #x= -1 0  1  2
+
     return p[2] + 0.5 * x*(p[3] - p[1] + x*(2.0*p[1] - 5.0*p[2] + 4.0*p[3] - p[4] + x*(3.0*(p[2] - p[3]) + p[4] - p[1])));
 end
-
+end
 @fastmath @inbounds function cubicInterpolate_grad{T<:ComplexOrFloat}(p::Array{T,1},x::Float64)
     #    @assert length(p) == 4 "wrong length"
     #   p1 p2 p3 p4

@@ -35,7 +35,8 @@ end
     # pidx = Array(Int64,2)
     # pidx[1] = round(Int64,cld(rel_pos[1],f.res[1]::Float64))
     # pidx[2] = round(Int64,cld(rel_pos[2],f.res[2]::Float64))
-    s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))
+#    s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))
+    s::Complex{Float64} = f.scaling(t)
 #    s = f.scaling(t)
     sample_field(f,f.pidx,s)
 end
@@ -61,7 +62,8 @@ function sample2!(f::VectorFieldNode{2},pos::Vector{Float64},t::Real)
             add_sample!(f.sample,ff.sample)
         end
     end
-    s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))
+#    s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))
+    s::Complex{Float64} = f.scaling(t)    
     scal!(48,s,f.sample,1)
 #    scale_sample!(f.sample,s)
 end
@@ -125,3 +127,4 @@ function value2(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real)
     return itp_bicubic(A,[x_1,x_2])
 #    return itp_spline(A,(2.0+x_1,2.0+x_2))
 end
+
