@@ -2,6 +2,7 @@ module Fields
 using Interpolations
 using Devectorize
 using Base.Cartesian
+using FastAnonymous
 #TODO: align use Flat() boundary condition, add more
 #TODO: getindex overload for fields.
 #TODO: support different resolution for different area

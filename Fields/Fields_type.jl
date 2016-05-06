@@ -11,12 +11,12 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     position::Vector{Float64}
     size::Vector{Float64}
     res::Vector{Float64}
-    scaling::Function
+    scaling
     dim::Integer
     sample::Array{T,3}
     rel_pos::Vector{Float64}
     pidx::Vector{Int64}
-    function VectorField(f::Array{T},pos::Vector{Float64},sz::Vector{Float64};scaling::Function = t->1.0)
+    function VectorField(f::Array{T},pos::Vector{Float64},sz::Vector{Float64};scaling = @anon t->1.0)
         res = sz./(collect(size(f))[2:N+1]-1)
         @assert all(x->x!=0,res) "zero resolution!"
         length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,res,scaling,N,zeros(T,(3,4,4)),[0.0,0.0],[0,0]):error("dimension error!")
@@ -28,19 +28,19 @@ type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     position::Vector{Float64}
     size::Vector{Float64}
     res::Vector{Float64}
-    scaling::Function
+    scaling
     dim::Integer
     sample::Array{T,2}
     rel_pos::Vector{Float64}
     pidx::Vector{Int64}
-    function ScalarField(f::Array{T,N},pos::Vector{Float64},sz::Vector{Float64};scaling::Function = t->1.0)
+    function ScalarField(f::Array{T,N},pos::Vector{Float64},sz::Vector{Float64};scaling = @anon t->1.0)
         res = sz./(collect(size(f))[1:N]-1)
         @assert all(x->x!=0,res) "zero resolution!"
         length(pos)==length(sz)==N==ndims(f)?new(f,pos,sz,res,scaling,N,zeros(T,(4,4)),[0.0,0.0],[0,0]):error("dimension error!")
     end
 end
 
-function setfield!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},A::Array{T},pos::Vector{Float64},sz::Array{Float64};scaling::Function = t->1.0)
+function setfield!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},A::Array{T},pos::Vector{Float64},sz::Array{Float64};scaling::FastAnonymous.Fun = @anon t->1.0)
     res = sz./(collect(size(A))[1:N]-1)
     @assert all(x->x!=0,res) "zero resolution!"
     @assert length(pos)==length(sz)==N==ndims(A) "dimension error!"
@@ -53,7 +53,7 @@ function setfield!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},A::Array{T},pos::Vec
     f.dim = N
 end
 
-function setfield!{T<:ComplexOrFloat,N}(f::VectorField{T,N},A::Array{T},pos::Vector{Float64},sz::Vector{Float64};scaling::Function = t->1.0)
+function setfield!{T<:ComplexOrFloat,N}(f::VectorField{T,N},A::Array{T},pos::Vector{Float64},sz::Vector{Float64};scaling::FastAnonymous.Fun = @anon t->1.0)
     res = sz./(collect(size(A))[2:N+1]-1)
     @assert all(x->x!=0,res) "zero resolution!"
     @assert length(pos)==length(sz)==N==ndims(A)-1 "dimension error!"
@@ -68,14 +68,14 @@ end
 
 type VectorFieldNode{N} <: AbstractVectorField
     fields::Vector{AbstractVectorField}
-    scaling::Function
+    scaling::FastAnonymous.Fun
     dim::Integer
     position::Vector{Float64}
     size::Vector{Float64}
     res::Vector{Float64}
     typeof::DataType
     sample::Array{Complex{Float64},3}
-    function VectorFieldNode{T<:AbstractVectorField}(f::Vector{T};scaling::Function = t->1.0)
+    function VectorFieldNode{T<:AbstractVectorField}(f::Vector{T};scaling::FastAnonymous.Fun = @anon t->1.0)
         @assert all(x->x.dim==N,f) "dimension error!"
         new(f,scaling,N,[],[],[],Complex{Float64},zeros(Complex{Float64},(3,4,4)))
     end
@@ -83,7 +83,7 @@ end
 
 type ScalarFieldNode{N} <: AbstractScalarField
     fields::Vector{Field}
-    scaling::Function
+    scaling
     dim::Integer
     position::Vector{Float64}
     size::Vector{Float64}
@@ -91,7 +91,7 @@ type ScalarFieldNode{N} <: AbstractScalarField
     typeof::DataType
     sample::Array{Float64,2}
     vf_sample::Array{Complex{Float64},3}
-    function ScalarFieldNode{T<:Field}(f::Vector{T};scaling::Function = t->1.0)
+    function ScalarFieldNode{T<:Field}(f::Vector{T};scaling = @anon t->1.0)
         @assert all(x->x.dim==N,f) "dimension error!"
         new(f,scaling,N,[],[],[],Complex{Float64},zeros(Float64,(4,4)),zeros(Complex{Float64},(3,4,4)))
     end

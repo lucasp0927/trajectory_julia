@@ -1,6 +1,9 @@
 push!(LOAD_PATH, "./Fields")
+using FastAnonymous
 using Fields
 using MAT
+#using Plots
+#plotly()
 function readfields(filename::AbstractString,variable::AbstractString)
     matfile = matopen(filename)
     if exists(matfile, variable)
@@ -21,23 +24,24 @@ function test()
     println("building sf2")
     sf2 = Fields.func2field(ScalarField{Complex{Float64},2},(x,y)->-sin(x/900.0*2pi),[101,101],[299.0,299.0],[300.0,300.0])
     println("building lattice beams")
-    println("left beam")
-    file = matopen("lattice_left.mat")
-    lb_field = read(file, "beam_left") # note that this does NOT introduce a variable ``varname`` into scope
-    close(file)
-    lb = VectorField{Complex{Float64},2}(lb_field,[0.0,0.0],[6666*15.0,3333*15.0],scaling=t::Float64->(1.0+0im)::Complex{Float64})
     println("right beam")
     file = matopen("lattice_right.mat")
     rb_field = read(file, "beam_right") # note that this does NOT introduce a variable ``varname`` into scope
     close(file)
-    rb = VectorField{Complex{Float64},2}(rb_field,[0.0,0.0],[6666*15.0,3333*15.0],scaling=t::Float64->exp(1.0im*t*2pi)::Complex{Float64})
+    rb = VectorField{Complex{Float64},2}(rb_field,[0.0,0.0],[6666*15.0,3333*15.0],scaling=@anon t-> exp(1.0im*t*2pi))    
+    println("left beam")
+    file = matopen("lattice_left.mat")
+    lb_field = read(file, "beam_left") # note that this does NOT introduce a variable ``varname`` into scope
+    close(file)
+    lb = VectorField{Complex{Float64},2}(lb_field,[0.0,0.0],[6666*15.0,3333*15.0],scaling=@anon t-> 1.0+0.0im)
+
     vfn = Fields.VectorFieldNode{2}([lb,rb])
     vfn1 = Fields.VectorFieldNode{2}([vfn])
     println("building gm")
     file = matopen("D2_TE.mat")
     gm_field = read(file, "gm") # note that this does NOT introduce a variable ``varname`` into scope
     close(file)
-    gm = ScalarField{Float64,2}(gm_field,[(6666*15.0)/2.0-1854.625,(3333*15.0)/2.0-1850.0],[3690.75,3690.75],scaling=t->10.0)
+    gm = ScalarField{Float64,2}(gm_field,[(6666*15.0)/2.0-1854.625,(3333*15.0)/2.0-1850.0],[3690.75,3690.75],scaling=@anon t-> 10.0)
     #########
     sfn = Fields.ScalarFieldNode{2}([vfn,gm])
     println("aligning...")
@@ -70,7 +74,9 @@ function test()
     println("diff: ",mean(output1-output2))
     =#
     println("output")
-    @time   itp_test(sfn)
+    @time   output = itp_test(sfn)
+#    heatmap(output)
+ #   png("output")
     ######composite
 # @time    f_out = Fields.composite(sfn,0.0)
 #     file = matopen("comp_0.0.mat", "w")
@@ -107,6 +113,7 @@ function itp_test(sfn)
             output[x[1],y[1]] = Fields.value2(sfn::ScalarFieldNode,[x[2],y[2]],0.25)
         end
     end
+
     file = matopen("out.mat", "w")
     write(file, "itp", output)
     close(file)
@@ -125,6 +132,7 @@ function itp_grad_test(sfn)
     file = matopen("out.mat", "w")
     write(file, "itp", output)
     close(file)
+    return output
 end
 
 function main()
