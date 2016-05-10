@@ -1,21 +1,23 @@
 using Base.LinAlg.BLAS
 @fastmath @inbounds function sample2!{T<:ComplexOrFloat}(f::ScalarField{T,2},pos::Vector{Float64},t::Real)
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
-    f.rel_pos[2] = pos[2]-f.position[2]::Float64
+    f.rel_pos[2] = pos[2]-f.position[2]::Float64    
     f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))
-    f.pidx[2] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))
+    f.pidx[2] = f.pidx[1]+3
+    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))
+    f.pidx[4] = f.pidx[3]+3        
 #    rel_pos::Vector{Float64} = pos-f.position::Vector{Float64}
 #    pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64}))
     # pidx = Array(Int64,2)
     # pidx[1] = round(Int64,cld(rel_pos[1],f.res[1]::Float64))
     # pidx[2] = round(Int64,cld(rel_pos[2],f.res[2]::Float64))
-    s::Float64 = f.scaling(t)::Float64
-    sample_field(f,f.pidx,s)
+    f.s::Float64 = f.scaling(t)::Float64
+    sample_field(f,f.pidx,f.s)
 end
 
 @inbounds function sample_field{T<:ComplexOrFloat}(f::ScalarField,pidx::Vector{Int64},s::T)
 #    blascopy!(16,f.field[pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2],1,f.sample,1)
-    copy!(f.sample,sub(f.field,pidx[1]:pidx[1]+3,pidx[2]:pidx[2]+3))
+    copy!(f.sample,sub(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]))
     scal!(16,s,f.sample,1)
     # for j=1:4,i=1:4
     #     f.sample[i,j] = f.field[pidx[1]-2+i,pidx[2]-2+j]
@@ -29,22 +31,24 @@ end
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
     f.rel_pos[2] = pos[2]-f.position[2]::Float64
     f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))
-    f.pidx[2] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))    
+    f.pidx[2] = f.pidx[1]+3
+    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))
+    f.pidx[4] = f.pidx[3]+3    
     # rel_pos::Vector{Float64} = pos-f.position::Vector{Float64}
     # pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64}))
     # pidx = Array(Int64,2)
     # pidx[1] = round(Int64,cld(rel_pos[1],f.res[1]::Float64))
     # pidx[2] = round(Int64,cld(rel_pos[2],f.res[2]::Float64))
 #    s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))
-    s::Complex{Float64} = f.scaling(t)
+    f.s::Complex{Float64} = f.scaling(t)::Complex{Float64}
 #    s = f.scaling(t)
-    sample_field(f,f.pidx,s)
+    sample_field(f,f.pidx,f.s)
 end
 
 @inbounds function sample_field{T<:ComplexOrFloat}(f::VectorField,pidx::Vector{Int64},s::T)
 #    blascopy!(48,f.field[:,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2],1,f.sample,1)
     #    f.sample[:,:,:] = sub(f.field,:,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2)
-    copy!(f.sample,sub(f.field,:,pidx[1]:pidx[1]+3,pidx[2]:pidx[2]+3))
+    copy!(f.sample,sub(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4]))
     # for j=1:4,i=1:4,k=1:3
     #     f.sample[k,i,j] = f.field[k,pidx[1]-2+i,pidx[2]-2+j]
     # end
@@ -55,7 +59,7 @@ end
 end
 
 function sample2!(f::VectorFieldNode{2},pos::Vector{Float64},t::Real)
-    fill!(f.sample,Base.zero(Complex{Float64}))
+    fill!(f.sample,zero(Complex{Float64}))
     for ff in f.fields
         if in_field(ff,pos)
             sample2!(ff,pos,t)
@@ -63,8 +67,8 @@ function sample2!(f::VectorFieldNode{2},pos::Vector{Float64},t::Real)
         end
     end
 #    s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))
-    s::Complex{Float64} = f.scaling(t)    
-    scal!(48,s,f.sample,1)
+    f.s::Complex{Float64} = f.scaling(t)::Complex{Float64}
+    scal!(48,f.s,f.sample,1)
 #    scale_sample!(f.sample,s)
 end
 
@@ -75,8 +79,8 @@ end
 end
 
 @inbounds function sample2!(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real)
-    fill!(f.sample,Base.zero(Float64))
-    fill!(f.vf_sample,Base.zero(Complex{Float64}))
+    fill!(f.sample,zero(Float64))
+    fill!(f.vf_sample,zero(Complex{Float64}))
     for ff in f.fields
         if in_field(ff,pos)
             sample2!(ff,pos,t)
@@ -84,8 +88,8 @@ end
         end
     end
     add_vector_field!(f.sample,f.vf_sample)
-    s = f.scaling(t)::Float64
-    scal!(16,s,f.sample,1)
+    f.s = f.scaling(t)::Float64
+    scal!(16,f.s,f.sample,1)
 #    scale_sample!(f.sample,s)
 end
 
@@ -119,12 +123,14 @@ end
 #    sample[:] .+= f.sample[:]
 end
 
-function value2(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real)
-    sample2!(f,pos,t)
-    A = f.sample
-    res = f.res::Vector{Float64}
-    @nexprs 2 j->x_j = rem(pos[j],res[j])/res[j]
-    return itp_bicubic(A,[x_1,x_2])
-#    return itp_spline(A,(2.0+x_1,2.0+x_2))
+@generated function value2(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real)
+    quote
+        x = $(Array(Float64,2))
+        sample2!(f,pos,t)
+        @nexprs 2 j->x[j] = rem(pos[j],f.res[j])/f.res[j]
+        return bicubicInterpolate(f.sample,x)
+#        return itp_bicubic(f.sample,x)
+    end
+    #    return itp_spline(A,(2.0+x_1,2.0+x_2))
 end
 

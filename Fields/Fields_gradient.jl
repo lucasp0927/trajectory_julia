@@ -90,12 +90,13 @@ function value(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Integer
 end
 
 function gradient(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
-    A = sample(f,pos,t;order=order)::Array{Float64,2}
-#    A = float(real(A)) #TODO: change this
-    res = f.res::Vector{Float64}
-    @nexprs 2 j->x_j = rem(pos[j],res[j])/res[j]
-    return itp_bicubic_grad(A,[x_1,x_2],res)
-#    return itp_spline(A,(2.0+x_1,2.0+x_2))
+#        A = Array(Float64,4,4)
+        A = sample(f,pos,t;order=order)::Array{Float64,2}
+        #    A = float(real(A)) #TODO: change this
+        res = f.res::Vector{Float64}
+        @nexprs 2 j->x_j = rem(pos[j],res[j])/res[j]
+        return itp_bicubic_grad(A,[x_1,x_2],res)
+    #    return itp_spline(A,(2.0+x_1,2.0+x_2))
 end
 
 function itp_spline(A::Array,pos::Vector{Float64})
@@ -116,16 +117,14 @@ function itp_bicubic_grad{T<:ComplexOrFloat}(A::Array{T},pos::Vector{Float64},re
     return [gx,gy]
 end
 
-let
-    
 @fastmath @inbounds function cubicInterpolate{T<:ComplexOrFloat}(p::Array{T,1},x::Float64)
     #    @assert length(p) == 4 "wrong length"
     #   p1 p2 p3 p4
     #x= -1 0  1  2
-
+#    return p[2]+0.5*(p[3]-p[1])*x+(p[1]-2.5*p[2]+2.0*p[3]-0.5*p[4])*x^2 +0.5*(-p[1]+3.0*(p[2]-p[3])+p[4])*x^3
     return p[2] + 0.5 * x*(p[3] - p[1] + x*(2.0*p[1] - 5.0*p[2] + 4.0*p[3] - p[4] + x*(3.0*(p[2] - p[3]) + p[4] - p[1])));
 end
-end
+
 @fastmath @inbounds function cubicInterpolate_grad{T<:ComplexOrFloat}(p::Array{T,1},x::Float64)
     #    @assert length(p) == 4 "wrong length"
     #   p1 p2 p3 p4
@@ -134,15 +133,17 @@ end
 end
 
 
-@fastmath @inbounds function bicubicInterpolate{T<:ComplexOrFloat}(p::Array{T,2},x::Float64,y::Float64)
-#    @assert size(p) == (4,4) "wrong size"
-    arr = Array(T,4)
-    @nexprs 4 j->(arr[j] = cubicInterpolate(p[:,j], x);)
-    # arr[1] = cubicInterpolate(vec(p[1,:]), y);
-    # arr[2] = cubicInterpolate(vec(p[2,:]), y);
-    # arr[3] = cubicInterpolate(vec(p[3,:]), y);
-    # arr[4] = cubicInterpolate(vec(p[4,:]), y);
-    return cubicInterpolate(arr, y);
+@generated function bicubicInterpolate{T<:ComplexOrFloat}(p::Array{T,2},x::Vector{Float64})
+    quote
+        #    @assert size(p) == (4,4) "wrong size"
+        arr = $(Array(T,4))
+        @nexprs 4 j->(arr[j] = cubicInterpolate(p[:,j], x[1]);)
+        # arr[1] = cubicInterpolate(vec(p[1,:]), y);
+        # arr[2] = cubicInterpolate(vec(p[2,:]), y);
+        # arr[3] = cubicInterpolate(vec(p[3,:]), y);
+        # arr[4] = cubicInterpolate(vec(p[4,:]), y);
+        return cubicInterpolate(arr, x[2]);
+    end
 end
 
 #=

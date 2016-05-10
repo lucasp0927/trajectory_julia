@@ -35,8 +35,7 @@ function test()
     close(file)
     lb = VectorField{Complex{Float64},2}(lb_field,[0.0,0.0],[6666*15.0,3333*15.0],scaling=@anon t-> 1.0+0.0im)
 
-    vfn = Fields.VectorFieldNode{2}([lb,rb])
-    vfn1 = Fields.VectorFieldNode{2}([vfn])
+    vfn = Fields.VectorFieldNode{2}([lb,rb],scaling=@anon t->1.0+0.0im)
     println("building gm")
     file = matopen("D2_TE.mat")
     gm_field = read(file, "gm") # note that this does NOT introduce a variable ``varname`` into scope
@@ -67,7 +66,7 @@ function test()
     @time    benchmark_smp(vfn)
     println("benchmark sampling sfn")
 =#
-@time    @profile    benchmark_smp(sfn)    
+@time    @profile      benchmark_smp(sfn)    
     println("benchmark value2 sfn")
     #=
     @time    benchmark_value(sfn)
@@ -104,13 +103,15 @@ function benchmark_value(f)
 end
 
 function itp_test(sfn)
-    N = 1000
-    xx = linspace(48000,52000,N)
+    N = 500
+    xx = linspace(48000-1000,52000+1000,N)
     yy = linspace(23000,27000,N)
+#    xx = linspace(450-400,450+400,N)
+#    yy = linspace(23000,27000,N)    
     output = zeros(Float64,(N,N))
     for x in enumerate(xx)
         for y in enumerate(yy)
-            output[x[1],y[1]] = Fields.value2(sfn::ScalarFieldNode,[x[2],y[2]],0.25)
+            output[x[1],y[1]] = Fields.value2(sfn::ScalarFieldNode,[x[2],y[2]],0.0)
         end
     end
 
