@@ -18,7 +18,7 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     rel_pos::Vector{Float64}
     pidx::Vector{Int64}
     s::Complex{Float64}
-    function VectorField(f::SharedArray{T},pos::Vector{Float64},sz::Vector{Float64};scaling = @anon t->1.0)
+    function VectorField(f::SharedArray{T},pos::Vector{Float64},sz::Vector{Float64};scaling =  t->1.0)
         res = sz./(collect(size(f))[2:N+1]-1)
         @assert all(x->x!=0,res) "zero resolution!"
         length(pos)==length(sz)==N==ndims(f)-1?new(f,sdata(f),pos,sz,res,scaling,N,zeros(T,(3,4,4)),[0.0,0.0],[0,0,0,0],zero(Complex{Float64})):error("dimension error!")
@@ -37,19 +37,22 @@ type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     rel_pos::Vector{Float64}
     pidx::Vector{Int64}
     s::Float64
-    function ScalarField(f::SharedArray{T,N},pos::Vector{Float64},sz::Vector{Float64};scaling = @anon t->1.0)
+    function ScalarField(f::SharedArray{T,N},pos::Vector{Float64},sz::Vector{Float64};scaling =  t->1.0)
         res = sz./(collect(size(f))[1:N]-1)
         @assert all(x->x!=0,res) "zero resolution!"
         length(pos)==length(sz)==N==ndims(f)?new(f,sdata(f),pos,sz,res,scaling,N,zeros(T,(4,4)),[0.0,0.0],[0,0,0,0],zero(Float64)):error("dimension error!")
     end
 end
 
-function setfield!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},A::Array{T},pos::Vector{Float64},sz::Array{Float64};scaling = @anon t->1.0)
+
+function setfield!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},A::SharedArray{T},pos::Vector{Float64},sz::Array{Float64};scaling = t->1.0)
     res = sz./(collect(size(A))[1:N]-1)
     @assert all(x->x!=0,res) "zero resolution!"
     @assert length(pos)==length(sz)==N==ndims(A) "dimension error!"
+    f.sharedfield = SharedArray(T,1)
     f.field = Array(T,1)
-    f.field = A
+    f.sharedfield = A
+    f.field = sdata(A)
     f.position = pos
     f.size = sz
     f.res = res
@@ -57,12 +60,14 @@ function setfield!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},A::Array{T},pos::Vec
     f.dim = N
 end
 
-function setfield!{T<:ComplexOrFloat,N}(f::VectorField{T,N},A::Array{T},pos::Vector{Float64},sz::Vector{Float64};scaling = @anon t->1.0)
+function setfield!{T<:ComplexOrFloat,N}(f::VectorField{T,N},A::SharedArray{T},pos::Vector{Float64},sz::Vector{Float64};scaling = t->1.0)
     res = sz./(collect(size(A))[2:N+1]-1)
     @assert all(x->x!=0,res) "zero resolution!"
     @assert length(pos)==length(sz)==N==ndims(A)-1 "dimension error!"
+    f.sharedfield = SharedArray(T,1)    
     f.field = Array(T,1)
-    f.field = A
+    f.sharedfield = A
+    f.field = sdata(A)    
     f.position = pos
     f.size = sz
     f.res = res
@@ -80,7 +85,7 @@ type VectorFieldNode{N} <: AbstractVectorField
     typeof::DataType
     sample::Array{Complex{Float64},3}
     s::Complex{Float64}
-    function VectorFieldNode{T<:AbstractVectorField}(f::Vector{T};scaling  = @anon t->1.0)
+    function VectorFieldNode{T<:AbstractVectorField}(f::Vector{T};scaling  =  t->1.0)
         @assert all(x->x.dim==N,f) "dimension error!"
         new(f,scaling,N,[],[],[],Complex{Float64},zeros(Complex{Float64},(3,4,4)),zero(Complex{Float64}))
     end
@@ -97,9 +102,40 @@ type ScalarFieldNode{N} <: AbstractScalarField
     sample::Array{Float64,2}
     vf_sample::Array{Complex{Float64},3}
     s::Float64
-    function ScalarFieldNode{T<:Field}(f::Vector{T};scaling = @anon t->1.0)
+    function ScalarFieldNode{T<:Field}(f::Vector{T};scaling =  t->1.0)
         @assert all(x->x.dim==N,f) "dimension error!"
         new(f,scaling,N,[],[],[],Complex{Float64},zeros(Float64,(4,4)),zeros(Complex{Float64},(3,4,4)),zero(Float64))
     end
 end
+
 FieldNode = Union{VectorFieldNode,ScalarFieldNode}
+
+function copyfield{T<:ComplexOrFloat,N}(f::ScalarField{T,N})
+    return ScalarField{T,N}(f.sharedfield,f.position,f.size,scaling=f.scaling)
+end
+
+function copyfield{T<:ComplexOrFloat,N}(f::VectorField{T,N})
+    return VectorField{T,N}(f.sharedfield,f.position,f.size,scaling=f.scaling)
+end
+
+function copyfield{N}(f::ScalarFieldNode{N})
+    fields = map(copyfield,f.fields)
+    fn = ScalarFieldNode{N}(fields,scaling = f.scaling)
+    fn.dim = f.dim
+    fn.position = f.position
+    fn.size = f.size
+    fn.res = f.res
+    fn.typeof = f.typeof
+    return fn
+end
+
+function copyfield{N}(f::VectorFieldNode{N})
+    fields = map(copyfield,f.fields)
+    fn = VectorFieldNode{N}(fields,scaling = f.scaling)
+    fn.dim = f.dim
+    fn.position = f.position
+    fn.size = f.size
+    fn.res = f.res
+    fn.typeof = f.typeof
+    return fn
+end

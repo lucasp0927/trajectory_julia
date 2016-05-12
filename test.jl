@@ -1,5 +1,5 @@
 push!(LOAD_PATH, "./Fields")
-using FastAnonymous
+#using FastAnonymous
 using Fields
 using MAT
 #using Plots
@@ -29,38 +29,24 @@ function sendto(ps::Vector{Int}; args...)
     end
 end
 
+function buildfields!(rb_field_s::SharedArray,lb_field_s::SharedArray,gm_field_s::SharedArray)
+    rb = Fields.VectorField{Complex{Float64},2}(rb_field_s,[0.0,0.0],[6666*15.0,3333*15.0],scaling=t-> exp(1.0im*t*2pi))
+    lb = Fields.VectorField{Complex{Float64},2}(lb_field_s,[0.0,0.0],[6666*15.0,3333*15.0],scaling= t-> 1.0+0.0im)
+    vfn = Fields.VectorFieldNode{2}([lb,rb],scaling= t->1.0+0.0im)
+    gm = Fields.ScalarField{Float64,2}(gm_field_s,[(6666*15.0)/2.0-1854.625,(3333*15.0)/2.0-1850.0],[3690.75,3690.75],scaling= t-> 10.0)
+    sfn = Fields.ScalarFieldNode{2}([vfn,gm])
+    info("aligning...")
+    Fields.align_field_tree!(sfn)
+    Fields.set_geometry!(sfn)
+    Fields.set_typeof!(sfn)
+    return sfn
+end
 
-function test()
-    println(nprocs()," processes running.")
-    println("######################################")
-#    println("building sf1")
-#    sf1 = Fields.func2field(ScalarField{Complex{Float64},2},(x,y)->sin(x/900.0*2pi),[1000,1000],[0.0,0.0],[900.0,900.0])
-#    println("building sf2")
-#    sf2 = Fields.func2field(ScalarField{Complex{Float64},2},(x,y)->-sin(x/900.0*2pi),[101,101],[299.0,299.0],[300.0,300.0])
-    println("building lattice beams")
-    println("right beam")
-    file = matopen("lattice_right.mat")
-    rb_field = read(file, "beam_right") # note that this does NOT introduce a variable ``varname`` into scope
-    rb_field_s = Fields.copy_to_sharedarray!(rb_field)
-    rb_field = []
-    close(file)
- 
-    println("left beam")
-    file = matopen("lattice_left.mat")
-    lb_field = read(file, "beam_left") # note that this does NOT introduce a variable ``varname`` into scope
-    lb_field_s = Fields.copy_to_sharedarray!(lb_field)
-    lb_field = []
-    close(file)
 
-    println("gm")
-    file = matopen("D2_TE.mat")
-    gm_field = read(file, "gm") # note that this does NOT introduce a variable ``varname`` into scope
-    gm_field_s = Fields.copy_to_sharedarray!(gm_field)
-    gm_field = []
-    close(file)
+function test(sfn::ScalarFieldNode)
+    Fields.init_parallel!(sfn)
+    sfn = 0
     gc()
-    #########
-    Fields.buildfields_parallel!(rb_field_s,lb_field_s,gm_field_s)
     ######
     # Fields.align_field_tree!(Fields.fields)
     # Fields.set_geometry!(Fields.fields)
@@ -91,7 +77,7 @@ function test()
     println("diff: ",mean(output1-output2))
     =#
     println("output")
-    r = @spawnat 2 itp_test()
+    @time  r = @spawnat 2 itp_test()
     output = fetch(r)
     file = matopen("out.mat", "w")
     write(file, "itp", output)
@@ -135,7 +121,7 @@ end
     output = zeros(Float64,(N,N))
     for x in enumerate(xx)
         for y in enumerate(yy)
-            output[x[1],y[1]] = Fields.value3([x[2],y[2]],0.0)
+            output[x[1],y[1]] = Fields.value3([x[2],y[2]],0.25)
         end
     end
     return output;
@@ -158,11 +144,41 @@ function itp_grad_test(sfn)
 end
 
 function main()
+    println(nprocs()," processes running.")
+    println("######################################")
+#    println("building sf1")
+#    sf1 = Fields.func2field(ScalarField{Complex{Float64},2},(x,y)->sin(x/900.0*2pi),[1000,1000],[0.0,0.0],[900.0,900.0])
+#    println("building sf2")
+#    sf2 = Fields.func2field(ScalarField{Complex{Float64},2},(x,y)->-sin(x/900.0*2pi),[101,101],[299.0,299.0],[300.0,300.0])
+    println("building lattice beams")
+    println("right beam")
+    file = matopen("lattice_right.mat")
+    rb_field = read(file, "beam_right") # note that this does NOT introduce a variable ``varname`` into scope
+    rb_field_s = Fields.copy_to_sharedarray!(rb_field)
+    rb_field = []
+    close(file)
+ 
+    println("left beam")
+    file = matopen("lattice_left.mat")
+    lb_field = read(file, "beam_left") # note that this does NOT introduce a variable ``varname`` into scope
+    lb_field_s = Fields.copy_to_sharedarray!(lb_field)
+    lb_field = []
+    close(file)
+
+    println("gm")
+    file = matopen("D2_TE.mat")
+    gm_field = read(file, "gm") # note that this does NOT introduce a variable ``varname`` into scope
+    gm_field_s = Fields.copy_to_sharedarray!(gm_field)
+    gm_field = []
+    close(file)
+    gc()
+    #########
+    sfn = buildfields!(rb_field_s,lb_field_s,gm_field_s)    
 #    Profile.init(delay=0.01)
-    test()
+    test(sfn)
     #    Profile.clear()
     gc()
-    test()
+    test(sfn)
 #    open("profile.bin", "w") do f serialize(f, Profile.retrieve()) end
     ##########3D test
 

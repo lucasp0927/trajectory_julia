@@ -5,17 +5,17 @@ function copy_to_sharedarray!{T<:ComplexOrFloat,N}(arr::Array{T,N})
     return arr_s
 end
 
-function zero_field{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling::FastAnonymous.Fun = @anon t->1.0)
+function zero_field{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling =  t->1.0)
     @assert length(res) ==  length(pos) == length(size) "dimension mismatch"
     return ScalarField{T,N}(copy_to_sharedarray!(zeros(T,res)),pos,size,scaling=scaling)
 end
 
-function zero_field{T<:ComplexOrFloat,N}(::Type{VectorField{T,N}},res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling::FastAnonymous.Fun = @anon t->1.0)
+function zero_field{T<:ComplexOrFloat,N}(::Type{VectorField{T,N}},res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling =  t->1.0)
     @assert length(res) ==  length(pos) == length(size) "dimension mismatch"    
     return VectorField{T,N}(copy_to_sharedarray!(zeros(T,(3,res...))),pos,size,scaling = scaling)
 end
 
-@generated function func2field{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},func::Function,res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling::FastAnonymous.Fun = @anon t->1.0)
+@generated function func2field{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},func::Function,res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling =  t->1.0)
     quote
         @assert length(res)==length(pos)==length(size)==N        
         @nexprs $N j->(x_j = linspace(pos[j],pos[j]+size[j],res[j]))
@@ -45,7 +45,7 @@ end
 # end
 
 
-@generated function func2field{T<:ComplexOrFloat,N}(::Type{VectorField{T,N}},func::Function,res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling::FastAnonymous.Fun = @anon t->1.0)
+@generated function func2field{T<:ComplexOrFloat,N}(::Type{VectorField{T,N}},func::Function,res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling = t->1.0)
     quote
         @assert length(res)==length(pos)==length(size)==N        
         @nexprs $N j->(x_j = linspace(pos[j],pos[j]+size[j],res[j]))

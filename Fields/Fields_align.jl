@@ -24,9 +24,8 @@ function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Vector{Float
     align_geo = Dict("pos"=>new_pos,"size"=>new_size,"res"=>res)
     ##### interpolate field
     new_arr_size = round(Int64,new_size ./ res)+one(Int64)
-    old_field = f.field
-    old_field_itp = interpolate(old_field, BSpline(Cubic(Flat())), OnGrid())
-    new_field = Array(T,new_arr_size...)
+    old_field_itp = interpolate(f.field, BSpline(Cubic(Flat())), OnGrid())
+    new_field = SharedArray(T,new_arr_size...)
     itp_field!(new_field,old_field_itp,unalign_geo,align_geo)
     @assert collect(size(new_field)) == new_arr_size
     setfield!(f,new_field,align_geo["pos"],align_geo["size"],scaling=f.scaling)
@@ -45,11 +44,10 @@ function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Vector{Float
     align_geo = Dict("pos"=>new_pos,"size"=>new_size,"res"=>res)
     ##### interpolate field
     new_arr_size = round(Int64,new_size ./ res)+one(Int64)
-    old_field = f.field
     #loop over three components
-    new_field = Array(T,3,new_arr_size...)
+    new_field = SharedArray(T,3,new_arr_size...)
     for i = 1:3
-        old_field_itp = interpolate(myslice(old_field,i), BSpline(Cubic(Flat())), OnGrid())
+        old_field_itp = interpolate(myslice(f.field,i), BSpline(Cubic(Flat())), OnGrid())
         itp_field!(myslice(new_field,i),old_field_itp,unalign_geo,align_geo)        
     end
     @assert collect(size(new_field)[2:end]) == new_arr_size
@@ -61,6 +59,11 @@ end
 
 #TODO clean this up with meta programming?
 @generated function myslice{T<:ComplexOrFloat,N}(A::Array{T,N},i::Integer)
+    ex_str = "slice(A,i"*repeat(",:",N-1)*")"
+    parse(ex_str)
+end
+
+@generated function myslice{T<:ComplexOrFloat,N}(A::SharedArray{T,N},i::Integer)
     ex_str = "slice(A,i"*repeat(",:",N-1)*")"
     parse(ex_str)
 end
@@ -77,7 +80,7 @@ end
     return old_idx
 end
 
-@generated function itp_field!{T<:Union{Array,SubArray}}(new_field::T,old_field_itp::Interpolations.BSplineInterpolation,unalign_geo,align_geo)
+@generated function itp_field!{T<:Union{Array,SubArray,SharedArray}}(new_field::T,old_field_itp::Interpolations.BSplineInterpolation,unalign_geo,align_geo)
     N::Int64 = ndims(new_field)
     quote
         apos::Vector{Float64} = align_geo["pos"]
