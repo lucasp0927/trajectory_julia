@@ -1,10 +1,4 @@
 # utility functions, for simple fields
-function copy_to_sharedarray!{T<:ComplexOrFloat,N}(arr::Array{T,N})
-    arr_s = SharedArray(T,size(arr))
-    arr_s[:] = arr
-    return arr_s
-end
-
 function zero_field{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling =  t->1.0)
     @assert length(res) ==  length(pos) == length(size) "dimension mismatch"
     return ScalarField{T,N}(copy_to_sharedarray!(zeros(T,res)),pos,size,scaling=scaling)

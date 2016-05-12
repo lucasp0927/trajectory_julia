@@ -1,6 +1,5 @@
-module Trajectory
+module TrajSolver
 using Sundials
-
 @everywhere function pcalc_trajectory!(result::SharedArray{Float64}, traj_num::Int64,t_span::Vector{Float64}, init_xv::SharedArray{Float64,2}, args::Tuple, progress::SharedArray{Bool}, solver::Vector{ASCIIString}, tol::Vector{Float64})
     idx = indexpids(result)
     if idx == 0
@@ -104,9 +103,9 @@ function mycvode(mem, f::Function, y0::Vector{Float64}, t::Vector{Float64} , you
     for k in 2:length(t)
         flag = Sundials.CVode(mem, t[k], y, tout, Sundials.CV_NORMAL)
         yout[:,k] = y[1:2]
-        if outside(yout[:,k]) == true
-            break
-        end
+        # if outside(yout[:,k]) == true
+        #     break
+        # end
     end
 end
 

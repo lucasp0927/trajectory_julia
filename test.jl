@@ -1,35 +1,9 @@
 push!(LOAD_PATH, "./Fields")
-#using FastAnonymous
 using Fields
+using TrajSolver
 using MAT
-#using Plots
-#plotly()
-function readfields(filename::AbstractString,variable::AbstractString)
-    matfile = matopen(filename)
-    if exists(matfile, variable)
-#        println("Reading $variable from $filename...")
-        var = read(matfile, variable)
-    else
-        error("Can't read $variable from $filename")
-    end
-    close(matfile)
-    return var
-end
-
-#=
-function sendto(p::Int; args...)
-    for (nm, val) in args
-        @spawnat(p, eval(Main, Expr(:(=), nm, val)))
-    end
-end
-
-function sendto(ps::Vector{Int}; args...)
-    for p in ps
-        sendto(p; args...)
-    end
-end
-=#
-#@everywhere expiwt(t::Float64) = exp(1.0im*t*2pi)::Complex{Float64}
+include("fileio.jl")
+include("benchmark.jl")
 
 function buildfields!(rb_field_s::SharedArray,lb_field_s::SharedArray,gm_field_s::SharedArray)
     rb = Fields.VectorField{Complex{Float64},2}(rb_field_s,[0.0,0.0],[6666*15.0,3333*15.0],scaling= t->exp(2*pi*im*t))
@@ -77,14 +51,11 @@ function test(sfn::ScalarFieldNode)
     #=
     println("diff: ",mean(output1-output2))
     =#
-    @time @profile output1 = itp_test()
+    @time  output1 = itp_test()
     println("output")
     @time  r = @spawnat 2 itp_test()
     output = fetch(r)
-    file = matopen("out.mat", "w")
-    write(file, "itp", output)
-    close(file)
-
+    savemat("out.mat",output,"output")
 #    heatmap(output)
  #   png("output")
     ######composite
@@ -100,56 +71,6 @@ function test(sfn::ScalarFieldNode)
 #     file = matopen("comp_0.5.mat", "w")
 #     write(file, "field", f_out.field)
 #     close(file)
-end
-
-function benchmark_smp(f)
-    for i = 1:1000000
-        Fields.sample2!(f,[50000.0+rand()*10.0,25000.0+rand()*10.0],1.0*rand())
-    end
-end
-
-function benchmark_value()
-    for i = 1:1000000
-        Fields.value3([50000.0+rand()*10.0,25000.0+rand()*10.0],1.0*rand())
-    end
-end
-
-@everywhere function itp_test()
-    info("test")
-    N = 1000
-    xx = linspace(48000-1000,52000+1000,N)
-    yy = linspace(23000,27000,N)
-#    xx = linspace(450-400,450+400,N)
-#    yy = linspace(23000,27000,N)
-    output = zeros(Float64,(N,N))
-    for x in enumerate(xx), y in enumerate(yy)
-        output[x[1],y[1]] = Fields.value3([x[2],y[2]],0.75)
-    end
-    return output
-end
-
-function itp_grad_test(sfn)
-    N = 1000
-    xx = linspace(48000,52000,N)
-    yy = linspace(23000,27000,N)
-    output = zeros(Float64,(2,N,N))
-    for x in enumerate(xx)
-        for y in enumerate(yy)
-            output[:,x[1],y[1]] = Fields.gradient(sfn,[x[2],y[2]],0.5)
-        end
-    end
-    file = matopen("out.mat", "w")
-    write(file, "itp", output)
-    close(file)
-    return output
-end
-
-function mat2sharedarray(filename,variable)
-    file = matopen(filename)
-    var = read(file, variable) # note that this does NOT introduce a variable ``varname`` into scope
-    close(file)
-    var_s = Fields.copy_to_sharedarray!(var)
-    return var_s
 end
 
 function main()
@@ -169,10 +90,10 @@ function main()
     sfn = buildfields!(rb_field_s,lb_field_s,gm_field_s)
 #    Profile.init(delay=0.01)
     test(sfn)
-    Profile.clear()
+#    Profile.clear()
     gc()
     test(sfn)
-    open("profile.bin", "w") do f serialize(f, Profile.retrieve()) end
+#    open("profile.bin", "w") do f serialize(f, Profile.retrieve()) end
     ##########3D test
 
 #     println("######################################")
@@ -206,3 +127,16 @@ function main()
 end
 main()
 
+#=
+function sendto(p::Int; args...)
+    for (nm, val) in args
+        @spawnat(p, eval(Main, Expr(:(=), nm, val)))
+    end
+end
+
+function sendto(ps::Vector{Int}; args...)
+    for p in ps
+        sendto(p; args...)
+    end
+end
+=#
