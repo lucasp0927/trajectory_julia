@@ -11,7 +11,7 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     position::Vector{Float64}
     size::Vector{Float64}
     res::Vector{Float64}
-    scaling
+    scaling::Function
     dim::Integer
     sample::Array{T,3}
     rel_pos::Vector{Float64}
@@ -29,7 +29,7 @@ type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     position::Vector{Float64}
     size::Vector{Float64}
     res::Vector{Float64}
-    scaling
+    scaling::Function
     dim::Integer
     sample::Array{T,2}
     rel_pos::Vector{Float64}
@@ -71,7 +71,7 @@ end
 
 type VectorFieldNode{N} <: AbstractVectorField
     fields::Vector{AbstractVectorField}
-    scaling
+    scaling::Function
     dim::Integer
     position::Vector{Float64}
     size::Vector{Float64}
@@ -87,7 +87,7 @@ end
 
 type ScalarFieldNode{N} <: AbstractScalarField
     fields::Vector{Field}
-    scaling
+    scaling::Function
     dim::Integer
     position::Vector{Float64}
     size::Vector{Float64}

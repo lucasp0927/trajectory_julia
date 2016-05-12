@@ -11,7 +11,7 @@ using Base.LinAlg.BLAS
     # pidx = Array(Int64,2)
     # pidx[1] = round(Int64,cld(rel_pos[1],f.res[1]::Float64))
     # pidx[2] = round(Int64,cld(rel_pos[2],f.res[2]::Float64))
-    f.s::Float64 = f.scaling(t)::Float64
+    f.s::Float64 = (f.scaling::Function)(t)::Float64
     sample_field(f,f.pidx,f.s)
 end
 
@@ -40,7 +40,7 @@ end
     # pidx[1] = round(Int64,cld(rel_pos[1],f.res[1]::Float64))
     # pidx[2] = round(Int64,cld(rel_pos[2],f.res[2]::Float64))
 #    s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))
-    f.s::Complex{Float64} = f.scaling(t)::Complex{Float64}
+    f.s::Complex{Float64} = (f.scaling::Function)(t)::Complex{Float64}
 #    s = f.scaling(t)
     sample_field(f,f.pidx,f.s)
 end
@@ -67,7 +67,7 @@ function sample2!(f::VectorFieldNode{2},pos::Vector{Float64},t::Real)
         end
     end
 #    s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))
-    f.s::Complex{Float64} = f.scaling(t)::Complex{Float64}
+    f.s::Complex{Float64} = (f.scaling::Function)(t)::Complex{Float64}
     scal!(48,f.s,f.sample,1)
 #    scale_sample!(f.sample,s)
 end
@@ -88,7 +88,7 @@ end
         end
     end
     add_vector_field!(f.sample,f.vf_sample)
-    f.s = f.scaling(t)::Float64
+    f.s = (f.scaling::Function)(t)::Float64
     scal!(16,f.s,f.sample,1)
 #    scale_sample!(f.sample,s)
 end
@@ -138,8 +138,10 @@ end
     quote
         global fields
         x = $(Array(Float64,2))
+        res = $(Array(Float64,2))
+        res[:] = (fields::ScalarFieldNode).res
         sample2!(fields::ScalarFieldNode,pos,t)
-        @nexprs 2 j->x[j] = rem(pos[j],(fields::ScalarFieldNode).res[j])/(fields::ScalarFieldNode).res[j]
+        @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
         return bicubicInterpolate((fields::ScalarFieldNode).sample,x)
 #        return itp_bicubic(f.sample,x)
     end

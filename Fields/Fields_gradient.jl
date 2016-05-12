@@ -125,7 +125,22 @@ end
     return p[2] + 0.5 * x*(p[3] - p[1] + x*(2.0*p[1] - 5.0*p[2] + 4.0*p[3] - p[4] + x*(3.0*(p[2] - p[3]) + p[4] - p[1])));
 end
 
+@fastmath @inbounds function cubicInterpolate{T<:ComplexOrFloat}(p::SubArray{T,1},x::Float64)
+    #    @assert length(p) == 4 "wrong length"
+    #   p1 p2 p3 p4
+    #x= -1 0  1  2
+#    return p[2]+0.5*(p[3]-p[1])*x+(p[1]-2.5*p[2]+2.0*p[3]-0.5*p[4])*x^2 +0.5*(-p[1]+3.0*(p[2]-p[3])+p[4])*x^3
+    return p[2] + 0.5 * x*(p[3] - p[1] + x*(2.0*p[1] - 5.0*p[2] + 4.0*p[3] - p[4] + x*(3.0*(p[2] - p[3]) + p[4] - p[1])));
+end
+
 @fastmath @inbounds function cubicInterpolate_grad{T<:ComplexOrFloat}(p::Array{T,1},x::Float64)
+    #    @assert length(p) == 4 "wrong length"
+    #   p1 p2 p3 p4
+    #x= -1 0  1  2
+    return -0.5p[1]+0.5p[3]+2p[1]*x-5p[2]*x+4p[3]*x-p[4]*x-1.5(p[1]-3p[2]+3p[3]-p[4])*x^2
+end
+
+@fastmath @inbounds function cubicInterpolate_grad{T<:ComplexOrFloat}(p::SubArray{T,1},x::Float64)
     #    @assert length(p) == 4 "wrong length"
     #   p1 p2 p3 p4
     #x= -1 0  1  2
@@ -137,7 +152,7 @@ end
     quote
         #    @assert size(p) == (4,4) "wrong size"
         arr = $(Array(T,4))
-        @nexprs 4 j->(arr[j] = cubicInterpolate(p[:,j], x[1]);)
+        @nexprs 4 j->(arr[j] = cubicInterpolate(slice(p,:,j), x[1]);)
         # arr[1] = cubicInterpolate(vec(p[1,:]), y);
         # arr[2] = cubicInterpolate(vec(p[2,:]), y);
         # arr[3] = cubicInterpolate(vec(p[3,:]), y);

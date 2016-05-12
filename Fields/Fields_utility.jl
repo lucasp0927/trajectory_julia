@@ -82,3 +82,5 @@ end
 #     return VectorField{T,3}(f::Array{T,4},pos,size,scaling=scaling)    
 # end
 # file2field?
+
+#expiwt(t::Float64) = exp(1.0im*t*2pi)::Complex{Float64}
