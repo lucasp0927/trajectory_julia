@@ -81,7 +81,7 @@ function test(sfn::ScalarFieldNode)
     output = fetch(r)
     file = matopen("out.mat", "w")
     write(file, "itp", output)
-    close(file)    
+    close(file)
 #    heatmap(output)
  #   png("output")
     ######composite
@@ -121,7 +121,7 @@ end
     output = zeros(Float64,(N,N))
     for x in enumerate(xx)
         for y in enumerate(yy)
-            output[x[1],y[1]] = Fields.value3([x[2],y[2]],0.25)
+            output[x[1],y[1]] = Fields.value3([x[2],y[2]],0.75)
         end
     end
     return output;
@@ -157,7 +157,7 @@ function main()
     rb_field_s = Fields.copy_to_sharedarray!(rb_field)
     rb_field = []
     close(file)
- 
+
     println("left beam")
     file = matopen("lattice_left.mat")
     lb_field = read(file, "beam_left") # note that this does NOT introduce a variable ``varname`` into scope
@@ -173,7 +173,7 @@ function main()
     close(file)
     gc()
     #########
-    sfn = buildfields!(rb_field_s,lb_field_s,gm_field_s)    
+    sfn = buildfields!(rb_field_s,lb_field_s,gm_field_s)
 #    Profile.init(delay=0.01)
     test(sfn)
     #    Profile.clear()
