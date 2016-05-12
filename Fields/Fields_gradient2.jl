@@ -134,3 +134,15 @@ end
     #    return itp_spline(A,(2.0+x_1,2.0+x_2))
 end
 
+@generated function value3(pos::Vector{Float64},t::Real)
+    quote
+        global fields
+        x = $(Array(Float64,2))
+        sample2!(fields::ScalarFieldNode,pos,t)
+        @nexprs 2 j->x[j] = rem(pos[j],(fields::ScalarFieldNode).res[j])/(fields::ScalarFieldNode).res[j]
+        return bicubicInterpolate((fields::ScalarFieldNode).sample,x)
+#        return itp_bicubic(f.sample,x)
+    end
+    #    return itp_spline(A,(2.0+x_1,2.0+x_2))
+end
+

@@ -16,46 +16,64 @@ function readfields(filename::AbstractString,variable::AbstractString)
     return var
 end
 
+function sendto(p::Int; args...)
+    for (nm, val) in args
+        @spawnat(p, eval(Main, Expr(:(=), nm, val)))
+    end
+end
+
+
+function sendto(ps::Vector{Int}; args...)
+    for p in ps
+        sendto(p; args...)
+    end
+end
+
+
 function test()
+    println(nprocs()," processes running.")
     println("######################################")
-    println("2D composite test")
-    println("building sf1")
-    sf1 = Fields.func2field(ScalarField{Complex{Float64},2},(x,y)->sin(x/900.0*2pi),[1000,1000],[0.0,0.0],[900.0,900.0])
-    println("building sf2")
-    sf2 = Fields.func2field(ScalarField{Complex{Float64},2},(x,y)->-sin(x/900.0*2pi),[101,101],[299.0,299.0],[300.0,300.0])
+#    println("building sf1")
+#    sf1 = Fields.func2field(ScalarField{Complex{Float64},2},(x,y)->sin(x/900.0*2pi),[1000,1000],[0.0,0.0],[900.0,900.0])
+#    println("building sf2")
+#    sf2 = Fields.func2field(ScalarField{Complex{Float64},2},(x,y)->-sin(x/900.0*2pi),[101,101],[299.0,299.0],[300.0,300.0])
     println("building lattice beams")
     println("right beam")
     file = matopen("lattice_right.mat")
     rb_field = read(file, "beam_right") # note that this does NOT introduce a variable ``varname`` into scope
+    rb_field_s = Fields.copy_to_sharedarray!(rb_field)
+    rb_field = []
     close(file)
-    rb = VectorField{Complex{Float64},2}(rb_field,[0.0,0.0],[6666*15.0,3333*15.0],scaling=@anon t-> exp(1.0im*t*2pi))    
+ 
     println("left beam")
     file = matopen("lattice_left.mat")
     lb_field = read(file, "beam_left") # note that this does NOT introduce a variable ``varname`` into scope
+    lb_field_s = Fields.copy_to_sharedarray!(lb_field)
+    lb_field = []
     close(file)
-    lb = VectorField{Complex{Float64},2}(lb_field,[0.0,0.0],[6666*15.0,3333*15.0],scaling=@anon t-> 1.0+0.0im)
 
-    vfn = Fields.VectorFieldNode{2}([lb,rb],scaling=@anon t->1.0+0.0im)
-    println("building gm")
+    println("gm")
     file = matopen("D2_TE.mat")
     gm_field = read(file, "gm") # note that this does NOT introduce a variable ``varname`` into scope
+    gm_field_s = Fields.copy_to_sharedarray!(gm_field)
+    gm_field = []
     close(file)
-    gm = ScalarField{Float64,2}(gm_field,[(6666*15.0)/2.0-1854.625,(3333*15.0)/2.0-1850.0],[3690.75,3690.75],scaling=@anon t-> 10.0)
-    #########
-    sfn = Fields.ScalarFieldNode{2}([vfn,gm])
-    println("aligning...")
-    @time Fields.align_field_tree!(sfn)
-    @time Fields.set_geometry!(sfn)
-    @time Fields.set_typeof!(sfn)
     gc()
-    println("geometry of lb")
-    println(Fields.geometry(lb))
-    println("geometry of rb")
-    println(Fields.geometry(rb))
-    println("geometry of gm")
-    println(Fields.geometry(gm))
-    println("geometry of sfn")
-    println(Fields.geometry(sfn))
+    #########
+    Fields.buildfields_parallel!(rb_field_s,lb_field_s,gm_field_s)
+    ######
+    # Fields.align_field_tree!(Fields.fields)
+    # Fields.set_geometry!(Fields.fields)
+    # Fields.set_typeof!(Fields.fields)
+
+    # println("geometry of lb")
+    # println(Fields.geometry(lb))
+    # println("geometry of rb")
+    # println(Fields.geometry(rb))
+    # println("geometry of gm")
+    # println(Fields.geometry(gm))
+    # println("geometry of sfn")
+    # println(Fields.geometry(sfn))
     ######gradient
     #=
     @time    Fields.sample(gm,[49140.0,24147.0],1.0)
@@ -66,14 +84,18 @@ function test()
     @time    benchmark_smp(vfn)
     println("benchmark sampling sfn")
 =#
-@time    @profile      benchmark_smp(sfn)    
+    @time  benchmark_smp(Fields.fields)
     println("benchmark value2 sfn")
     #=
     @time    benchmark_value(sfn)
     println("diff: ",mean(output1-output2))
     =#
     println("output")
-    @time   output = itp_test(sfn)
+    r = @spawnat 2 itp_test()
+    output = fetch(r)
+    file = matopen("out.mat", "w")
+    write(file, "itp", output)
+    close(file)    
 #    heatmap(output)
  #   png("output")
     ######composite
@@ -90,6 +112,7 @@ function test()
 #     write(file, "field", f_out.field)
 #     close(file)
 end
+
 function benchmark_smp(f)
     for i = 1:1000000
         Fields.sample2!(f,[50000.0+rand()*10.0,25000.0+rand()*10.0],1.0*rand())
@@ -102,26 +125,24 @@ function benchmark_value(f)
     end
 end
 
-function itp_test(sfn)
-    N = 500
+@everywhere function itp_test()
+    info("test")
+    N = 1000
     xx = linspace(48000-1000,52000+1000,N)
     yy = linspace(23000,27000,N)
 #    xx = linspace(450-400,450+400,N)
-#    yy = linspace(23000,27000,N)    
+#    yy = linspace(23000,27000,N)
     output = zeros(Float64,(N,N))
     for x in enumerate(xx)
         for y in enumerate(yy)
-            output[x[1],y[1]] = Fields.value2(sfn::ScalarFieldNode,[x[2],y[2]],0.0)
+            output[x[1],y[1]] = Fields.value3([x[2],y[2]],0.0)
         end
     end
-
-    file = matopen("out.mat", "w")
-    write(file, "itp", output)
-    close(file)
+    return output;
 end
 
 function itp_grad_test(sfn)
-    N = 500
+    N = 1000
     xx = linspace(48000,52000,N)
     yy = linspace(23000,27000,N)
     output = zeros(Float64,(2,N,N))
@@ -139,9 +160,10 @@ end
 function main()
 #    Profile.init(delay=0.01)
     test()
-    Profile.clear()
+    #    Profile.clear()
+    gc()
     test()
-    open("profile.bin", "w") do f serialize(f, Profile.retrieve()) end
+#    open("profile.bin", "w") do f serialize(f, Profile.retrieve()) end
     ##########3D test
 
 #     println("######################################")
@@ -174,4 +196,5 @@ function main()
 #     println(Fields.geometry(sfn))
 end
 main()
+whos()
 #@time main()

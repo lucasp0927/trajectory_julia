@@ -7,6 +7,7 @@ abstract AbstractVectorField <: Field
 abstract AbstractScalarField <: Field
 #TODO: right now sample is only for 2d, also the ScalarFieldNode.sample datatype is Float64
 type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
+    sharedfield::SharedArray{T}
     field::Array{T}
     position::Vector{Float64}
     size::Vector{Float64}
@@ -17,15 +18,16 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     rel_pos::Vector{Float64}
     pidx::Vector{Int64}
     s::Complex{Float64}
-    function VectorField(f::Array{T},pos::Vector{Float64},sz::Vector{Float64};scaling = @anon t->1.0)
+    function VectorField(f::SharedArray{T},pos::Vector{Float64},sz::Vector{Float64};scaling = @anon t->1.0)
         res = sz./(collect(size(f))[2:N+1]-1)
         @assert all(x->x!=0,res) "zero resolution!"
-        length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,res,scaling,N,zeros(T,(3,4,4)),[0.0,0.0],[0,0,0,0],zero(Complex{Float64})):error("dimension error!")
+        length(pos)==length(sz)==N==ndims(f)-1?new(f,sdata(f),pos,sz,res,scaling,N,zeros(T,(3,4,4)),[0.0,0.0],[0,0,0,0],zero(Complex{Float64})):error("dimension error!")
     end
 end
 
 type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
-    field::Array{T}
+    sharedfield::SharedArray{T}
+    field::Array{T}    
     position::Vector{Float64}
     size::Vector{Float64}
     res::Vector{Float64}
@@ -35,10 +37,10 @@ type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     rel_pos::Vector{Float64}
     pidx::Vector{Int64}
     s::Float64
-    function ScalarField(f::Array{T,N},pos::Vector{Float64},sz::Vector{Float64};scaling = @anon t->1.0)
+    function ScalarField(f::SharedArray{T,N},pos::Vector{Float64},sz::Vector{Float64};scaling = @anon t->1.0)
         res = sz./(collect(size(f))[1:N]-1)
         @assert all(x->x!=0,res) "zero resolution!"
-        length(pos)==length(sz)==N==ndims(f)?new(f,pos,sz,res,scaling,N,zeros(T,(4,4)),[0.0,0.0],[0,0,0,0],zero(Float64)):error("dimension error!")
+        length(pos)==length(sz)==N==ndims(f)?new(f,sdata(f),pos,sz,res,scaling,N,zeros(T,(4,4)),[0.0,0.0],[0,0,0,0],zero(Float64)):error("dimension error!")
     end
 end
 
