@@ -1,11 +1,11 @@
 using Base.LinAlg.BLAS
 @fastmath @inbounds function sample2!{T<:ComplexOrFloat}(f::ScalarField{T,2},pos::Vector{Float64},t::Real)
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
-    f.rel_pos[2] = pos[2]-f.position[2]::Float64    
+    f.rel_pos[2] = pos[2]-f.position[2]::Float64
     f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))
     f.pidx[2] = f.pidx[1]+3
     f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))
-    f.pidx[4] = f.pidx[3]+3        
+    f.pidx[4] = f.pidx[3]+3
 #    rel_pos::Vector{Float64} = pos-f.position::Vector{Float64}
 #    pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64}))
     # pidx = Array(Int64,2)
@@ -33,7 +33,7 @@ end
     f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))
     f.pidx[2] = f.pidx[1]+3
     f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))
-    f.pidx[4] = f.pidx[3]+3    
+    f.pidx[4] = f.pidx[3]+3
     # rel_pos::Vector{Float64} = pos-f.position::Vector{Float64}
     # pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64}))
     # pidx = Array(Int64,2)
@@ -148,3 +148,30 @@ end
     #    return itp_spline(A,(2.0+x_1,2.0+x_2))
 end
 
+@generated function gradient2(pos::Vector{Float64},t::Float64)
+    quote
+        global fields
+        x = $(Array(Float64,2))
+        res = $(Array(Float64,2))
+        res[:] = (fields::ScalarFieldNode).res
+        @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
+        sample2!(fields::ScalarFieldNode,pos,t)
+        return itp_bicubic_grad((fields::ScalarFieldNode).sample,x,res)
+    end
+end
+
+@generated function gradient!(t::Float64,posvel::Vector{Float64},grad::Vector{Float64})
+    quote
+        global fields
+        x = $(Array(Float64,2))
+        res = $(Array(Float64,2))
+        pos = $(Array(Float64,2))
+        res[:] = (fields::ScalarFieldNode).res
+        pos[:] = posvel[1:2]
+        @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
+        sample2!(fields::ScalarFieldNode,pos,t)
+        grad[1] = posvel[3]
+        grad[2] = posvel[4]
+        grad[3:4] = itp_bicubic_grad(A,x,res)
+    end
+end

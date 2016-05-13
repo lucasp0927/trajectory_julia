@@ -12,7 +12,7 @@ include("Fields_function.jl")
 # variables
 
 function init_parallel!(sfn::ScalarFieldNode)
-    println("start initialization")
+    println("start initialization Fields module")
     @sync begin
         @async begin
             for p = 1:nprocs()     #initialize Fields module on each processe
@@ -26,7 +26,6 @@ function init!(sfn::ScalarFieldNode)
     global fields
     fields = 0
     gc()
-    info("copy fields...")
     fields = copyfield(sfn)
     gc()
 end

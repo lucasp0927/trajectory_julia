@@ -1,7 +1,7 @@
 push!(LOAD_PATH, "./Fields")
+push!(LOAD_PATH, "./TrajSolver")
 using Fields
 using TrajSolver
-using MAT
 include("fileio.jl")
 include("benchmark.jl")
 
@@ -21,6 +21,8 @@ end
 function test(sfn::ScalarFieldNode)
     Fields.init_parallel!(sfn)
     gc()
+    println(Fields.geometry())
+    TrajSolver.test()
     ######
     # Fields.align_field_tree!(Fields.fields)
     # Fields.set_geometry!(Fields.fields)
@@ -51,11 +53,12 @@ function test(sfn::ScalarFieldNode)
     #=
     println("diff: ",mean(output1-output2))
     =#
-    @time  output1 = itp_test()
-    println("output")
-    @time  r = @spawnat 2 itp_test()
-    output = fetch(r)
+    println("value")
+    @time output = itp_test()
+    println("gradient")
+    @time grad =  itp_grad_test()
     savemat("out.mat",output,"output")
+    savemat("grad_out.mat",grad,"grad")
 #    heatmap(output)
  #   png("output")
     ######composite
@@ -84,9 +87,9 @@ function main()
     println("right beam")
     rb_field_s = mat2sharedarray("lattice_right.mat","beam_right")
     println("left beam")
-    lb_field_s = mat2sharedarray("lattice_left.mat","beam_left")    
+    lb_field_s = mat2sharedarray("lattice_left.mat","beam_left")
     println("gm")
-    gm_field_s = mat2sharedarray("D2_TE.mat","gm")        
+    gm_field_s = mat2sharedarray("D2_TE.mat","gm")
     sfn = buildfields!(rb_field_s,lb_field_s,gm_field_s)
 #    Profile.init(delay=0.01)
     test(sfn)

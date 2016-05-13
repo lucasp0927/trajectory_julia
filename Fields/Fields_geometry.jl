@@ -24,3 +24,8 @@ end
 
 geometry{T<:Union{VectorField,ScalarField}}(f::T) = Dict("pos"=>f.position,"size"=>f.size,"res"=>f.res)
 
+function geometry()
+    global fields
+    Dict("pos"=>fields.position,"size"=>fields.size,"res"=>fields.res)
+end
+
