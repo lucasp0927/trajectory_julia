@@ -58,7 +58,6 @@ end
     end
 end
 
-
 # function func2field{T<:ComplexOrFloat}(::Type{VectorField{T,2}},func::Function,res::Tuple{Integer,Integer},pos::Tuple{Real,Real},size::Tuple{Real,Real};scaling::Function = t->1.0)
 #     xx = linspace(pos[1],pos[1]+size[1],res[1])
 #     yy = linspace(pos[2],pos[2]+size[2],res[2])
