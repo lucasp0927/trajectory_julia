@@ -18,5 +18,3 @@ function savemat(filename,variable,var_name)
     write(file, var_name, variable)
     close(file)
 end
-
-

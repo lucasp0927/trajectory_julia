@@ -72,7 +72,7 @@ function sample2!(f::VectorFieldNode{2},pos::Vector{Float64},t::Real)
 #    scale_sample!(f.sample,s)
 end
 
-@inbounds function add_sample!{T<:ComplexOrFloat}(sample1::Array{T,3},sample2::Array{T,3})
+@fastmath @inbounds function add_sample!{T<:ComplexOrFloat}(sample1::Array{T,3},sample2::Array{T,3})
     for i in eachindex(sample1)
         sample1[i] += sample2[i]
     end
@@ -172,6 +172,6 @@ end
         sample2!(fields::ScalarFieldNode,pos,t)
         grad[1] = posvel[3]
         grad[2] = posvel[4]
-        grad[3:4] = itp_bicubic_grad(A,x,res)
+        grad[3:4] = itp_bicubic_grad((fields::ScalarFieldNode).sample,x,res)
     end
 end

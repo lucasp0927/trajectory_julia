@@ -5,6 +5,7 @@ function align_field_tree!{T<:FieldNode}(f::T)
     align_geo = unalign_geo
     align_geo["size"] = new_sz
     align_field!(f,align_geo["res"],align_geo["pos"])
+    gc()
 end
 
 function align_field!{T<:FieldNode}(f::T,res::Vector{Float64},pos::Vector{Float64})
@@ -48,7 +49,7 @@ function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Vector{Float
     new_field = SharedArray(T,3,new_arr_size...)
     for i = 1:3
         old_field_itp = interpolate(myslice(f.field,i), BSpline(Cubic(Flat())), OnGrid())
-        itp_field!(myslice(new_field,i),old_field_itp,unalign_geo,align_geo)        
+        itp_field!(myslice(new_field,i),old_field_itp,unalign_geo,align_geo)
     end
     @assert collect(size(new_field)[2:end]) == new_arr_size
     setfield!(f,new_field,align_geo["pos"],align_geo["size"],scaling=f.scaling)

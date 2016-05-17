@@ -33,3 +33,18 @@ end
     end
     return output
 end
+
+@everywhere function itp_grad_test2()
+    N = 1000
+    xx = linspace(48000-1000,52000+1000,N)
+    yy = linspace(23000,27000,N)
+    output = zeros(Float64,(4,N,N))
+    grad = Array(Float64,4)
+    for x in enumerate(xx)
+        for y in enumerate(yy)
+            Fields.gradient!(0.5,[x[2],y[2],rand(),rand()],grad)
+            output[:,x[1],y[1]] = grad
+        end
+    end
+    return output
+end
