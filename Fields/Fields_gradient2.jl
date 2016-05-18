@@ -79,21 +79,26 @@ end
 end
 
 @inbounds function sample2!(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real)
-    fill!(f.sample,zero(Float64))
-    fill!(f.vf_sample,zero(Complex{Float64}))
-    for ff in f.fields
-        if in_field(ff,pos)
-            sample2!(ff,pos,t)
-            add_fields!(ff,f.sample,f.vf_sample)
+    fill!((f.sample)::Array{Float64,2},zero(Float64))
+     if f.one_vf_flag
+         sample2!(f.fields[1],pos,t)
+         add_vector_field!(f.sample,f.fields[1].sample)
+     else
+        fill!((f.vf_sample)::Array{Complex{Float64},3},zero(Complex{Float64}))
+        for ff in f.fields
+            if in_field(ff,pos)
+                sample2!(ff,pos,t)
+                add_fields!(ff,f.sample,f.vf_sample)
+            end
         end
-    end
-    add_vector_field!(f.sample,f.vf_sample)
-    f.s = (f.scaling::Function)(t)::Float64
-    scal!(16,f.s,f.sample,1)
+        add_vector_field!(f.sample,f.vf_sample)
+     end
+        f.s = (f.scaling::Function)(t)::Float64
+        scal!(16,f.s,f.sample,1)
 #    scale_sample!(f.sample,s)
 end
 
-@inbounds function add_vector_field!{T<:ComplexOrFloat}(sample::Array{Float64,2},vf_sample::Array{T,3})
+@fastmath @inbounds function add_vector_field!{T<:ComplexOrFloat}(sample::Array{Float64,2},vf_sample::Array{T,3})
     for j = 1:4, i = 1:4
         #        sample[i,j] += sumabs2(vf_sample[:,i,j])
         @simd        for k = 1:3

@@ -95,9 +95,11 @@ type ScalarFieldNode{N} <: AbstractScalarField
     sample::Array{Float64,2}
     vf_sample::Array{Complex{Float64},3}
     s::Float64
+    one_vf_flag::Bool
     function ScalarFieldNode{T<:Field}(f::Vector{T};scaling::Function =  t->1.0)
         @assert all(x->x.dim==N,f) "dimension error!"
-        new(f,scaling,N,[],[],[],Complex{Float64},zeros(Float64,(4,4)),zeros(Complex{Float64},(3,4,4)),zero(Float64))
+        flag = length(f) == 1 && typeof(f[1])<:AbstractVectorField
+        new(f,scaling,N,[],[],[],Complex{Float64},zeros(Float64,(4,4)),zeros(Complex{Float64},(3,4,4)),zero(Float64),flag)
     end
 end
 
@@ -232,7 +234,8 @@ function build_field(field_config::Dict,name,level::Integer,verbose::Bool)
         #     println(typeof(f))
         # end
         dim = round(field_config["dim"])::Integer
-        return ScalarFieldNode{dim}(fields)
+        scaling = eval(parse(field_config["scaling"]))
+        return ScalarFieldNode{dim}(fields,scaling=scaling)
     elseif field_config["field-type"] == "VectorFieldNode"
         if verbose
             println(padding(level),"building VectorFieldNode ",name)
@@ -248,7 +251,8 @@ function build_field(field_config::Dict,name,level::Integer,verbose::Bool)
         #     println(typeof(f))
         # end
         dim = round(field_config["dim"])::Integer
-        return VectorFieldNode{dim}(fields)
+        scaling = eval(parse(field_config["scaling"]))
+        return VectorFieldNode{dim}(fields,scaling=scaling)
     elseif field_config["field-type"] == "ScalarField" || field_config["field-type"] == "VectorField"
         if field_config["init-type"] == "file"
             build_field_file(field_config,name,level,verbose)

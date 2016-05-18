@@ -21,10 +21,8 @@ end
 function init_parallel(config::Dict)
     println("start initialization TrajSolver module")
     @sync begin
-        @async begin
-            for p = 2:nprocs()
-                remotecall_fetch(p,init!,config)
-            end
+        for p = 2:nprocs()
+            @async remotecall_wait(p,init!,config)
         end
     end
 end
@@ -67,16 +65,45 @@ function in_boundary(pos::Vector{Float64},boundary::Array{Float64,2})
     return true
 end
 
-function distribute_atoms()
-    global init_range
+
+function solve_traj()
+    global init_range, temperature, tspan
+    init_xv = distribute_atoms(init_range,temperature,tspan[1])
+end
+
+function distribute_atoms(init_range::Vector{Float64},atom_temp::Float64,t::Float64)
+    srand()
     x_range = init_range[1:2]
     y_range = init_range[3:4]
-    x = (x_range[2]-x_range[1])*rand()+x_range[1]
-    y = (y_range[2]-y_range[1])*rand()+y_range[1]
-    U = Fields.composite_slow(init_range,tspan[1])
-    U_min = minimum(U)
+    U_range = Fields.composite_slow(init_range,t)
+    U_min = minimum(U_range)
+    U_max = maximum(U_range)
+    init_xv = zeros(Float64,(4,my_trajnum))
     for i = 1:my_trajnum
+        while true
+            #randomize position
+            x = (x_range[2]-x_range[1])*rand()+x_range[1]
+            y = (y_range[2]-y_range[1])*rand()+y_range[1]
+            eu = Fields.value3([x,y],t)
+            #randomize speed
+            vp = sqrt(2.0*KB*atom_temp/M_CS)
+            vx = -4.0*vp+8.0*vp*rand()
+            vy = -4.0*vp+8.0*vp*rand()
+            vz = -4.0*vp+8.0*vp*rand()
+            ek = 0.5*M_CS*(vx*vx+vy*vy+vz*vz)/KB
+            etot = ek+eu-U_min
+            p = exp(-1.0*etot/atom_temp)
+            @assert 0.0 < p <= 1.0 "p out of range"
+            init_xv[1,i] = x
+            init_xv[2,i] = y
+            init_xv[3,i] = vx
+            init_xv[4,i] = vy
+            if rand() <= p
+                break
+            end
+        end
     end
+    return init_xv
 end
 
 function distribute_atoms!(init_xv::SharedArray{Float64,2}, x_grid, x_div, y_grid, y_div, U_t::SharedArray{Float64})

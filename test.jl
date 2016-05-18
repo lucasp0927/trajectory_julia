@@ -9,18 +9,17 @@ include("parse.jl")
 function test(sfn::ScalarFieldNode)
     Fields.init_parallel!(sfn)
     @sync begin
-        @async begin
-            for p = 2:nprocs()
-                remotecall_fetch(p,TrajSolver.distribute_atoms)
-            end
+        for p = 2:nprocs()
+            @async remotecall_wait(p,TrajSolver.solve_traj)
         end
     end
-@time    begin
+    @time    begin
         println("value")
         r =@spawnat 2 itp_test()
         println("gradient")
         r_grad = @spawnat 3 itp_grad_test2()
         output = fetch(r)
+
         grad = fetch(r_grad)
         savemat("out.mat",output,"output")
         savemat("grad_out.mat",grad,"grad")

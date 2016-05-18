@@ -5,31 +5,36 @@ fields-config:
         field-type: ScalarFieldNode
         dim: 2
         fields:
-            lattice-beam:
-                field-type: VectorFieldNode
+            lattice-beam-wrap:
+                field-type: ScalarFieldNode
                 dim: 2
                 fields:
-                    right-beam:
-                        field-type: VectorField
-                        D-type: Complex
+                    lattice-beam:
+                        field-type: VectorFieldNode
                         dim: 2
-                        init-type: file
-                        filename: lattice_right.mat
-                        variable: beam_right
-                        pos: [0.0,0.0]
-                        size: [99990, 49995]
-                        scaling: "t->1.0+0.0im"
-                    left-beam:
-                        field-type: VectorField
-                        D-type: Complex
-                        dim: 2
-                        init-type: file
-                        filename: lattice_left.mat
-                        variable: beam_left
-                        pos: [0.0,0.0]
-                        size: [99990, 49995]
-                        scaling: "t->exp(2*pi*im*t)"
-                scaling: "t->1.0+0.0im"
+                        fields:
+                            right-beam:
+                                field-type: VectorField
+                                D-type: Complex
+                                dim: 2
+                                init-type: file
+                                filename: lattice_right.mat
+                                variable: beam_right
+                                pos: [0.0,0.0]
+                                size: [99990, 49995]
+                                scaling: "t->1.0+0.0im"
+                            left-beam:
+                                field-type: VectorField
+                                D-type: Complex
+                                dim: 2
+                                init-type: file
+                                filename: lattice_left.mat
+                                variable: beam_left
+                                pos: [0.0,0.0]
+                                size: [99990, 49995]
+                                scaling: "t->exp(2*pi*im*t)"
+                        scaling: "t->1.0+0.0im" #amplitude scaling, not power
+                scaling: "t->213e-6"
             gm:
                 field-type: ScalarField
                 D-type: Float
@@ -41,11 +46,11 @@ fields-config:
                 res: [400, 400]
                 pos: [48140.4, 23147.5]
                 size: [3690.75,3690.75]
-                scaling: "t->10.0"
+                scaling: "t->-2000e-6"
         scaling: "t->1.0"
 trajsolver-config:
     simulation-config:
-        traj_num: 3000
+        traj_num: 1000
         tstart: 0.0
         tend: 150.0
         tdiv: 0.1
