@@ -8,6 +8,13 @@ include("parse.jl")
 
 function test(sfn::ScalarFieldNode)
     Fields.init_parallel!(sfn)
+    @sync begin
+        @async begin
+            for p = 2:nprocs()
+                remotecall_fetch(p,TrajSolver.distribute_atoms)
+            end
+        end
+    end
 @time    begin
         println("value")
         r =@spawnat 2 itp_test()
@@ -22,8 +29,8 @@ end
 
 function main()
     println(nprocs()," processes running.")
-
-    fields_config,trajsolver_config = parse_config("config.yml",false)
+    fields_config,trajsolver_config = parse_config("config.yml",true)
+    TrajSolver.init_parallel(trajsolver_config)
     field_config = fields_config["field"]
     sfn = Fields.build_field(field_config,"field",0,true)
     println("aligning...")

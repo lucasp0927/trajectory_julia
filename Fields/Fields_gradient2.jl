@@ -175,3 +175,17 @@ end
         grad[3:4] = itp_bicubic_grad((fields::ScalarFieldNode).sample,x,res)
     end
 end
+
+function composite_slow(range::Vector{Float64},t::Float64)
+    global fields
+    res = (fields::ScalarFieldNode).res
+    @assert range[2]-range[1] > res[1] "range too small"
+    @assert range[4]-range[3] > res[1] "range too small"
+    xx = range[1]:res[1]:range[2]
+    yy = range[3]:res[2]:range[4]
+    output = zeros(Float64,(length(xx),length(yy)))
+    for x in enumerate(xx), y in enumerate(yy)
+        output[x[1],y[1]] = Fields.value3([x[2],y[2]],t)
+    end
+    return output
+end

@@ -45,6 +45,7 @@ fields-config:
         scaling: "t->1.0"
 trajsolver-config:
     simulation-config:
+        traj_num: 3000
         tstart: 0.0
         tend: 150.0
         tdiv: 0.1
@@ -63,3 +64,4 @@ trajsolver-config:
         right-edge: [99890.0, 99990.0, 0.0, 49995.0]
         top-edge: [0.0, 99990.0, 0.0, 100.0]
         bottom-edge: [0.0, 99990.0, 49895.0, 49995.0]
+output-config:

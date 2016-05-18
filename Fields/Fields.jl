@@ -15,14 +15,15 @@ function init_parallel!(sfn::ScalarFieldNode)
     println("start initialization Fields module")
     @sync begin
         @async begin
-            for p = 1:nprocs()     #initialize Fields module on each processe
-                remotecall_fetch(p,Fields.init!,sfn)
+            for p = 2:nprocs()     #initialize Fields module on each processe
+                remotecall_fetch(p,init!,sfn)
             end
         end
     end
 end
 
 function init!(sfn::ScalarFieldNode)
+    println("initialize Field module on process ", myid())
     global fields
     fields = 0
     gc()

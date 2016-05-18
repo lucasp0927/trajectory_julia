@@ -2,7 +2,141 @@ module TrajSolver
 using Sundials
 using Fields
 include("constant.jl")
+global trajnum
+global my_trajnum
+global solver, reltol, abstol
+global traj_num, tspan, tdiv
+global temperature, init_speed, init_range
+global boundary
 
+function allocate_jobs(totaljob)
+    nchunks = nworkers()
+    jobs = fill(fld(totaljob,nchunks),nchunks)
+    jobs[1:totaljob%nchunks] += 1
+    start = round(Int64,sum(jobs[1:myid()-2])+1)
+    stop = round(Int64,sum(jobs[1:myid()-1]))
+    return start,stop
+end
+
+function init_parallel(config::Dict)
+    println("start initialization TrajSolver module")
+    @sync begin
+        @async begin
+            for p = 2:nprocs()
+                remotecall_fetch(p,init!,config)
+            end
+        end
+    end
+end
+
+function init!(config::Dict)
+    println("initialize TrajSolver module on process ", myid())
+    global tarjnum
+    global my_trajnum
+    global solver, reltol, abstol
+    global traj_num, tspan, tdiv
+    global temperature, init_speed, init_range
+    global boundary
+    #simulation-config
+    trajnum = round(Int64,config["simulation-config"]["traj_num"])::Int64
+    tstart = float(config["simulation-config"]["tstart"])::Float64
+    tend = float(config["simulation-config"]["tend"])::Float64
+    tdiv = float(config["simulation-config"]["tdiv"])::Float64
+    tspan = collect(Float64,tstart:tdiv:tend)
+    #solver-config
+    solver = ascii(config["solver-config"]["solver"])
+    reltol = float(config["solver-config"]["reltol"])::Float64
+    abstol = float(config["solver-config"]["abstol"])::Float64
+    #atom-config
+    temperature = float(config["atom-config"]["temperature"])::Float64
+    init_speed = float(config["atom-config"]["init-speed"])::Float64
+    init_range = convert(Vector{Float64},config["atom-config"]["init-range"])
+    #boundary
+    boundary = reduce(hcat,map(d->convert(Array{Float64},d),values(config["boundary"])))
+    #calculate my_trajnum
+    jobs = allocate_jobs(trajnum)
+    my_trajnum = jobs[2]-jobs[1]+1
+end
+
+function in_boundary(pos::Vector{Float64},boundary::Array{Float64,2})
+    for i = size(boundary,2)
+        if boundary[1,i]<pos[1]<boundary[2,i] && boundary[3,i]<pos[2]<boundary[4,i]
+            return false
+        end
+    end
+    return true
+end
+
+function distribute_atoms()
+    global init_range
+    x_range = init_range[1:2]
+    y_range = init_range[3:4]
+    x = (x_range[2]-x_range[1])*rand()+x_range[1]
+    y = (y_range[2]-y_range[1])*rand()+y_range[1]
+    U = Fields.composite_slow(init_range,tspan[1])
+    U_min = minimum(U)
+    for i = 1:my_trajnum
+    end
+end
+
+function distribute_atoms!(init_xv::SharedArray{Float64,2}, x_grid, x_div, y_grid, y_div, U_t::SharedArray{Float64})
+    idx = indexpids(init_xv)
+    if idx == 0
+        return
+    end
+    #srand()
+    #srand(idx)#TODO remove this!!
+    x_center = 31
+    x_width = 10
+    traj_num = size(init_xv,1)
+    nchunks = length(procs(init_xv))
+    jobs = fill(fld(traj_num,nchunks),nchunks)
+    jobs[1:traj_num%nchunks] += 1
+    start = Integer(sum(jobs[1:idx-1])+1)
+    stop = Integer(sum(jobs[1:idx]))
+    t_min = minimum(U_t[:,x_center-x_width:x_center+x_width,1])
+#    U_t_itp = Interpolations.interpolate(U_t[:,:,1], BSpline(Quadratic(Flat())),OnGrid())
+    for i in collect(start:stop)
+        flag = false
+        while flag == false
+            # randomize position
+            #x = round(Int64,x_center-x_width+rand()*(2*x_width))
+            #y = round(Int64,110/y_div+ rand()*(y_grid-220/y_div))
+            x = x_center-x_width+rand()*(2*x_width)
+            y = 110/y_div+ rand()*(y_grid-220/y_div)
+            x_floor = floor(Int64,x)
+            y_floor = floor(Int64,y)
+            #evaluate U for linear bilinear interpolation
+            U11 = U_t[y_floor,x_floor,1]
+            U12 = U_t[y_floor+1,x_floor,1]
+            U21 = U_t[y_floor,x_floor+1,1]
+            U22 = U_t[y_floor+1,x_floor+1,1]
+            # randomize velocity
+            vp = sqrt(2.0*KB*Config.temp/M_CS)
+            vx = -3.5*vp+6.0*vp*rand()
+            vy = -3.5*vp+6.0*vp*rand()
+            vz = -3.5*vp+6.0*vp*rand()
+            ek = 0.5*M_CS*(vx*vx+vy*vy+vz*vz)/KB
+            #etot = ek+U_t[y,x,1]-t_min
+            eu = U11*(x_floor+1-x)*(y_floor+1-y)+U21*(x-x_floor)*(y_floor+1-y)+U12*(x_floor+1-x)*(y-y_floor)+U22*(x-x_floor)*(y-y_floor)
+            etot = ek+eu-t_min #in K
+            p = exp(-1.0*etot/Config.temp)
+            if rand() <= p
+                flag = true
+                init_xv[i,1] = (x-1)*x_div
+                init_xv[i,2] = (y-1)*y_div
+                init_xv[i,3] = vx+Config.lattice_speed
+                init_xv[i,4] = vy
+            end
+        end
+    end
+end
+
+
+###########################################
+#OLD VERSION
+###########################################
+#=
 function pcalc_trajectory!(result::SharedArray{Float64}, traj_num::Int64,t_span::Vector{Float64}, init_xv::SharedArray{Float64,2}, args::Tuple, progress::SharedArray{Bool}, solver::Vector{ASCIIString}, tol::Vector{Float64})
     idx = indexpids(result)
     if idx == 0
@@ -228,5 +362,6 @@ end
     end
 end
 
+=#
 =#
 end
