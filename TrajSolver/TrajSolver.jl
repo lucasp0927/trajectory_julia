@@ -108,10 +108,7 @@ function solve_traj()
     end
     init = zeros(Float64,4)
     for i = 1:my_trajnum::Int64
-
-        for j = 1:4
-            init[j] = init_xv[j,i]
-        end
+        init[:] = init_xv[:,i]
         yout = slice(result::Array{Float64,3},:,:,i)
         mycvode(mem,Fields.gradient!,init,tspan,yout; reltol = reltol, abstol =abstol)
     end

@@ -14,7 +14,7 @@ include("Fields_function.jl")
 function init_parallel!(sfn::ScalarFieldNode)
     println("start initialization Fields module...")
     @sync begin
-        for p = 2:nprocs()     #initialize Fields module on each processe
+        for p = 1:nprocs()     #initialize Fields module on each processe
         @async remotecall_fetch(p,init!,sfn)
         end
     end

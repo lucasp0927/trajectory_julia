@@ -19,6 +19,8 @@ function test(sfn::ScalarFieldNode)
     end
     result = cat(3,temp...)
     savemat("result.mat",result,"result")
+#    output = Fields.composite_slow([200.0, 600.0, 100.0, 49895.0],0.0)
+#    savemat("out.mat",output,"output")
     # @time    begin
     #     println("value")
     #     r =@spawnat 2 itp_test()
@@ -34,7 +36,7 @@ end
 
 function main()
     println(nprocs()," processes running.")
-    fields_config,trajsolver_config = parse_config("config.yml",true)
+    fields_config,trajsolver_config = parse_config("config_200khz_lattice.yml",true)
     TrajSolver.init_parallel(trajsolver_config)
     field_config = fields_config["field"]
     sfn = Fields.build_field(field_config,"field",0,true)
@@ -45,8 +47,6 @@ function main()
 #    Profile.init(delay=0.01)
     test(sfn)
 #    Profile.clear()
-    gc()
-    test(sfn)
 #    open("profile.bin", "w") do f serialize(f, Profile.retrieve()) end
 end
 main()

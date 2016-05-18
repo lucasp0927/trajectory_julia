@@ -1,6 +1,19 @@
 using ArgParse
 using YAML
 
+function parse_commandline()
+    s = ArgParseSettings()
+    @add_arg_table s begin
+        "--config", "-C"
+        help = "Configuration file."
+        required = true
+        "--outfile", "-O"
+        help = "output file."
+        required = true
+    end
+    return parse_args(s)
+end
+
 function parse_config(filename,verbose)
     config = YAML.load(open(filename))
     fields_config = config["fields-config"]

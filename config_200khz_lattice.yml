@@ -1,0 +1,55 @@
+#time unit us
+#length unit nm
+fields-config:
+    field:
+        field-type: ScalarFieldNode
+        dim: 2
+        scaling: "t->1.0"
+        fields:
+            lattice-beam:
+                field-type: VectorFieldNode
+                dim: 2
+                scaling: "t->0.0378*0.01+0.0im" #amplitude scaling, 0.0378 for 1MHz trap freq, 10Khz
+                fields:
+                    right-beam:
+                        field-type: VectorField
+                        D-type: Complex
+                        dim: 2
+                        init-type: file
+                        filename: lattice_right.mat
+                        variable: beam_right
+                        pos: [0.0,0.0]
+                        size: [99990, 49995]
+                        scaling: "t->1.0+0.0im"
+                    left-beam:
+                        field-type: VectorField
+                        D-type: Complex
+                        dim: 2
+                        init-type: file
+                        filename: lattice_left.mat
+                        variable: beam_left
+                        pos: [0.0,0.0]
+                        size: [99990, 49995]
+                        scaling: "t->exp(0.4*pi*im*t)"
+trajsolver-config:
+    simulation-config:
+        traj_num: 1000
+        tstart: 0.0
+        tend: 400.0
+        tdiv: 0.1
+    solver-config:
+        solver: ADAMS
+        reltol: 1e-6
+        abstol: 1e-6
+    atom-config:
+        temperature: 50e-6
+        init-speed: 82.2
+        init-range: [200.0, 600.0, 100.0, 49895.0] #[x1 x2 y1 y2]
+    boundary: #atoms in these areas are removed from simulation
+        beam1: [49890.0, 50110.0, 24662.0, 24880.0]
+        beam2: [49890.0, 50110.0, 25120.0, 25338.0]
+        left-edge: [0.0, 100.0, 0.0, 49995.0]
+        right-edge: [99890.0, 99990.0, 0.0, 49995.0]
+        top-edge: [0.0, 99990.0, 0.0, 100.0]
+        bottom-edge: [0.0, 99990.0, 49895.0, 49995.0]
+output-config:
