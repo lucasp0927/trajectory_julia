@@ -1,13 +1,17 @@
 module TrajSolver
 using Sundials
 using Fields
-include("constant.jl")
-global trajnum
+include("../constant.jl")
 global my_trajnum
 global solver, reltol, abstol
-global traj_num, tspan, tdiv
+global trajnum, tspan, tdiv
 global temperature, init_speed, init_range
 global boundary
+global result
+
+function get_result()
+    return result
+end
 
 function allocate_jobs(totaljob)
     nchunks = nworkers()
@@ -19,7 +23,7 @@ function allocate_jobs(totaljob)
 end
 
 function init_parallel(config::Dict)
-    println("start initialization TrajSolver module")
+#    println("start initialization TrajSolver module...")
     @sync begin
         for p = 2:nprocs()
             @async remotecall_wait(p,init!,config)
@@ -28,13 +32,13 @@ function init_parallel(config::Dict)
 end
 
 function init!(config::Dict)
-    println("initialize TrajSolver module on process ", myid())
-    global tarjnum
+#    println("initialize TrajSolver module on process ", myid())
     global my_trajnum
     global solver, reltol, abstol
-    global traj_num, tspan, tdiv
+    global trajnum, tspan, tdiv
     global temperature, init_speed, init_range
     global boundary
+    global result
     #simulation-config
     trajnum = round(Int64,config["simulation-config"]["traj_num"])::Int64
     tstart = float(config["simulation-config"]["tstart"])::Float64
@@ -54,10 +58,11 @@ function init!(config::Dict)
     #calculate my_trajnum
     jobs = allocate_jobs(trajnum)
     my_trajnum = jobs[2]-jobs[1]+1
+    result = Array(Float64,4,length(tspan),my_trajnum)
 end
 
-function in_boundary(pos::Vector{Float64},boundary::Array{Float64,2})
-    for i = size(boundary,2)
+@inbounds function in_boundary(pos::Vector{Float64},boundary::Array{Float64,2})
+    for i = 1:size(boundary,2)
         if boundary[1,i]<pos[1]<boundary[2,i] && boundary[3,i]<pos[2]<boundary[4,i]
             return false
         end
@@ -65,13 +70,56 @@ function in_boundary(pos::Vector{Float64},boundary::Array{Float64,2})
     return true
 end
 
+function mycvode(mem, f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::SubArray; reltol::Float64=1e-8, abstol::Float64=1e-7)
+    # f, Function to be optimized of the form f(y::Vector{Float64}, fy::Vector{Float64}, t::Float64)
+    #    where `y` is the input vector, and `fy` is the
+    # y0, Vector of initial values
+    # t, Vector of time values at which to record integration results
+    # reltol, Relative Tolerance to be used (default=1e-4)
+    # abstol, Absolute Tolerance to be used (default=1e-6)
+    flag = Sundials.CVodeInit(mem, cfunction(Sundials.cvodefun, Int32, (Sundials.realtype, Sundials.N_Vector, Sundials.N_Vector, Ref{Function})), t[1], Sundials.nvector(y0).ptr[1])
+    flag = Sundials.CVodeSetUserData(mem, f)
+    flag = Sundials.CVodeSStolerances(mem, reltol, abstol)
+    flag = Sundials.CVDense(mem, length(y0))
+    yout[1:2,1] = y0[1:2]
+    yout[3,1] = Fields.value3(y0[1:2],t[1])
+    y = copy(y0)
+    tout = [t[1]]
+    for k in 2:length(t)
+        flag = Sundials.CVode(mem, t[k], y, tout, Sundials.CV_NORMAL)
+        yout[1:2,k] = y[1:2]
+        yout[3,k] = Fields.value3(y[1:2],t[k])
+        if in_boundary(yout[1:2,k],boundary::Array{Float64,2}) == false
+            break
+        end
+    end
+end
 
 function solve_traj()
-    global init_range, temperature, tspan
+    fill!(result,NaN)
     init_xv = distribute_atoms(init_range,temperature,tspan[1])
+    #initialize sundials
+    if solver == "ADAMS"
+        mem = convert(Sundials.CVODE_ptr,Sundials.CVodeHandle(Sundials.CV_ADAMS, Sundials.CV_FUNCTIONAL))
+    elseif solver == "BDF"
+        mem = convert(Sundials.CVODE_ptr,Sundials.CVodeHandle(Sundials.CV_BDF, Sundials.CV_NEWTON))
+    else
+        error("Unknown ODE solver $solver.")
+    end
+    init = zeros(Float64,4)
+    for i = 1:my_trajnum::Int64
+
+        for j = 1:4
+            init[j] = init_xv[j,i]
+        end
+        yout = slice(result::Array{Float64,3},:,:,i)
+        mycvode(mem,Fields.gradient!,init,tspan,yout; reltol = reltol, abstol =abstol)
+    end
+    gc()
 end
 
 function distribute_atoms(init_range::Vector{Float64},atom_temp::Float64,t::Float64)
+#    println("initialize atoms...")
     srand()
     x_range = init_range[1:2]
     y_range = init_range[3:4]
@@ -79,7 +127,7 @@ function distribute_atoms(init_range::Vector{Float64},atom_temp::Float64,t::Floa
     U_min = minimum(U_range)
     U_max = maximum(U_range)
     init_xv = zeros(Float64,(4,my_trajnum))
-    for i = 1:my_trajnum
+    for i = 1:my_trajnum::Int64
         while true
             #randomize position
             x = (x_range[2]-x_range[1])*rand()+x_range[1]
@@ -96,7 +144,7 @@ function distribute_atoms(init_range::Vector{Float64},atom_temp::Float64,t::Floa
             @assert 0.0 < p <= 1.0 "p out of range"
             init_xv[1,i] = x
             init_xv[2,i] = y
-            init_xv[3,i] = vx
+            init_xv[3,i] = vx+init_speed
             init_xv[4,i] = vy
             if rand() <= p
                 break
@@ -105,60 +153,6 @@ function distribute_atoms(init_range::Vector{Float64},atom_temp::Float64,t::Floa
     end
     return init_xv
 end
-
-function distribute_atoms!(init_xv::SharedArray{Float64,2}, x_grid, x_div, y_grid, y_div, U_t::SharedArray{Float64})
-    idx = indexpids(init_xv)
-    if idx == 0
-        return
-    end
-    #srand()
-    #srand(idx)#TODO remove this!!
-    x_center = 31
-    x_width = 10
-    traj_num = size(init_xv,1)
-    nchunks = length(procs(init_xv))
-    jobs = fill(fld(traj_num,nchunks),nchunks)
-    jobs[1:traj_num%nchunks] += 1
-    start = Integer(sum(jobs[1:idx-1])+1)
-    stop = Integer(sum(jobs[1:idx]))
-    t_min = minimum(U_t[:,x_center-x_width:x_center+x_width,1])
-#    U_t_itp = Interpolations.interpolate(U_t[:,:,1], BSpline(Quadratic(Flat())),OnGrid())
-    for i in collect(start:stop)
-        flag = false
-        while flag == false
-            # randomize position
-            #x = round(Int64,x_center-x_width+rand()*(2*x_width))
-            #y = round(Int64,110/y_div+ rand()*(y_grid-220/y_div))
-            x = x_center-x_width+rand()*(2*x_width)
-            y = 110/y_div+ rand()*(y_grid-220/y_div)
-            x_floor = floor(Int64,x)
-            y_floor = floor(Int64,y)
-            #evaluate U for linear bilinear interpolation
-            U11 = U_t[y_floor,x_floor,1]
-            U12 = U_t[y_floor+1,x_floor,1]
-            U21 = U_t[y_floor,x_floor+1,1]
-            U22 = U_t[y_floor+1,x_floor+1,1]
-            # randomize velocity
-            vp = sqrt(2.0*KB*Config.temp/M_CS)
-            vx = -3.5*vp+6.0*vp*rand()
-            vy = -3.5*vp+6.0*vp*rand()
-            vz = -3.5*vp+6.0*vp*rand()
-            ek = 0.5*M_CS*(vx*vx+vy*vy+vz*vz)/KB
-            #etot = ek+U_t[y,x,1]-t_min
-            eu = U11*(x_floor+1-x)*(y_floor+1-y)+U21*(x-x_floor)*(y_floor+1-y)+U12*(x_floor+1-x)*(y-y_floor)+U22*(x-x_floor)*(y-y_floor)
-            etot = ek+eu-t_min #in K
-            p = exp(-1.0*etot/Config.temp)
-            if rand() <= p
-                flag = true
-                init_xv[i,1] = (x-1)*x_div
-                init_xv[i,2] = (y-1)*y_div
-                init_xv[i,3] = vx+Config.lattice_speed
-                init_xv[i,4] = vy
-            end
-        end
-    end
-end
-
 
 ###########################################
 #OLD VERSION

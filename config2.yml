@@ -5,36 +5,31 @@ fields-config:
         field-type: ScalarFieldNode
         dim: 2
         fields:
-            lattice-beam-wrap:
-                field-type: ScalarFieldNode
+            lattice-beam:
+                field-type: VectorFieldNode
                 dim: 2
                 fields:
-                    lattice-beam:
-                        field-type: VectorFieldNode
+                    right-beam:
+                        field-type: VectorField
+                        D-type: Complex
                         dim: 2
-                        fields:
-                            right-beam:
-                                field-type: VectorField
-                                D-type: Complex
-                                dim: 2
-                                init-type: file
-                                filename: lattice_right.mat
-                                variable: beam_right
-                                pos: [0.0,0.0]
-                                size: [99990, 49995]
-                                scaling: "t->1.0+0.0im"
-                            left-beam:
-                                field-type: VectorField
-                                D-type: Complex
-                                dim: 2
-                                init-type: file
-                                filename: lattice_left.mat
-                                variable: beam_left
-                                pos: [0.0,0.0]
-                                size: [99990, 49995]
-                                scaling: "t->exp(2*pi*im*t)"
-                        scaling: "t->1.0+0.0im" #amplitude scaling, not power
-                scaling: "t->213e-6*10"
+                        init-type: file
+                        filename: lattice_right.mat
+                        variable: beam_right
+                        pos: [0.0,0.0]
+                        size: [99990, 49995]
+                        scaling: "t->1.0+0.0im"
+                    left-beam:
+                        field-type: VectorField
+                        D-type: Complex
+                        dim: 2
+                        init-type: file
+                        filename: lattice_left.mat
+                        variable: beam_left
+                        pos: [0.0,0.0]
+                        size: [99990, 49995]
+                        scaling: "t->exp(2*pi*im*t)"
+                scaling: "t->sqrt(213e-6)+0.0im" #amplitude scaling, not power
             gm:
                 field-type: ScalarField
                 D-type: Float

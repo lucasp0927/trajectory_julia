@@ -1,4 +1,5 @@
 using Base.LinAlg.BLAS
+include("../constant.jl")
 @fastmath @inbounds function sample2!{T<:ComplexOrFloat}(f::ScalarField{T,2},pos::Vector{Float64},t::Real)
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
     f.rel_pos[2] = pos[2]-f.position[2]::Float64
@@ -177,7 +178,7 @@ end
         sample2!(fields::ScalarFieldNode,pos,t)
         grad[1] = posvel[3]
         grad[2] = posvel[4]
-        grad[3:4] = itp_bicubic_grad((fields::ScalarFieldNode).sample,x,res)
+        grad[3:4] = itp_bicubic_grad((fields::ScalarFieldNode).sample,x,res)*KB/M_CS
     end
 end
 
