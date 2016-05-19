@@ -44,35 +44,6 @@ type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     end
 end
 
-function setscaling!(f::Field,scaling::Function)
-    f.scaling = scaling
-end
-
-function setfield!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},A::SharedArray{T},pos::Vector{Float64},sz::Array{Float64};scaling::Function = t->1.0)
-    res = sz./(collect(size(A))[1:N]-1)
-    @assert all(x->x!=0,res) "zero resolution!"
-    @assert length(pos)==length(sz)==N==ndims(A) "dimension error!"
-    f.field = Array(T,1)
-    f.field = A
-    f.position = pos
-    f.size = sz
-    f.res = res
-    f.scaling = scaling
-    f.dim = N
-end
-
-function setfield!{T<:ComplexOrFloat,N}(f::VectorField{T,N},A::SharedArray{T},pos::Vector{Float64},sz::Vector{Float64};scaling::Function = t->1.0)
-    res = sz./(collect(size(A))[2:N+1]-1)
-    @assert all(x->x!=0,res) "zero resolution!"
-    @assert length(pos)==length(sz)==N==ndims(A)-1 "dimension error!"
-    f.field = Array(T,1)
-    f.field = A
-    f.position = pos
-    f.size = sz
-    f.res = res
-    f.scaling = scaling
-    f.dim = N
-end
 
 type VectorFieldNode{N} <: AbstractVectorField
     fields::Vector{AbstractVectorField}
@@ -113,6 +84,55 @@ end
 
 FieldNode = Union{VectorFieldNode,ScalarFieldNode}
 
+function setfield!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},A::SharedArray{T},pos::Vector{Float64},sz::Array{Float64};scaling::Function = t->1.0)
+    res = sz./(collect(size(A))[1:N]-1)
+    @assert all(x->x!=0,res) "zero resolution!"
+    @assert length(pos)==length(sz)==N==ndims(A) "dimension error!"
+    f.field = Array(T,1)
+    f.field = A
+    f.position = pos
+    f.size = sz
+    f.res = res
+    f.scaling = scaling
+    f.dim = N
+end
+
+function setfield!{T<:ComplexOrFloat,N}(f::VectorField{T,N},A::SharedArray{T},pos::Vector{Float64},sz::Vector{Float64};scaling::Function = t->1.0)
+    res = sz./(collect(size(A))[2:N+1]-1)
+    @assert all(x->x!=0,res) "zero resolution!"
+    @assert length(pos)==length(sz)==N==ndims(A)-1 "dimension error!"
+    f.field = Array(T,1)
+    f.field = A
+    f.position = pos
+    f.size = sz
+    f.res = res
+    f.scaling = scaling
+    f.dim = N
+end
+
+function setscaling!(f::Field,scaling::Function)
+    f.scaling = scaling
+end
+#=
+function find_field(criteria::Function)
+    if fields.
+end
+function find_field{T<:FieldNode}(criteria::Function,f::T)
+    if criteria(f)
+        return f
+    else
+        for ff in f.fields
+            find_field(criteria,ff)
+        end
+    end
+end
+
+function find_field{T<:Union{ScalarField,VectorField}}(criteria::Function,f::T)
+    if criteria(f)
+        return f
+    end
+end
+=#
 function copyfield{T<:ComplexOrFloat,N}(f::ScalarField{T,N})
     return ScalarField{T,N}(f.field,f.position,f.size,scaling=f.scaling)
 end
@@ -122,8 +142,8 @@ function copyfield{T<:ComplexOrFloat,N}(f::VectorField{T,N})
 end
 
 function copyfield{N}(f::ScalarFieldNode{N})
-    fields = map(copyfield,f.fields)
-    fn = ScalarFieldNode{N}(fields,scaling = f.scaling)
+    f_arr = map(copyfield,f.fields)
+    fn = ScalarFieldNode{N}(f_arr,scaling = f.scaling)
     fn.dim = f.dim
     fn.position = f.position
     fn.size = f.size
@@ -133,8 +153,8 @@ function copyfield{N}(f::ScalarFieldNode{N})
 end
 
 function copyfield{N}(f::VectorFieldNode{N})
-    fields = map(copyfield,f.fields)
-    fn = VectorFieldNode{N}(fields,scaling = f.scaling)
+    f_arr = map(copyfield,f.fields)
+    fn = VectorFieldNode{N}(f_arr,scaling = f.scaling)
     fn.dim = f.dim
     fn.position = f.position
     fn.size = f.size
@@ -230,25 +250,25 @@ function build_field(field_config::Dict,level::Integer,verbose::Bool;name::ASCII
             println(padding(level),"building ScalarFieldNode ", name)
             println(padding(level),"scaling:", field_config["scaling"])
         end
-        fields = map(keys(field_config["fields"]))do k
+        f_arr = map(keys(field_config["fields"]))do k
             build_field(field_config["fields"][k],level+1,verbose,name=ascii(k))
         end
-        fields = [promote(fields...)...]
+        f_arr = [promote(f_arr...)...]
         dim = round(field_config["dim"])::Integer
         scaling = eval(parse(field_config["scaling"]))
-        return ScalarFieldNode{dim}(fields,scaling=scaling,name=name)
+        return ScalarFieldNode{dim}(f_arr,scaling=scaling,name=name)
     elseif field_config["field-type"] == "VectorFieldNode"
         if verbose
             println(padding(level),"building VectorFieldNode ",name)
             println(padding(level),"scaling:", field_config["scaling"])
         end
-        fields = map(keys(field_config["fields"]))do k
+        f_arr = map(keys(field_config["fields"]))do k
             build_field(field_config["fields"][k],level+1,verbose,name=ascii(k))
         end
-        fields = [promote(fields...)...]
+        f_arr = [promote(f_arr...)...]
         dim = round(field_config["dim"])::Integer
         scaling = eval(parse(field_config["scaling"]))
-        return VectorFieldNode{dim}(fields,scaling=scaling,name=name)
+        return VectorFieldNode{dim}(f_arr,scaling=scaling,name=name)
     elseif field_config["field-type"] == "ScalarField" || field_config["field-type"] == "VectorField"
         if field_config["init-type"] == "file"
             return build_field_file(field_config,level,verbose,name=name)

@@ -142,7 +142,6 @@ end
 
 @generated function value3(pos::Vector{Float64},t::Real)
     quote
-        global fields
         x = $(Array(Float64,2))
         res = $(Array(Float64,2))
         res[:] = (fields::ScalarFieldNode).res
@@ -156,7 +155,6 @@ end
 
 @generated function gradient2(pos::Vector{Float64},t::Float64)
     quote
-        global fields
         x = $(Array(Float64,2))
         res = $(Array(Float64,2))
         res[:] = (fields::ScalarFieldNode).res
@@ -168,7 +166,6 @@ end
 
 @generated function gradient!(t::Float64,posvel::Vector{Float64},grad::Vector{Float64})
     quote
-        global fields
         x = $(Array(Float64,2))
         res = $(Array(Float64,2))
         pos = $(Array(Float64,2))
@@ -183,7 +180,6 @@ end
 end
 
 function composite_slow(range::Vector{Float64},t::Float64)
-    global fields
     res = (fields::ScalarFieldNode).res
     @assert range[2]-range[1] > res[1] "range too small"
     @assert range[4]-range[3] > res[1] "range too small"

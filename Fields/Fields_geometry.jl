@@ -3,7 +3,7 @@ function set_geometry!{T<:FieldNode}(f::T)
     geo = geometry(f)
     f.position = geo["pos"]
     f.size = geo["size"]
-    f.res = geo["res"]    
+    f.res = geo["res"]
     for ff in f.fields
         if typeof(ff) <: FieldNode
             set_geometry!(ff)
@@ -25,7 +25,5 @@ end
 geometry{T<:Union{VectorField,ScalarField}}(f::T) = Dict("pos"=>f.position,"size"=>f.size,"res"=>f.res)
 
 function geometry()
-    global fields
     Dict("pos"=>fields.position,"size"=>fields.size,"res"=>fields.res)
 end
-
