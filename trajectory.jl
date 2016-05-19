@@ -14,14 +14,14 @@ function main()
     println("output file: ", output_file)
     fields_config,trajsolver_config = parse_config(config_file,true)
     TrajSolver.init_parallel(trajsolver_config)
-    sfn = Fields.build_field(fields_config["field"],"field",0,true)
+    sfn = Fields.build_field(fields_config["field"],0,true)
     println("aligning...")
     Fields.align_field_tree!(sfn)
     Fields.set_geometry!(sfn)
     Fields.set_typeof!(sfn)
     println("Start calculating trajectories...")
 
-    for scale = (1.0:1.0:50.0).^2
+    for scale = 50.0^2
         println("scale: ",scale)
         Fields.setscaling!(sfn,t->scale)
         Fields.init_parallel!(sfn)
@@ -37,5 +37,7 @@ function main()
         result = cat(3,temp...)
         savemat(output_file*string(sqrt(scale))*".mat",result,"result")
     end
+    output = Fields.composite_slow([200.0, 600.0, 100.0, 49895.0],0.0)
+    savemat("out.mat",output,"output")
 end
 main()
