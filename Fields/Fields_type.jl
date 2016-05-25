@@ -44,7 +44,6 @@ type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     end
 end
 
-
 type VectorFieldNode{N} <: AbstractVectorField
     fields::Vector{AbstractVectorField}
     scaling::Function
@@ -113,16 +112,31 @@ end
 function setscaling!(f::Field,scaling::Function)
     f.scaling = scaling
 end
-#=
+
 function find_field(criteria::Function)
-    if fields.
+    if criteria(fields)
+        return fields
+    else
+        for ff in fields.fields
+            if find_field_bool(criteria,ff)
+                return find_field(criteria,ff)
+            else
+                error("Cant find field.")
+            end
+        end
+    end
 end
+
 function find_field{T<:FieldNode}(criteria::Function,f::T)
     if criteria(f)
         return f
     else
-        for ff in f.fields
-            find_field(criteria,ff)
+        for ff in fields.fields
+            if find_field_bool(criteria,ff)
+                return find_field(criteria,ff)
+            else
+                error("Cant find field.")
+            end
         end
     end
 end
@@ -130,20 +144,35 @@ end
 function find_field{T<:Union{ScalarField,VectorField}}(criteria::Function,f::T)
     if criteria(f)
         return f
+    else
+        error("Cant find field.")
     end
 end
-=#
+
+function find_field_bool(criteria::Function)
+    find_field_bool(criteria,fields)
+end
+
+
+function find_field_bool{T<:FieldNode}(criteria::Function,f::T)
+    return criteria(f)?true:any(map(f->find_field_bool(criteria,f),f.fields))
+end
+
+function find_field_bool{T<:Union{ScalarField,VectorField}}(criteria::Function,f::T)
+    return criteria(f)
+end
+
 function copyfield{T<:ComplexOrFloat,N}(f::ScalarField{T,N})
-    return ScalarField{T,N}(f.field,f.position,f.size,scaling=f.scaling)
+    return ScalarField{T,N}(f.field,f.position,f.size,scaling=f.scaling,name=f.name)
 end
 
 function copyfield{T<:ComplexOrFloat,N}(f::VectorField{T,N})
-    return VectorField{T,N}(f.field,f.position,f.size,scaling=f.scaling)
+    return VectorField{T,N}(f.field,f.position,f.size,scaling=f.scaling,name=f.name)
 end
 
 function copyfield{N}(f::ScalarFieldNode{N})
     f_arr = map(copyfield,f.fields)
-    fn = ScalarFieldNode{N}(f_arr,scaling = f.scaling)
+    fn = ScalarFieldNode{N}(f_arr,scaling = f.scaling,name=f.name)
     fn.dim = f.dim
     fn.position = f.position
     fn.size = f.size
@@ -154,7 +183,7 @@ end
 
 function copyfield{N}(f::VectorFieldNode{N})
     f_arr = map(copyfield,f.fields)
-    fn = VectorFieldNode{N}(f_arr,scaling = f.scaling)
+    fn = VectorFieldNode{N}(f_arr,scaling = f.scaling, name=f.name)
     fn.dim = f.dim
     fn.position = f.position
     fn.size = f.size

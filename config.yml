@@ -34,19 +34,19 @@ fields-config:
                                 size: [99990, 49995]
                                 scaling: "t->exp(2*pi*im*t)"
                         scaling: "t->1.0+0.0im" #amplitude scaling, not power
-                scaling: "t->213e-6*10"
-            gm:
-                field-type: ScalarField
-                D-type: Float
-                dim: 2
-                init-type: file
-                filename: D2_TE.mat
-                variable: gm
-                func: "(x,y) -> sin(x)"
-                res: [400, 400]
-                pos: [48140.4, 23147.5]
-                size: [3690.75,3690.75]
-                scaling: "t->-2000e-6"
+                scaling: "t->1.42e-7"
+            # gm:
+            #     field-type: ScalarField
+            #     D-type: Float
+            #     dim: 2
+            #     init-type: file
+            #     filename: D2_TE.mat
+            #     variable: gm
+            #     func: "(x,y) -> sin(x)"
+            #     res: [400, 400]
+            #     pos: [48140.4, 23147.5]
+            #     size: [3690.75,3690.75]
+            #     scaling: "t->0.0"
         scaling: "t->1.0"
 trajsolver-config:
     simulation-config:
@@ -69,4 +69,8 @@ trajsolver-config:
         right-edge: [99890.0, 99990.0, 0.0, 49995.0]
         top-edge: [0.0, 99990.0, 0.0, 100.0]
         bottom-edge: [0.0, 99990.0, 49895.0, 49995.0]
-output-config:
+job-config:
+    type: single-scan-scaling
+    range: 50
+    field: field
+    scaling: "t->$i^2"
