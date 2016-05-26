@@ -62,13 +62,20 @@ trajsolver-config:
         temperature: 50e-6
         init-speed: 411.0
         init-range: [365.0, 565.0, 100.0, 49895.0] #[x1 x2 y1 y2]
-    boundary: #atoms in these areas are removed from simulation
-        beam1: [49890.0, 50110.0, 24662.0, 24880.0]
-        beam2: [49890.0, 50110.0, 25120.0, 25338.0]
-        left-edge: [0.0, 100.0, 0.0, 49995.0]
-        right-edge: [99890.0, 99990.0, 0.0, 49995.0]
-        top-edge: [0.0, 99990.0, 0.0, 100.0]
-        bottom-edge: [0.0, 99990.0, 49895.0, 49995.0]
+    in-boundary: #atoms in these areas are removed from simulation
+        beam1: [49890.0, 50110.0, 50110.0, 49890.0,
+                24662.0, 24662.0, 24880.0, 24880.0]
+        beam2: [49890.0, 50110.0, 50110.0, 49890.0,
+                25120.0, 25120.0, 25338.0, 25338.0]
+    out-boundary:
+        edge: [100.0, 99890.0, 99890.0, 100.0,
+               100.0, 100.0,   49895.0, 49895.0]
+        # beam1: [49890.0, 50110.0, 24662.0, 24880.0]
+        # beam2: [49890.0, 50110.0, 25120.0, 25338.0]
+        # left-edge: [0.0, 100.0, 0.0, 49995.0]
+        # right-edge: [99890.0, 99990.0, 0.0, 49995.0]
+        # top-edge: [0.0, 99990.0, 0.0, 100.0]
+        # bottom-edge: [0.0, 99990.0, 49895.0, 49995.0]
 job-config:
     type: single-scan-scaling
     range: 50
