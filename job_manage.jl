@@ -1,8 +1,82 @@
-function single_scan_scaling(config::Dict,sfn::ScalarFieldNode)
+using PyCall
+using HDF5
+function single_scan_scaling(config::Dict,sfn::ScalarFieldNode,output_file)
     range = config["range"]
     field_name = config["field"]
     scaling = config["scaling"]
-    i = 1
-    println(scaling,eval(parse(scaling))(0))
-    #scaling = eval(parse(field_config["scaling"]))
+    for i = 1:range
+        s = replace(scaling,"@i",float(i))
+        println("change scaling of field $field_name to ",s)
+        s_exp = eval(parse(s))
+        Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
+        println("initialize fields...")
+        Fields.init_parallel!(sfn)
+        println("start calculation...")
+        result = calculate()
+        println("save results...")
+        matwrite(output_file*string(i)*".mat",Dict(
+                                                   "result"=>result,
+                                                   "tspan" =>TrajSolver.get_tspan(),
+                                                   "pos"=>sfn.position,
+                                                   "siz"=>sfn.size
+                                                   ))
+        h5write(output_file*string(i)*".h5", "result", result)
+        output_image(sfn,0.0,[400.0, 800.0, 100.0, 49895.0],output_file*string(i)*".png")
+        output = Fields.composite_slow([400.0, 800.0, 100.0, 49895.0],0.0)
+        savemat(output_file*string(i)*"_usmall.mat",output,"output")
+        println("outputing movie...")
+    #    output_movie(sfn,collect(0:0.1:10),[45000.0, 55000.0, 20000.0, 30000.0],"movie")
+    end
+end
+
+function output_movie(sfn,tspan,range,filename)
+    try:
+        rm("/tmp/movie",recursive=true)
+    end
+    mkdir("/tmp/movie")
+    for t in enumerate(tspan)
+        output_image(sfn,t[2],range,"/tmp/movie/img"*@sprintf("%04d",t[1])*".png")
+    end
+
+#    rm("/tmp/movie",recursive=true)
+end
+
+function traj_plot(sfn,result,tspan,range,filename)
+    pyimport("matplotlib")[:use]("Agg")
+    @pyimport matplotlib.pyplot as plt
+
+    for i = 1:size(result,3)
+        println(i)
+        plt.plot(result[1,1:5:end,i],result[2,1:5:end,i],"r,")
+    end
+    plt.xlim(range[1:2])
+    plt.ylim(range[3:4])
+    plt.savefig(filename)
+    plt.clf()
+
+end
+
+function output_image(sfn,t,range,filename)#range x1 x2 y1 y2
+    pyimport("matplotlib")[:use]("Agg")
+    @pyimport matplotlib.pyplot as plt
+
+    output = Fields.composite_slow(range,t)
+    plt.imshow(output)
+    plt.colorbar()
+    plt.savefig(filename)
+    plt.clf()
+end
+
+function calculate()
+    @time    @sync begin
+        for p = 2:nprocs()
+            @async remotecall_wait(p,TrajSolver.solve_traj)
+        end
+    end
+    temp = cell(nworkers())
+    for p = 2:nprocs()
+        temp[p-1] = remotecall_fetch(p,TrajSolver.get_result)
+    end
+    result = cat(3,temp...)
+    return result
 end

@@ -175,7 +175,7 @@ end
         sample2!(fields::ScalarFieldNode,pos,t)
         grad[1] = posvel[3]
         grad[2] = posvel[4]
-        grad[3:4] = itp_bicubic_grad((fields::ScalarFieldNode).sample,x,res)*KB/M_CS
+        grad[3:4] = -1.0*itp_bicubic_grad((fields::ScalarFieldNode).sample,x,res)*KB/M_CS
     end
 end
 

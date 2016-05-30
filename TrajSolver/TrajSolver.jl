@@ -11,6 +11,10 @@ global in_boundaries
 global out_boundaries
 global result
 
+function get_tspan()
+    return tspan
+end
+
 function get_result()
     return result
 end
@@ -27,7 +31,7 @@ end
 function init_parallel(config::Dict)
 #    println("start initialization TrajSolver module...")
     @sync begin
-        for p = 2:nprocs()
+        for p = 1:nprocs()
             @async remotecall_wait(p,init!,config)
         end
     end
@@ -141,6 +145,9 @@ function distribute_atoms(init_range::Vector{Float64},atom_temp::Float64,t::Floa
     U_range = Fields.composite_slow(init_range,t)
     U_min = minimum(U_range)
     U_max = maximum(U_range)
+    U_min -= (U_max-U_min)/1000
+#    println("U_min= ",U_min)
+#    println("U_max= ",U_max)
     init_xv = zeros(Float64,(4,my_trajnum))
     for i = 1:my_trajnum::Int64
         while true
@@ -156,7 +163,9 @@ function distribute_atoms(init_range::Vector{Float64},atom_temp::Float64,t::Floa
             ek = 0.5*M_CS*(vx*vx+vy*vy+vz*vz)/KB
             etot = ek+eu-U_min
             p = exp(-1.0*etot/atom_temp)
-            @assert 0.0 < p <= 1.0 "p out of range"
+            if p<0.0 || p > 1.0
+                warn("p=$p: out of range!")
+            end
             init_xv[1,i] = x
             init_xv[2,i] = y
             init_xv[3,i] = vx+init_speed

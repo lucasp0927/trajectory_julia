@@ -32,9 +32,10 @@ fields-config:
                                 variable: beam_left
                                 pos: [0.0,0.0]
                                 size: [99990, 49995]
-                                scaling: "t->exp(2*pi*im*t)"
+                                #scaling: "t->1.0+0.0im"
+                                scaling: "t->exp(-2*pi*im*t)"
                         scaling: "t->1.0+0.0im" #amplitude scaling, not power
-                scaling: "t->1.42e-7"
+                scaling: "t->-1.42884e-5"
             # gm:
             #     field-type: ScalarField
             #     D-type: Float
@@ -52,16 +53,16 @@ trajsolver-config:
     simulation-config:
         traj_num: 1000
         tstart: 0.0
-        tend: 150.0
+        tend: 400.0
         tdiv: 0.1
     solver-config:
         solver: ADAMS
         reltol: 1e-6
         abstol: 1e-6
     atom-config:
-        temperature: 50e-6
+        temperature: 100e-6
         init-speed: 411.0
-        init-range: [365.0, 565.0, 100.0, 49895.0] #[x1 x2 y1 y2]
+        init-range: [400.0, 800.0, 100.0, 49895.0] #[x1 x2 y1 y2]
     in-boundary: #atoms in these areas are removed from simulation
         beam1: [49890.0, 50110.0, 50110.0, 49890.0,
                 24662.0, 24662.0, 24880.0, 24880.0]
@@ -78,6 +79,6 @@ trajsolver-config:
         # bottom-edge: [0.0, 99990.0, 49895.0, 49995.0]
 job-config:
     type: single-scan-scaling
-    range: 50
+    range: 10
     field: field
-    scaling: "t->$i^2"
+    scaling: "t->@i^2"
