@@ -1,5 +1,5 @@
 using PyCall
-using HDF5
+@everywhere using HDF5
 function single_scan_scaling(config::Dict,sfn::ScalarFieldNode,output_file)
     range = config["range"]
     field_name = config["field"]
@@ -20,40 +20,38 @@ function single_scan_scaling(config::Dict,sfn::ScalarFieldNode,output_file)
                                                    "siz"=>sfn.size
                                                    ))
         h5write(output_file*string(i)*".h5", "result", result)
-        output_image(sfn,0.0,[69200.0, 69650.0, 100.0, 49900.0],output_file*string(i)*".png")
+        output_image(0.0,[69200.0, 69650.0, 100.0, 49900.0],output_file*string(i)*".png")
         output = Fields.composite_slow([69200.0, 69650.0, 100.0, 49900.0],0.0)
         savemat(output_file*string(i)*"_usmall.mat",output,"output")
         calc_score(result)
+        output_image_gp(0.0,[5000, 20000.0, 20000.0, 30000.0],output_file*string(i)*"_gp.png")
+        output_movie(collect(0:0.1:10),[5000, 20000.0, 20000.0, 30000.0],output_file*string(i)*"_u.mp4")
 #        println("outputing movie...")
-#        output_movie(sfn,collect(0:0.1:10),[5000, 20000.0, 20000.0, 30000.0],output_file*string(i)*"_u.mp4")
+
     end
 end
 
-function output_movie(sfn,tspan,range,filename)
-    try:
-        rm("/tmp/movie",recursive=true)
-    end
-    mkdir("/tmp/movie")
+function output_movie(tspan,range,filename;traj=false)
     output_0 = Fields.composite_slow(range,0.0)
     v_min = minimum(output_0)
     v_max = maximum(output_0)
     #TODO: parallel image output
-    for t in enumerate(tspan)
-        println(t)
-        output_image(sfn,t[2],range,"/tmp/movie/img"*@sprintf("%04d",t[1])*".png",v_min=v_min,v_max=v_max)
-    end
     hash_key = string(hash(time()))
-
     current_folder = pwd()
     movie_folder = "/tmp/movie"*hash_key
+    mkdir(movie_folder)
+    @sync @parallel for t in collect(enumerate(tspan))
+        println(t)
+        output_image_gp(t[2],range,movie_folder*"/img"*@sprintf("%04d",t[1])*".png",v_min=v_min,v_max=v_max)
+    end
     cd(movie_folder)
     run(`ffmpeg -framerate 10 -i img%04d.png -s:v 1280x720 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p out.mp4`)
     cd(current_folder)
-    cp("/tmp/movie/out.mp4",filename,remove_destination=true)
+    cp(movie_folder*"/out.mp4",filename,remove_destination=true)
     rm(movie_folder,recursive=true)
 end
 
-function traj_plot(sfn,result,tspan,range,filename)
+function traj_plot(result,tspan,range,filename)
     pyimport("matplotlib")[:use]("Agg")
     @pyimport matplotlib.pyplot as plt
 
@@ -68,11 +66,27 @@ function traj_plot(sfn,result,tspan,range,filename)
 
 end
 
-function output_image_gp(sfn,t,range,filename;v_min=0.0,v_max=0.0)
-
+@everywhere function output_image_gp(t,range,filename;v_min=0.0,v_max=0.0)
+    output_data = Fields.composite_slow_with_position(range,t)
+    current_folder = pwd()
+    hash_key = string(hash(time()))
+    image_folder = "/tmp/image"*hash_key
+    mkdir(image_folder)
+    cd(image_folder)
+    h5write(image_folder*"/data.h5", "output", output_data)
+    run(`h5totxt data.h5 -o data.txt`)
+    cp(current_folder*"/output_image_gp.gp",image_folder*"/output_image_gp.gp")
+    if v_min==0.0 && v_max==0.0
+        run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4])" output_image_gp.gp`)
+    else
+        run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);set cbrange [$v_min:$v_max]" output_image_gp.gp`)
+    end
+    cd(current_folder)
+    cp(image_folder*"/data.png",filename,remove_destination=true)
+    rm(image_folder,recursive=true)
 end
 
-function output_image(sfn,t,range,filename;v_min=0.0,v_max=0.0)#range x1 x2 y1 y2
+function output_image(t,range,filename;v_min=0.0,v_max=0.0)#range x1 x2 y1 y2
     pyimport("matplotlib")[:use]("Agg")
     @pyimport matplotlib.pyplot as plt
     output = Fields.composite_slow(range,t)
