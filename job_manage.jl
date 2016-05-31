@@ -34,17 +34,23 @@ function output_movie(sfn,tspan,range,filename)
         rm("/tmp/movie",recursive=true)
     end
     mkdir("/tmp/movie")
+    output_0 = Fields.composite_slow(range,0.0)
+    v_min = minimum(output_0)
+    v_max = maximum(output_0)
+    #TODO: parallel image output
     for t in enumerate(tspan)
         println(t)
-        output_image(sfn,t[2],range,"/tmp/movie/img"*@sprintf("%04d",t[1])*".png")
+        output_image(sfn,t[2],range,"/tmp/movie/img"*@sprintf("%04d",t[1])*".png",v_min=v_min,v_max=v_max)
     end
+    hash_key = string(hash(time()))
+
     current_folder = pwd()
-    cd("/tmp/movie")
+    movie_folder = "/tmp/movie"*hash_key
+    cd(movie_folder)
     run(`ffmpeg -framerate 10 -i img%04d.png -s:v 1280x720 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p out.mp4`)
     cd(current_folder)
     cp("/tmp/movie/out.mp4",filename,remove_destination=true)
-#ffmpeg -framerate 10 -i img%04d.png -s:v 1280x720 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p out.mp4
-    rm("/tmp/movie",recursive=true)
+    rm(movie_folder,recursive=true)
 end
 
 function traj_plot(sfn,result,tspan,range,filename)
@@ -62,14 +68,19 @@ function traj_plot(sfn,result,tspan,range,filename)
 
 end
 
-function output_image(sfn,t,range,filename)#range x1 x2 y1 y2
+function output_image_gp(sfn,t,range,filename;v_min=0.0,v_max=0.0)
+
+end
+
+function output_image(sfn,t,range,filename;v_min=0.0,v_max=0.0)#range x1 x2 y1 y2
     pyimport("matplotlib")[:use]("Agg")
     @pyimport matplotlib.pyplot as plt
-    output_0 = Fields.composite_slow(range,0.0)
-    v_min = minimum(output_0)
-    v_max = maximum(output_0)
     output = Fields.composite_slow(range,t)
-    plt.imshow(output, vmin=v_min, vmax=v_max, extent=[range[3],range[4],range[2],range[1]])
+    if v_min==0.0 && v_max==0.0
+        plt.imshow(output, extent=[range[3],range[4],range[2],range[1]])
+    else
+        plt.imshow(output, vmin=v_min, vmax=v_max, extent=[range[3],range[4],range[2],range[1]])
+    end
     plt.colorbar()
     plt.savefig(filename)
     plt.clf()
