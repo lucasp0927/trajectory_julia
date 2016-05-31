@@ -5,63 +5,80 @@ fields-config:
         field-type: ScalarFieldNode
         dim: 2
         fields:
-            lattice-beam:
-                field-type: VectorFieldNode
+            lattice-beam-wrap:
+                field-type: ScalarFieldNode
                 dim: 2
                 fields:
-                    right-beam:
-                        field-type: VectorField
-                        D-type: Complex
+                    lattice-beam:
+                        field-type: VectorFieldNode
                         dim: 2
-                        init-type: file
-                        filename: lattice_right.mat
-                        variable: beam_right
-                        pos: [0.0,0.0]
-                        size: [99990, 49995]
-                        scaling: "t->1.0+0.0im"
-                    left-beam:
-                        field-type: VectorField
-                        D-type: Complex
-                        dim: 2
-                        init-type: file
-                        filename: lattice_left.mat
-                        variable: beam_left
-                        pos: [0.0,0.0]
-                        size: [99990, 49995]
-                        scaling: "t->exp(2*pi*im*t)"
-                scaling: "t->sqrt(213e-6)+0.0im" #amplitude scaling, not power
-            gm:
-                field-type: ScalarField
-                D-type: Float
-                dim: 2
-                init-type: file
-                filename: D2_TE.mat
-                variable: gm
-                func: "(x,y) -> sin(x)"
-                res: [400, 400]
-                pos: [48140.4, 23147.5]
-                size: [3690.75,3690.75]
-                scaling: "t->-2000e-6"
+                        fields:
+                            right-beam:
+                                field-type: VectorField
+                                D-type: Complex
+                                dim: 2
+                                init-type: file
+                                filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_right.mat
+                                variable: field
+                                pos: [0.0,0.0]
+                                size: [70000, 50000]
+                                scaling: "t->1.0+0.0im"
+                            left-beam:
+                                field-type: VectorField
+                                D-type: Complex
+                                dim: 2
+                                init-type: file
+                                filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_left.mat
+                                variable: field
+                                pos: [0.0,0.0]
+                                size: [70000, 50000]
+                                #scaling: "t->1.0+0.0im"
+                                scaling: "t->exp(0.4*pi*im*t)"
+                        scaling: "t->1.0+0.0im" #amplitude scaling, not power
+                scaling: "t->-1.42884e-5"
+            # gm:
+            #     field-type: ScalarField
+            #     D-type: Float
+            #     dim: 2
+            #     init-type: file
+            #     filename: D2_TE.mat
+            #     variable: gm
+            #     func: "(x,y) -> sin(x)"
+            #     res: [400, 400]
+            #     pos: [48140.4, 23147.5]
+            #     size: [3690.75,3690.75]
+            #     scaling: "t->0.0"
         scaling: "t->1.0"
 trajsolver-config:
     simulation-config:
         traj_num: 1000
         tstart: 0.0
-        tend: 150.0
+        tend: 750.0
         tdiv: 0.1
     solver-config:
         solver: ADAMS
         reltol: 1e-6
         abstol: 1e-6
     atom-config:
-        temperature: 50e-6
-        init-speed: 411.0
-        init-range: [365.0, 565.0, 100.0, 49895.0] #[x1 x2 y1 y2]
-    boundary: #atoms in these areas are removed from simulation
-        beam1: [49890.0, 50110.0, 24662.0, 24880.0]
-        beam2: [49890.0, 50110.0, 25120.0, 25338.0]
-        left-edge: [0.0, 100.0, 0.0, 49995.0]
-        right-edge: [99890.0, 99990.0, 0.0, 49995.0]
-        top-edge: [0.0, 99990.0, 0.0, 100.0]
-        bottom-edge: [0.0, 99990.0, 49895.0, 49995.0]
-output-config:
+        temperature: 100e-6
+        init-speed: -82.2
+        init-range: [69200.0, 69650.0, 100.0, 49900.0] #[x1 x2 y1 y2]
+    in-boundary: #atoms in these areas are removed from simulation
+        beam1: [9890.0, 10110.0, 10110.0, 9890.0,
+                24662.0, 24662.0, 24880.0, 24880.0]
+        beam2: [9890.0, 10110.0, 10110.0, 9890.0,
+                25120.0, 25120.0, 25338.0, 25338.0]
+    out-boundary:
+        edge: [100.0, 69900.0, 69900.0, 100.0,
+               100.0, 100.0,   49900.0, 49900.0]
+        # beam1: [49890.0, 50110.0, 24662.0, 24880.0]
+        # beam2: [49890.0, 50110.0, 25120.0, 25338.0]
+        # left-edge: [0.0, 100.0, 0.0, 49995.0]
+        # right-edge: [99890.0, 99990.0, 0.0, 49995.0]
+        # top-edge: [0.0, 99990.0, 0.0, 100.0]
+        # bottom-edge: [0.0, 99990.0, 49895.0, 49995.0]
+job-config:
+    type: single-scan-scaling
+    range: 20
+    field: field
+    scaling: "t->(@i/5.0)^2"

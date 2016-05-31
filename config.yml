@@ -79,6 +79,6 @@ trajsolver-config:
         # bottom-edge: [0.0, 99990.0, 49895.0, 49995.0]
 job-config:
     type: single-scan-scaling
-    range: 10
+    range: 1
     field: field
     scaling: "t->@i^2"

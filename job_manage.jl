@@ -9,7 +9,6 @@ function single_scan_scaling(config::Dict,sfn::ScalarFieldNode,output_file)
         println("change scaling of field $field_name to ",s)
         s_exp = eval(parse(s))
         Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
-        println("initialize fields...")
         Fields.init_parallel!(sfn)
         println("start calculation...")
         result = calculate()
@@ -21,11 +20,12 @@ function single_scan_scaling(config::Dict,sfn::ScalarFieldNode,output_file)
                                                    "siz"=>sfn.size
                                                    ))
         h5write(output_file*string(i)*".h5", "result", result)
-        output_image(sfn,0.0,[400.0, 800.0, 100.0, 49895.0],output_file*string(i)*".png")
-        output = Fields.composite_slow([400.0, 800.0, 100.0, 49895.0],0.0)
+        output_image(sfn,0.0,[69200.0, 69650.0, 100.0, 49900.0],output_file*string(i)*".png")
+        output = Fields.composite_slow([69200.0, 69650.0, 100.0, 49900.0],0.0)
         savemat(output_file*string(i)*"_usmall.mat",output,"output")
-        println("outputing movie...")
-    #    output_movie(sfn,collect(0:0.1:10),[45000.0, 55000.0, 20000.0, 30000.0],"movie")
+        calc_score(result)
+#        println("outputing movie...")
+#        output_movie(sfn,collect(0:0.1:10),[5000, 20000.0, 20000.0, 30000.0],output_file*string(i)*"_u.mp4")
     end
 end
 
@@ -35,10 +35,16 @@ function output_movie(sfn,tspan,range,filename)
     end
     mkdir("/tmp/movie")
     for t in enumerate(tspan)
+        println(t)
         output_image(sfn,t[2],range,"/tmp/movie/img"*@sprintf("%04d",t[1])*".png")
     end
-
-#    rm("/tmp/movie",recursive=true)
+    current_folder = pwd()
+    cd("/tmp/movie")
+    run(`ffmpeg -framerate 10 -i img%04d.png -s:v 1280x720 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p out.mp4`)
+    cd(current_folder)
+    cp("/tmp/movie/out.mp4",filename,remove_destination=true)
+#ffmpeg -framerate 10 -i img%04d.png -s:v 1280x720 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p out.mp4
+    rm("/tmp/movie",recursive=true)
 end
 
 function traj_plot(sfn,result,tspan,range,filename)
@@ -59,9 +65,11 @@ end
 function output_image(sfn,t,range,filename)#range x1 x2 y1 y2
     pyimport("matplotlib")[:use]("Agg")
     @pyimport matplotlib.pyplot as plt
-
+    output_0 = Fields.composite_slow(range,0.0)
+    v_min = minimum(output_0)
+    v_max = maximum(output_0)
     output = Fields.composite_slow(range,t)
-    plt.imshow(output)
+    plt.imshow(output, vmin=v_min, vmax=v_max, extent=[range[3],range[4],range[2],range[1]])
     plt.colorbar()
     plt.savefig(filename)
     plt.clf()
@@ -79,4 +87,19 @@ function calculate()
     end
     result = cat(3,temp...)
     return result
+end
+
+function calc_score(result)
+    println("calculate score...")
+    include("./TrajSolver/polygon.jl")
+    pp = Polygon([9890.0 10110.0 10110.0 9890.0;25338.0 25338.0 24662 24662])
+    score = 0
+    for i = 1:size(result,3)
+        for j = 1:size(result,2)
+            if pointInPolygon(pp,result[1:2,j,i])
+                score+=1
+            end
+        end
+    end
+    println("score:",score)
 end

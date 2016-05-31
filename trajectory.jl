@@ -29,9 +29,5 @@ function main()
     println("initialize fields")
     Fields.init_parallel!(sfn)
     single_scan_scaling(job_config,sfn,output_file)
-#=
-    output = Fields.composite_slow([40000.0, 60000.0, 15000.0, 35000.0],0.0)
-    savemat("out.mat",output,"output")
-=#
 end
 main()
