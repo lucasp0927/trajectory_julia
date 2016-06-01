@@ -4,6 +4,7 @@ function single_scan_scaling(config::Dict,sfn::ScalarFieldNode,output_file)
     range = config["range"]
     field_name = config["field"]
     scaling = config["scaling"]
+    score = zeros(Int64,range)
     for i = 1:range
         s = replace(scaling,"@i",float(i))
         println("change scaling of field $field_name to ",s)
@@ -13,24 +14,34 @@ function single_scan_scaling(config::Dict,sfn::ScalarFieldNode,output_file)
         println("start calculation...")
         result = calculate()
         println("save results...")
+        tspan = TrajSolver.get_tspan()
         matwrite(output_file*string(i)*".mat",Dict(
                                                    "result"=>result,
-                                                   "tspan" =>TrajSolver.get_tspan(),
+                                                   "tspan" =>tspan,
                                                    "pos"=>sfn.position,
                                                    "siz"=>sfn.size
                                                    ))
-#        h5write(output_file*string(i)*".h5", "result", result)
 #        output_image(0.0,[69200.0, 69650.0, 100.0, 49900.0],output_file*string(i)*".png")
 #        output = Fields.composite_slow([69200.0, 69650.0, 100.0, 49900.0],0.0)
 #        savemat(output_file*string(i)*"_usmall.mat",output,"output")
-        calc_score(result)
+        score[i] = calc_score(result)
 #        output_image_gp(0.0,[5000, 20000.0, 20000.0, 30000.0],output_file*string(i)*"_gp.png")
-        tspan = TrajSolver.get_tspan()
-        output_movie(collect(680:0.5:720),[7500, 12500.0, 22500.0, 27500.0],output_file*string(i)*"_traj.mp4",traj=true,result=result,tspan=tspan)
+        mov_tspan = collect(config["movie-output"]["tstart"]:config["movie-output"]["tdiv"]:config["movie-output"]["tend"])
+        mov_range = [promote(config["movie-output"]["range"]...)...]
+        mov_res = config["movie-output"]["res"]
+        output_movie(mov_tspan,mov_range,mov_res,output_file*string(i)*"_traj.mp4",traj=true,result=result,tspan=tspan)
     end
+    savemat(output_file*"score.mat",score,"score")
+    pyimport("matplotlib")[:use]("Agg")
+    @pyimport matplotlib.pyplot as plt
+    prange = config["plot-range"]
+    xx = collect(linspace(prange...,range))
+    plt.plot(xx,score)
+    plt.savefig(output_file*"score.png")
+    plt.clf()
 end
 
-function output_movie(output_tspan,range,filename;traj=false,result=[],tspan=[])
+function output_movie(output_tspan,range,res,filename;traj=false,result=[],tspan=[])
     output_0 = Fields.composite_slow(range,0.0)
     v_min = minimum(output_0)
     v_max = maximum(output_0)
@@ -45,11 +56,13 @@ function output_movie(output_tspan,range,filename;traj=false,result=[],tspan=[])
             output_image_gp(t[2],range,movie_folder*"/img"*@sprintf("%04d",t[1])*".png",v_min=v_min,v_max=v_max)
         end
     else
+        res_x = res[1]
+        res_y = res[2]
         result_s=copy_to_sharedarray!(result)
         tspan_s=copy_to_sharedarray!(tspan)
         @sync @parallel for t in collect(enumerate(output_tspan))
             println(t)
-            output_image_gp_traj(t[2],range,result_s,tspan_s,movie_folder*"/img"*@sprintf("%04d",t[1])*".png",v_min=v_min,v_max=v_max)
+            output_image_gp_traj(t[2],range,result_s,tspan_s,res_x,res_y,movie_folder*"/img"*@sprintf("%04d",t[1])*".png",v_min=v_min,v_max=v_max)
         end
     end
     cd(movie_folder)
@@ -71,16 +84,15 @@ function traj_plot(result,tspan,range,filename)
     plt.ylim(range[3:4])
     plt.savefig(filename)
     plt.clf()
-
 end
 
-@everywhere function output_image_gp_traj(t,range,result,tspan,filename;v_min=0.0,v_max=0.0)
+@everywhere function output_image_gp_traj(t,range,result,tspan,res_x,res_y,filename;v_min=0.0,v_max=0.0)
     #find closest index
     t_idx=indmin(abs(tspan-t))
     tmp = squeeze(result[1:2,t_idx,:],2)
     dots = zeros(Float64,3,size(tmp,2))
     dots[1:2,:] = tmp[:,:]
-    output_data = Fields.composite_slow_with_position(range,t,[20.0,20.0])
+    output_data = Fields.composite_slow_with_position(range,t,[res_x,res_y])
     current_folder = pwd()
     hash_key = string(hash(rand()))
     image_folder = "/tmp/image"*hash_key
@@ -92,9 +104,9 @@ end
     run(`h5totxt dots.h5 -o dots.txt`)
     cp(current_folder*"/output_image_gp_traj.gp",image_folder*"/output_image_gp_traj.gp")
     if v_min==0.0 && v_max==0.0
-        run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4])" output_image_gp_traj.gp`)
+        run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);time=$t" output_image_gp_traj.gp`)
     else
-        run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);set cbrange [$v_min:$v_max]" output_image_gp_traj.gp`)
+        run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);time=$t;set cbrange [$v_min:$v_max]" output_image_gp_traj.gp`)
     end
     cd(current_folder)
     cp(image_folder*"/data.png",filename,remove_destination=true)
@@ -162,4 +174,5 @@ function calc_score(result)
         end
     end
     println("score:",score)
+    return score
 end

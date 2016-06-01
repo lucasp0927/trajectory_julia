@@ -51,7 +51,7 @@ fields-config:
         scaling: "t->1.0"
 trajsolver-config:
     simulation-config:
-        traj_num: 500
+        traj_num: 2000
         tstart: 0.0
         tend: 750.0
         tdiv: 0.1
@@ -80,5 +80,12 @@ trajsolver-config:
 job-config:
     type: single-scan-scaling
     range: 20
+    plot-range: [20,400]
     field: field
     scaling: "t->(@i/5.0)^2"
+    movie-output:
+        tstart: 680.0
+        tend: 720.0
+        tdiv: 0.5
+        range: [7500.0, 12500.0, 22500.0, 27500.0]
+        res: [20.0,20.0]
