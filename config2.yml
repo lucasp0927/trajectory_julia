@@ -51,7 +51,7 @@ fields-config:
         scaling: "t->1.0"
 trajsolver-config:
     simulation-config:
-        traj_num: 2000
+        traj_num: 500
         tstart: 0.0
         tend: 750.0
         tdiv: 0.1
@@ -79,7 +79,7 @@ trajsolver-config:
         # bottom-edge: [0.0, 99990.0, 49895.0, 49995.0]
 job-config:
     type: single-scan-scaling
-    range: 20
+    range: 2
     plot-range: [20,400]
     field: field
     scaling: "t->(@i/5.0)^2"
@@ -89,3 +89,4 @@ job-config:
         tdiv: 0.5
         range: [7500.0, 12500.0, 22500.0, 27500.0]
         res: [20.0,20.0]
+#    flux-analysis:
