@@ -19,12 +19,12 @@ function single_scan_scaling(config::Dict,sfn::ScalarFieldNode,output_file)
                                                    "pos"=>sfn.position,
                                                    "siz"=>sfn.size
                                                    ))
-        h5write(output_file*string(i)*".h5", "result", result)
-        output_image(0.0,[69200.0, 69650.0, 100.0, 49900.0],output_file*string(i)*".png")
-        output = Fields.composite_slow([69200.0, 69650.0, 100.0, 49900.0],0.0)
-        savemat(output_file*string(i)*"_usmall.mat",output,"output")
+#        h5write(output_file*string(i)*".h5", "result", result)
+#        output_image(0.0,[69200.0, 69650.0, 100.0, 49900.0],output_file*string(i)*".png")
+#        output = Fields.composite_slow([69200.0, 69650.0, 100.0, 49900.0],0.0)
+#        savemat(output_file*string(i)*"_usmall.mat",output,"output")
         calc_score(result)
-        output_image_gp(0.0,[5000, 20000.0, 20000.0, 30000.0],output_file*string(i)*"_gp.png")
+#        output_image_gp(0.0,[5000, 20000.0, 20000.0, 30000.0],output_file*string(i)*"_gp.png")
         tspan = TrajSolver.get_tspan()
         output_movie(collect(680:0.5:720),[7500, 12500.0, 22500.0, 27500.0],output_file*string(i)*"_traj.mp4",traj=true,result=result,tspan=tspan)
     end
@@ -35,7 +35,7 @@ function output_movie(output_tspan,range,filename;traj=false,result=[],tspan=[])
     v_min = minimum(output_0)
     v_max = maximum(output_0)
     #TODO: parallel image output
-    hash_key = string(hash(time()))
+    hash_key = string(hash(rand()))
     current_folder = pwd()
     movie_folder = "/tmp/movie"*hash_key
     mkdir(movie_folder)
@@ -53,7 +53,7 @@ function output_movie(output_tspan,range,filename;traj=false,result=[],tspan=[])
         end
     end
     cd(movie_folder)
-    run(`ffmpeg -framerate 10 -i img%04d.png -s:v 1280x720 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p out.mp4`)
+    run(`ffmpeg -framerate 10 -i img%04d.png -s:v 1300x1000 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p out.mp4`)
     cd(current_folder)
     cp(movie_folder*"/out.mp4",filename,remove_destination=true)
     rm(movie_folder,recursive=true)
@@ -82,7 +82,7 @@ end
     dots[1:2,:] = tmp[:,:]
     output_data = Fields.composite_slow_with_position(range,t,[20.0,20.0])
     current_folder = pwd()
-    hash_key = string(hash(time()))
+    hash_key = string(hash(rand()))
     image_folder = "/tmp/image"*hash_key
     mkdir(image_folder)
     cd(image_folder)
@@ -104,7 +104,7 @@ end
 @everywhere function output_image_gp(t,range,filename;v_min=0.0,v_max=0.0)
     output_data = Fields.composite_slow_with_position(range,t,[20.0,20.0])
     current_folder = pwd()
-    hash_key = string(hash(time()))
+    hash_key = string(hash(rand()))
     image_folder = "/tmp/image"*hash_key
     mkdir(image_folder)
     cd(image_folder)

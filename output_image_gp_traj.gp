@@ -1,7 +1,7 @@
-set terminal pngcairo size 1000,1000 enhanced font 'Verdana,10'
+set terminal pngcairo size 1300,1000 enhanced font 'Verdana,10'
 set output "data.png"
 set datafile separator ","
-unset colorbox
+#unset colorbox
 set xrange [xstart:xend]
 set yrange [ystart:yend]
 set key off
