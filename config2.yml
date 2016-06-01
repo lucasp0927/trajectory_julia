@@ -82,11 +82,13 @@ job-config:
     range: 2
     plot-range: [20,400]
     field: field
-    scaling: "t->(@i/5.0)^2"
+    scaling: "t->(@i+10/5.0)^2"
     movie-output:
         tstart: 680.0
         tend: 720.0
         tdiv: 0.5
         range: [7500.0, 12500.0, 22500.0, 27500.0]
         res: [20.0,20.0]
+    score-analysis:
+        area: [9890.0 10110.0 10110.0 9890.0;25338.0 25338.0 24662 24662]
 #    flux-analysis:

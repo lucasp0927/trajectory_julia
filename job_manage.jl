@@ -66,7 +66,6 @@ function output_movie(output_tspan,range,res,filename;traj=false,result=[],tspan
     end
     cd(movie_folder)
     run(pipeline(`ffmpeg -framerate 10 -i img%04d.png -s:v 1300x1000 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p out.mp4`,stderr=current_folder*"/ffmpeg.log"))
-#    run(`ffmpeg -framerate 10 -i img%04d.png -s:v 1300x1000 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p out.mp4`)
     cd(current_folder)
     cp(movie_folder*"/out.mp4",filename,remove_destination=true)
     rm(movie_folder,recursive=true)
@@ -164,7 +163,7 @@ end
 function calc_score(result)
     println("calculate score...")
     include("./TrajSolver/polygon.jl")
-    pp = Polygon([9890.0 10110.0 10110.0 9890.0;25338.0 25338.0 24662 24662])
+    pp = Polygon([9890.0,10110.0,10110.0,9890.0,25338.0,25338.0,24662,24662])
     score = 0
     for i = 1:size(result,3)
         for j = 1:size(result,2)

@@ -61,13 +61,11 @@ function init!(config::Dict)
     init_range = convert(Vector{Float64},config["atom-config"]["init-range"])
     #boundary
     in_boundaries = map(values(config["in-boundary"]))do x
-        poly = convert(Array{Float64,2},reshape(x,(round(Int64,length(x)/2)),2))'
-        return Polygon(poly)
+        return Polygon([promote(x...)...])
     end
     in_boundaries = [promote(in_boundaries...)...]::Vector{Polygon}
     out_boundaries = map(values(config["out-boundary"]))do x
-        poly = convert(Array{Float64,2},reshape(x,(round(Int64,length(x)/2)),2))'
-        return Polygon(poly)
+        return Polygon([promote(x...)...])
     end
     out_boundaries = [promote(out_boundaries...)...]::Vector{Polygon}
 #    boundary = reduce(hcat,map(d->convert(Array{Float64},d),values(config["boundary"])))

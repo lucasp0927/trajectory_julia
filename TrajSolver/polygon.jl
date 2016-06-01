@@ -4,7 +4,10 @@ type Polygon
     y::Vector{Float64}
     constant::Vector{Float64}
     multiple::Vector{Float64}
-    function Polygon(poly::Array{Float64,2})
+    function Polygon(poly::Array{Float64})
+        if size(poly,1)>2
+            poly = reshape(poly,(round(Int64,length(poly)/2)),2)'
+        end
         @assert size(poly,1) == 2
         n = size(poly,2)
         x = squeeze(poly[1,:],1)
