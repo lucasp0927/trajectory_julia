@@ -51,7 +51,7 @@ fields-config:
         scaling: "t->1.0"
 trajsolver-config:
     simulation-config:
-        traj_num: 500
+        traj_num: 1000
         tstart: 0.0
         tend: 750.0
         tdiv: 0.1
@@ -71,14 +71,8 @@ trajsolver-config:
     out-boundary:
         edge: [100.0, 69900.0, 69900.0, 100.0,
                100.0, 100.0,   49900.0, 49900.0]
-        # beam1: [49890.0, 50110.0, 24662.0, 24880.0]
-        # beam2: [49890.0, 50110.0, 25120.0, 25338.0]
-        # left-edge: [0.0, 100.0, 0.0, 49995.0]
-        # right-edge: [99890.0, 99990.0, 0.0, 49995.0]
-        # top-edge: [0.0, 99990.0, 0.0, 100.0]
-        # bottom-edge: [0.0, 99990.0, 49895.0, 49995.0]
 job-config:
     type: single-scan-scaling
-    range: 1
+    range: 20
     field: field
     scaling: "t->(@i/5.0)^2"

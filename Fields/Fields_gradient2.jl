@@ -192,8 +192,7 @@ function composite_slow(range::Vector{Float64},t::Float64)
     return output
 end
 
-function composite_slow_with_position(range::Vector{Float64},t::Float64)
-    res = (fields::ScalarFieldNode).res
+function composite_slow_with_position(range::Vector{Float64},t::Float64,res::Vector{Float64})
     @assert range[2]-range[1] > res[1] "range too small"
     @assert range[4]-range[3] > res[2] "range too small"
     xx = range[1]:res[1]:range[2]

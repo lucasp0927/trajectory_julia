@@ -13,7 +13,7 @@ function prepare()
     TrajSolver.init_parallel(trajsolver_config)
     #build field with name "field"
     @assert length(keys(fields_config)) == 1 "more than 1 top level fieldnode!"
-    println("buildinf field ",[k for k in keys(fields_config)][1],"...")
+    println("building field ",[k for k in keys(fields_config)][1],"...")
     sfn = Fields.build_field(fields_config["field"],0,true,name=ascii([k for k in keys(fields_config)][1]))
     println("aligning...")
     Fields.align_field_tree!(sfn)
