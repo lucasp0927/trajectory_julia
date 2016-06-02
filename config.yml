@@ -50,14 +50,14 @@ fields-config:
         scaling: "t->1.0"
 trajsolver-config:
     simulation-config:
-        traj_num: 1000
+        traj_num: 2000
         tstart: 0.0
         tend: 150.0
         tdiv: 0.1
     solver-config:
         solver: ADAMS
-        reltol: 1e-6
-        abstol: 1e-6
+        reltol: 1e-7
+        abstol: 1e-7
     atom-config:
         temperature: 50e-6
         init-speed: 411.0

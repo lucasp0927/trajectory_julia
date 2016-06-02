@@ -33,7 +33,7 @@ fields-config:
                         scaling: "t->exp(0.4*pi*im*t)"
 trajsolver-config:
     simulation-config:
-        traj_num: 1000
+        traj_num: 4000
         tstart: 0.0
         tend: 400.0
         tdiv: 0.1
