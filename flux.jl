@@ -1,6 +1,7 @@
+using Iterators
 # Given three colinear points p, q, r, the function checks if
 # point q lies on line segment 'pr'
-@inbounds function onSegment(p::Vector{Float64},q::Vector{Float64},r::Vector{Float64})
+@everywhere @inbounds function onSegment(p::Vector{Float64},q::Vector{Float64},r::Vector{Float64})
     return  (q[1] <= max(p[1], r[1]) && q[1] >= min(p[1], r[1]) && q[2] <= max(p[2], r[2]) && q[2] >= min(p[2], r[2]))
 end
 
@@ -9,7 +10,7 @@ end
 # 0 --> p, q and r are colinear
 # 1 --> Clockwise
 # 2 --> Counterclockwise
-@inbounds function orientation(p::Vector{Float64},q::Vector{Float64},r::Vector{Float64})
+@everywhere @inbounds function orientation(p::Vector{Float64},q::Vector{Float64},r::Vector{Float64})
     #See http://www.geeksforgeeks.org/orientation-3-ordered-points/
     val = (q[2] - p[2]) * (r[1] - q[1]) - (q[1] - p[1]) * (r[2] - q[2])
     if val==0
@@ -21,7 +22,7 @@ end
 
 # The main function that returns true if line segment 'p1q1'
 # and 'p2q2' intersect.
-function doIntersect(p1::Vector{Float64},q1::Vector{Float64},p2::Vector{Float64},q2::Vector{Float64})
+@everywhere function doIntersect(p1::Vector{Float64},q1::Vector{Float64},p2::Vector{Float64},q2::Vector{Float64})
     #return (b,d) tuple, b = true if p1q1 and p2q2 intersect,
     #d = 1 if p2 is on the left side of p1q1 line.
     #d = -1 if p2 is on the right side of p1q1 line.
@@ -47,27 +48,40 @@ function doIntersect(p1::Vector{Float64},q1::Vector{Float64},p2::Vector{Float64}
     end
     return (false,0.0)
 end
+
+@everywhere function cat_ignore_empty(x::Array{Float64},y::Array{Float64})
+    if isempty(x) && isempty(y)
+        return Float64[]
+    elseif isempty(x)
+        return cat(2,y)
+    elseif isempty(y)
+        return cat(2,x)
+    else
+        return cat(2,x,y)
+    end
+end
+
 #TODO optimize this
 @inbounds function calc_flux(traj,tspan,config,filename)
     flux = Dict{Any,Any}([ascii(k)=>[] for k in keys(config)])
     tmp = zeros(Float64,4)
+    traj_s = copy_to_sharedarray!(traj)
     for (k,v) in config
         v = [promote(v...)...]
+        @assert length(v)==4 "wrong array length"
         k = ascii(k)
-        for i = 1:size(traj,3),t_idx = 1:length(tspan)-1#loop over trajectories and time
-            (b,d) = doIntersect(v[1:2],v[3:4],traj[1:2,t_idx,i],traj[1:2,t_idx+1,i])
-            if b
-                tmp[1] = tspan[t_idx]
-                tmp[2:3] = traj[1:2,t_idx,i]
-                tmp[4] = d
-                if isempty(flux[k])
-                    flux[k] = tmp
-                else
-                    flux[k] = cat(2,flux[k],tmp)
-                end
+        flux[k] = @parallel ((x,y)->cat_ignore_empty(x,y)) for i = 1:size(traj_s,3) #loop over trajectories
+            tmp = map(1:length(tspan)-1)do j
+                (b,d) = doIntersect(v[1:2],v[3:4],traj_s[1:2,j,i],traj_s[1:2,j+1,i])
+                b?Float64[tspan[j],traj_s[1:2,j,i]...,d]:Float64[]
             end
+            reduce((x,y)->cat_ignore_empty(x,y),tmp)
         end
     end
     matwrite(filename,flux)
+    for k in keys(flux)
+        println(k," ",size(flux[k]))
+    end
     return flux
 end
+

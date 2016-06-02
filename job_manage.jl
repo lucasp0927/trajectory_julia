@@ -26,7 +26,7 @@ function single_scan_scaling(config::Dict,sfn::ScalarFieldNode,output_file)
         matwrite(output_file*string(i)*".mat",result)
         for (k,v) in config["score"]
             println("calculating score for area $k...")
-            (score[ascii(k)])[i] = calc_score(traj,v)
+            @time (score[ascii(k)])[i] = calc_score(traj,v)
         end
         @time flux = calc_flux(traj,tspan,config["flux"],output_file*string(i)*"_flux.mat")
         @time output_movie_traj(config["movie-output"],output_file*string(i)*"_traj.mp4",traj,tspan)
@@ -58,9 +58,16 @@ function calculate_traj()
 end
 
 function calc_score(traj,area)
-    include("./TrajSolver/polygon.jl")
+    @everywhere include("./TrajSolver/polygon.jl")
     pp = Polygon([promote(area...)...])
-    score = sum([pointInPolygon(pp,traj[1:2,j,i]) for i = 1:size(traj,3),j = 1:size(traj,2)])
+    traj_s = copy_to_sharedarray!(traj)
+    score = @parallel (+) for i = 1:size(traj_s,3)
+        sum(map(j->pointInPolygon(pp,traj_s[1:2,j,i])?1:0,1:size(traj_s,2)))
+        # for j = 1:size(traj_s,2)
+        #     pointInPolygon(pp,traj_s[1:2,j,i])?1:0
+        # end
+    end    
+#    score = sum([pointInPolygon(pp,traj[1:2,j,i]) for i = 1:size(traj,3),j = 1:size(traj,2)])
     # score = 0
     # for i = 1:size(traj,3),j = 1:size(traj,2)
     #     if pointInPolygon(pp,traj[1:2,j,i])
