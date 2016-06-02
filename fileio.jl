@@ -10,6 +10,8 @@ function mat2sharedarray(filename,variable)
     var = read(file, variable) # note that this does NOT introduce a variable ``varname`` into scope
     close(file)
     var_s = copy_to_sharedarray!(var)
+    var = 0
+    gc()
     return var_s
 end
 

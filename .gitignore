@@ -6,3 +6,7 @@
 *.bin
 *.mem
 *.png
+*.log
+result/
+test/
+*.yml

@@ -5,17 +5,17 @@ function copy_to_sharedarray!{T<:ComplexOrFloat,N}(arr::Array{T,N})
     return arr_s
 end
 
-function zero_field{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling =  t->1.0)
+function zero_field{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling =  t->1.0, name="scalarfield")
     @assert length(res) ==  length(pos) == length(size) "dimension mismatch"
-    return ScalarField{T,N}(copy_to_sharedarray!(zeros(T,res...)),pos,size,scaling=scaling)
+    return ScalarField{T,N}(copy_to_sharedarray!(zeros(T,res...)),pos,size,scaling=scaling,name=name)
 end
 
-function zero_field{T<:ComplexOrFloat,N}(::Type{VectorField{T,N}},res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling =  t->1.0)
+function zero_field{T<:ComplexOrFloat,N}(::Type{VectorField{T,N}},res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling =  t->1.0, name="vectorfield")
     @assert length(res) ==  length(pos) == length(size) "dimension mismatch"
-    return VectorField{T,N}(copy_to_sharedarray!(zeros(T,(3,res...))),pos,size,scaling = scaling)
+    return VectorField{T,N}(copy_to_sharedarray!(zeros(T,(3,res...))),pos,size,scaling = scaling,name=name)
 end
 
-@generated function func2field{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},func::Function,res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling =  t->1.0)
+@generated function func2field{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},func::Function,res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling =  t->1.0,name="scalarfield")
     quote
         @assert length(res)==length(pos)==length(size)==N
         @nexprs $N j->(x_j = linspace(pos[j],pos[j]+size[j],res[j]))
@@ -24,7 +24,7 @@ end
             v = func((@ntuple $N k->x_k[i_k])...)
             f[(@ntuple $N k->i_k)...] = v
         end
-        return ScalarField{T,2}(copy_to_sharedarray!(f::Array{T,$N}),pos,size,scaling=scaling)
+        return ScalarField{T,2}(copy_to_sharedarray!(f::Array{T,$N}),pos,size,scaling=scaling,name=name)
     end
 end
 
@@ -45,7 +45,7 @@ end
 # end
 
 
-@generated function func2field{T<:ComplexOrFloat,N}(::Type{VectorField{T,N}},func::Function,res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling = t->1.0)
+@generated function func2field{T<:ComplexOrFloat,N}(::Type{VectorField{T,N}},func::Function,res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling = t->1.0,name="vectorfield")
     quote
         @assert length(res)==length(pos)==length(size)==N
         @nexprs $N j->(x_j = linspace(pos[j],pos[j]+size[j],res[j]))
@@ -54,7 +54,7 @@ end
             v = func((@ntuple $N k->x_k[i_k])...)
             f[:,(@ntuple $N k->i_k)...] = v
         end
-        return VectorField{T,$N}(copy_to_sharedarray!(f::Array{T,$N+1}),pos,size,scaling=scaling)
+        return VectorField{T,$N}(copy_to_sharedarray!(f::Array{T,$N+1}),pos,size,scaling=scaling,name=name)
     end
 end
 

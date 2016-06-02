@@ -4,38 +4,30 @@ using Fields
 using TrajSolver
 include("fileio.jl")
 include("parse.jl")
+include("job_manage.jl")
 
-function main()
-    println(nprocs()," processes running.")
+function prepare()
     parsed_args = parse_commandline()
-    config_file = parsed_args["config"]
-    println("config file: ", config_file)
-    output_file = parsed_args["outfile"]
-    println("output file: ", output_file)
-    fields_config,trajsolver_config = parse_config(config_file,true)
+    config_file,output_file = parsed_args["config"],parsed_args["outfile"]
+    fields_config,trajsolver_config,job_config = parse_config(config_file,false)
     TrajSolver.init_parallel(trajsolver_config)
-    sfn = Fields.build_field(fields_config["field"],"field",0,true)
+    #build field with name "field"
+    @assert length(keys(fields_config)) == 1 "more than 1 top level fieldnode!"
+    println("building field ",[k for k in keys(fields_config)][1],"...")
+    sfn = Fields.build_field(fields_config["field"],0,true,name=ascii([k for k in keys(fields_config)][1]))
     println("aligning...")
     Fields.align_field_tree!(sfn)
     Fields.set_geometry!(sfn)
     Fields.set_typeof!(sfn)
-    println("Start calculating trajectories...")
+    return sfn,output_file,job_config
+end
 
-    for scale = (1.0:1.0:50.0).^2
-        println("scale: ",scale)
-        Fields.setscaling!(sfn,t->scale)
-        Fields.init_parallel!(sfn)
-        @time    @sync begin
-            for p = 2:nprocs()
-                @async remotecall_wait(p,TrajSolver.solve_traj)
-            end
-        end
-        temp = cell(nworkers())
-        for p = 2:nprocs()
-            temp[p-1] = remotecall_fetch(p,TrajSolver.get_result)
-        end
-        result = cat(3,temp...)
-        savemat(output_file*string(sqrt(scale))*".mat",result,"result")
-    end
+function main()
+    #preparation
+    sfn,output_file,job_config = prepare()
+    println("Start calculating trajectories...")
+    println("initialize fields")
+    Fields.init_parallel!(sfn)
+    single_scan_scaling(job_config,sfn,output_file)
 end
 main()

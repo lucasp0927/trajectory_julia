@@ -18,22 +18,22 @@ fields-config:
                                 D-type: Complex
                                 dim: 2
                                 init-type: file
-                                filename: lattice_right.mat
-                                variable: beam_right
+                                filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_right.mat
+                                variable: field
                                 pos: [0.0,0.0]
-                                size: [99990, 49995]
+                                size: [70000, 50000]
                                 scaling: "t->1.0+0.0im"
                             left-beam:
                                 field-type: VectorField
                                 D-type: Complex
                                 dim: 2
                                 init-type: file
-                                filename: lattice_left.mat
-                                variable: beam_left
+                                filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_left.mat
+                                variable: field
                                 pos: [0.0,0.0]
-                                size: [99990, 49995]
+                                size: [70000, 50000]
                                 #scaling: "t->1.0+0.0im"
-                                scaling: "t->exp(-2*pi*im*t)"
+                                scaling: "t->exp(0.4*pi*im*t)"
                         scaling: "t->1.0+0.0im" #amplitude scaling, not power
                 scaling: "t->-1.42884e-5"
             # gm:
@@ -51,34 +51,28 @@ fields-config:
         scaling: "t->1.0"
 trajsolver-config:
     simulation-config:
-        traj_num: 2000
+        traj_num: 1000
         tstart: 0.0
-        tend: 400.0
+        tend: 750.0
         tdiv: 0.1
     solver-config:
         solver: ADAMS
-        reltol: 1e-7
-        abstol: 1e-7
+        reltol: 1e-6
+        abstol: 1e-6
     atom-config:
         temperature: 100e-6
-        init-speed: 411.0
-        init-range: [400.0, 800.0, 100.0, 49895.0] #[x1 x2 y1 y2]
+        init-speed: -82.2
+        init-range: [69200.0, 69650.0, 100.0, 49900.0] #[x1 x2 y1 y2]
     in-boundary: #atoms in these areas are removed from simulation
-        beam1: [49890.0, 50110.0, 50110.0, 49890.0,
+        beam1: [9890.0, 10110.0, 10110.0, 9890.0,
                 24662.0, 24662.0, 24880.0, 24880.0]
-        beam2: [49890.0, 50110.0, 50110.0, 49890.0,
+        beam2: [9890.0, 10110.0, 10110.0, 9890.0,
                 25120.0, 25120.0, 25338.0, 25338.0]
     out-boundary:
-        edge: [100.0, 99890.0, 99890.0, 100.0,
-               100.0, 100.0,   49895.0, 49895.0]
-        # beam1: [49890.0, 50110.0, 24662.0, 24880.0]
-        # beam2: [49890.0, 50110.0, 25120.0, 25338.0]
-        # left-edge: [0.0, 100.0, 0.0, 49995.0]
-        # right-edge: [99890.0, 99990.0, 0.0, 49995.0]
-        # top-edge: [0.0, 99990.0, 0.0, 100.0]
-        # bottom-edge: [0.0, 99990.0, 49895.0, 49995.0]
+        edge: [100.0, 69900.0, 69900.0, 100.0,
+               100.0, 100.0,   49900.0, 49900.0]
 job-config:
     type: single-scan-scaling
-    range: 1
+    range: 20
     field: field
-    scaling: "t->@i^2"
+    scaling: "t->(@i/5.0)^2"

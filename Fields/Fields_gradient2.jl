@@ -142,7 +142,6 @@ end
 
 @generated function value3(pos::Vector{Float64},t::Real)
     quote
-        global fields
         x = $(Array(Float64,2))
         res = $(Array(Float64,2))
         res[:] = (fields::ScalarFieldNode).res
@@ -156,7 +155,6 @@ end
 
 @generated function gradient2(pos::Vector{Float64},t::Float64)
     quote
-        global fields
         x = $(Array(Float64,2))
         res = $(Array(Float64,2))
         res[:] = (fields::ScalarFieldNode).res
@@ -168,7 +166,6 @@ end
 
 @generated function gradient!(t::Float64,posvel::Vector{Float64},grad::Vector{Float64})
     quote
-        global fields
         x = $(Array(Float64,2))
         res = $(Array(Float64,2))
         pos = $(Array(Float64,2))
@@ -178,20 +175,33 @@ end
         sample2!(fields::ScalarFieldNode,pos,t)
         grad[1] = posvel[3]
         grad[2] = posvel[4]
-        grad[3:4] = itp_bicubic_grad((fields::ScalarFieldNode).sample,x,res)*KB/M_CS
+        grad[3:4] = -1.0*itp_bicubic_grad((fields::ScalarFieldNode).sample,x,res)*KB/M_CS
     end
 end
 
 function composite_slow(range::Vector{Float64},t::Float64)
-    global fields
     res = (fields::ScalarFieldNode).res
     @assert range[2]-range[1] > res[1] "range too small"
-    @assert range[4]-range[3] > res[1] "range too small"
+    @assert range[4]-range[3] > res[2] "range too small"
     xx = range[1]:res[1]:range[2]
     yy = range[3]:res[2]:range[4]
     output = zeros(Float64,(length(xx),length(yy)))
     for x in enumerate(xx), y in enumerate(yy)
         output[x[1],y[1]] = Fields.value3([x[2],y[2]],t)
+    end
+    return output
+end
+
+function composite_slow_with_position(range::Vector{Float64},t::Float64,res::Vector{Float64})
+    @assert range[2]-range[1] > res[1] "range too small"
+    @assert range[4]-range[3] > res[2] "range too small"
+    xx = range[1]:res[1]:range[2]
+    yy = range[3]:res[2]:range[4]
+    output = zeros(Float64,(3,length(xx),length(yy)))
+    for x in enumerate(xx), y in enumerate(yy)
+        output[1,x[1],y[1]] = x[2]
+        output[2,x[1],y[1]] = y[2]
+        output[3,x[1],y[1]] = Fields.value3([x[2],y[2]],t)
     end
     return output
 end
