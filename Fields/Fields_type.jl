@@ -279,8 +279,8 @@ function build_field(field_config::Dict,level::Integer,verbose::Bool;name::ASCII
             println(padding(level),"building ScalarFieldNode ", name)
             println(padding(level),"scaling:", field_config["scaling"])
         end
-        f_arr = map(keys(field_config["fields"]))do k
-            build_field(field_config["fields"][k],level+1,verbose,name=ascii(k))
+        f_arr = map(field_config["fields"])do x
+            build_field(x[2],level+1,verbose,name=ascii(x[1]))
         end
         f_arr = [promote(f_arr...)...]
         dim = round(field_config["dim"])::Integer
@@ -291,8 +291,8 @@ function build_field(field_config::Dict,level::Integer,verbose::Bool;name::ASCII
             println(padding(level),"building VectorFieldNode ",name)
             println(padding(level),"scaling:", field_config["scaling"])
         end
-        f_arr = map(keys(field_config["fields"]))do k
-            build_field(field_config["fields"][k],level+1,verbose,name=ascii(k))
+        f_arr = map(field_config["fields"])do x
+            build_field(x[2],level+1,verbose,name=ascii(x[1]))
         end
         f_arr = [promote(f_arr...)...]
         dim = round(field_config["dim"])::Integer

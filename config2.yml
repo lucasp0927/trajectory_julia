@@ -51,7 +51,7 @@ fields-config:
         scaling: "t->1.0"
 trajsolver-config:
     simulation-config:
-        traj_num: 500
+        traj_num: 2000
         tstart: 0.0
         tend: 750.0
         tdiv: 0.1
@@ -82,13 +82,19 @@ job-config:
     range: 2
     plot-range: [20,400]
     field: field
-    scaling: "t->(@i+10/5.0)^2"
+    scaling: "t->(@i+15/5.0)^2"
     movie-output:
         tstart: 680.0
         tend: 720.0
-        tdiv: 0.5
-        range: [7500.0, 12500.0, 22500.0, 27500.0]
-        res: [20.0,20.0]
-    score-analysis:
-        area: [9890.0 10110.0 10110.0 9890.0;25338.0 25338.0 24662 24662]
-#    flux-analysis:
+        tdiv: 0.1
+        range: [9000.0, 11000.0, 24000.0, 26000.0]
+        res: [10.0,10.0]
+    score:
+        gap: [9890.0, 10110.0, 10110.0, 9890.0, 25120.0, 25120.0, 24880.0, 24880.0]
+        before_gap: [10110.0, 10330.0, 10330.0, 10110.0, 25120.0, 25120.0, 24880.0, 24880.0]
+        after_gap: [9670.0, 9890.0, 9890.0, 9670.0, 25120.0, 25120.0, 24880.0, 24880.0]
+    flux: #[x1,y1,x2,y2]
+        before_gap: [10110.0, 25120.0, 10110.0, 24880.0]
+        after_gap: [9890.0, 25120.0, 9890.0, 24880.0]
+        top_inner_wall: [10110.0, 25120.0, 9890.0, 25120.0]
+        bottom_inner_wall: [9890.0, 24880.0, 10110.0, 24880.0]

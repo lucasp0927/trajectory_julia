@@ -9,7 +9,7 @@ include("job_manage.jl")
 function prepare()
     parsed_args = parse_commandline()
     config_file,output_file = parsed_args["config"],parsed_args["outfile"]
-    fields_config,trajsolver_config,job_config = parse_config(config_file,true)
+    fields_config,trajsolver_config,job_config = parse_config(config_file,false)
     TrajSolver.init_parallel(trajsolver_config)
     #build field with name "field"
     @assert length(keys(fields_config)) == 1 "more than 1 top level fieldnode!"
