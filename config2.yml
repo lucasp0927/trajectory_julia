@@ -18,7 +18,7 @@ fields-config:
                                 D-type: Complex
                                 dim: 2
                                 init-type: file
-                                filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_right.mat
+                                filename: /home/ubuntu/data/new_potential/Exy_32u_0_right.mat
                                 variable: field
                                 pos: [0.0,0.0]
                                 size: [70000, 50000]
@@ -28,7 +28,7 @@ fields-config:
                                 D-type: Complex
                                 dim: 2
                                 init-type: file
-                                filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_left.mat
+                                filename: /home/ubuntu/data/new_potential/Exy_32u_0_left.mat
                                 variable: field
                                 pos: [0.0,0.0]
                                 size: [70000, 50000]
