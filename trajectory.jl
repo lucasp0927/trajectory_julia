@@ -29,5 +29,6 @@ function main()
     println("initialize fields")
     Fields.init_parallel!(sfn)
     single_scan_scaling(job_config,sfn,output_file)
+    sleep(5)
 end
 main()

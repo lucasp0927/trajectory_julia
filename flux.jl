@@ -10,7 +10,7 @@ end
 # 0 --> p, q and r are colinear
 # 1 --> Clockwise
 # 2 --> Counterclockwise
-@everywhere @inbounds function orientation(p::Vector{Float64},q::Vector{Float64},r::Vector{Float64})
+@everywhere @inbounds @fastmath function orientation(p::Vector{Float64},q::Vector{Float64},r::Vector{Float64})
     #See http://www.geeksforgeeks.org/orientation-3-ordered-points/
     val = (q[2] - p[2]) * (r[1] - q[1]) - (q[1] - p[1]) * (r[2] - q[2])
     if val==0
@@ -62,7 +62,7 @@ end
 end
 
 #TODO optimize this
-@inbounds function calc_flux(traj,tspan,config,filename)
+@inbounds function calc_flux2(traj,tspan,config,filename)
     flux = Dict{Any,Any}([ascii(k)=>[] for k in keys(config)])
     tmp = zeros(Float64,4)
     traj_s = copy_to_sharedarray!(traj)
@@ -73,7 +73,7 @@ end
         flux[k] = @parallel ((x,y)->cat_ignore_empty(x,y)) for i = 1:size(traj_s,3) #loop over trajectories
             tmp = map(1:length(tspan)-1)do j
                 (b,d) = doIntersect(v[1:2],v[3:4],traj_s[1:2,j,i],traj_s[1:2,j+1,i])
-                b?Float64[tspan[j],traj_s[1:2,j,i]...,d]:Float64[]
+                b?Float64[tspan[j],traj_s[1:4,j,i]...,d]:Float64[]
             end
             reduce((x,y)->cat_ignore_empty(x,y),tmp)
         end
@@ -85,3 +85,29 @@ end
     return flux
 end
 
+@inbounds function calc_flux(traj,tspan,config,filename)
+    flux = Dict{Any,Any}([ascii(k)=>[] for k in keys(config)])
+    tmp = zeros(Float64,4)
+    traj_s = copy_to_sharedarray!(traj)
+    tspan_s = copy_to_sharedarray!(tspan)
+    for (k,v) in config
+        v = [promote(v...)...]
+        @assert length(v)==4 "wrong array length"
+        k = ascii(k)
+        flux[k] = @parallel ((x,y)->cat_ignore_empty(x,y)) for i = 1:size(traj_s,3) #loop over trajectories
+            tmp = zeros(Float64,6)
+            for j = 1:length(tspan_s)-1
+            (b,d) = doIntersect(v[1:2],v[3:4],traj_s[1:2,j,i],traj_s[1:2,j+1,i])
+                if b
+                    tmp = cat(2,tmp,Float64[tspan_s[j],traj_s[1:4,j,i]...,d])
+                end
+            end
+            tmp[:,2:end]
+        end
+    end
+    matwrite(filename,flux)
+    for k in keys(flux)
+        println(k," ",size(flux[k]))
+    end
+    return flux
+end

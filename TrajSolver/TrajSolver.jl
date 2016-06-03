@@ -108,7 +108,7 @@ function mycvode(mem, f::Function, y0::Vector{Float64}, t::Vector{Float64} , you
     for k in 2:length(t)
         flag = Sundials.CVode(mem, t[k], y, tout, Sundials.CV_NORMAL)
         yout[1:2,k] = y[1:2]
-#        yout[3,k] = Fields.value3(y[1:2],t[k])
+        yout[3,k] = Fields.value3(y[1:2],t[k])
 #        yout[4,k] = t[k]
         if boundary(yout[1:2,k]) == false
             break
