@@ -2,7 +2,7 @@ using PyCall
 include("output.jl")
 include("flux.jl")
 @everywhere using HDF5
-function single_scan_scaling(config::Dict,sfn::ScalarFieldNode,output_file)
+function single_scan_scaling(config::Dict,sfn::ScalarFieldNode,output_file,calc_traj_flag::Bool,movie_flag::Bool)
     range = config["range"]
     field_name = config["field"]
     scaling = config["scaling"]
@@ -14,22 +14,30 @@ function single_scan_scaling(config::Dict,sfn::ScalarFieldNode,output_file)
         Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
         Fields.init_parallel!(sfn)
         println("start calculation...")
-        traj = calculate_traj()
-        println("save results...")
-        tspan = TrajSolver.get_tspan()
-        result = Dict(
-                      "traj"=>traj,
-                      "tspan" =>tspan,
-                      "pos"=>sfn.position,
-                      "siz"=>sfn.size
-                      )
-        matwrite(output_file*string(i)*".mat",result)
+        if calc_traj_flag
+            traj = calculate_traj()
+            println("save results...")
+            tspan = TrajSolver.get_tspan()
+            result = Dict(
+                          "traj"=>traj,
+                          "tspan" =>tspan,
+                          "pos"=>sfn.position,
+                          "siz"=>sfn.size
+                          )
+            matwrite(output_file*string(i)*".mat",result)
+        else
+            vars = matread(output_file*string(i)*".mat")
+            traj = vars["traj"]
+            tspan = vars["tspan"]
+        end
         for (k,v) in config["score"]
             println("calculating score for area $k...")
             @time (score[ascii(k)])[i] = calc_score(traj,v)
         end
         @time flux = calc_flux(traj,tspan,config["flux"],output_file*string(i)*"_flux.mat")
-        @time output_movie_traj(config["movie-output"],output_file*string(i)*"_traj.mp4",traj,tspan)
+        if movie_flag
+            @time output_movie_traj(config["movie-output"],output_file*string(i)*"_traj.mp4",traj,tspan)
+        end
     end
     #save score and plot score
     matwrite(output_file*"score.mat",score)

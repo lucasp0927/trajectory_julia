@@ -95,11 +95,11 @@ end
         @assert length(v)==4 "wrong array length"
         k = ascii(k)
         flux[k] = @parallel ((x,y)->cat_ignore_empty(x,y)) for i = 1:size(traj_s,3) #loop over trajectories
-            tmp = zeros(Float64,6)
+            tmp = zeros(Float64,7)
             for j = 1:length(tspan_s)-1
             (b,d) = doIntersect(v[1:2],v[3:4],traj_s[1:2,j,i],traj_s[1:2,j+1,i])
                 if b
-                    tmp = cat(2,tmp,Float64[tspan_s[j],traj_s[1:4,j,i]...,d])
+                    tmp = cat(2,tmp,Float64[Float64(i),tspan_s[j],traj_s[1:4,j,i]...,d])
                 end
             end
             tmp[:,2:end]

@@ -19,16 +19,16 @@ function prepare()
     Fields.align_field_tree!(sfn)
     Fields.set_geometry!(sfn)
     Fields.set_typeof!(sfn)
-    return sfn,output_file,job_config
+    return sfn,output_file,job_config,parsed_args["trajectory"],parsed_args["movie"]
 end
 
 function main()
     #preparation
-    sfn,output_file,job_config = prepare()
+    sfn,output_file,job_config,calc_traj_flag,movie_flag = prepare()
     println("Start calculating trajectories...")
     println("initialize fields")
     Fields.init_parallel!(sfn)
-    single_scan_scaling(job_config,sfn,output_file)
+    single_scan_scaling(job_config,sfn,output_file,calc_traj_flag,movie_flag)
     sleep(5)
 end
 main()

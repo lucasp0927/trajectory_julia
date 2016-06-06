@@ -10,6 +10,12 @@ function parse_commandline()
         "--outfile", "-O"
         help = "output file."
         required = true
+        "--trajectory", "-T"
+        help = "calculate trajectories"
+        action = :store_true
+        "--movie", "-M"
+        help = "render movies"
+        action = :store_true
     end
     return parse_args(s)
 end
