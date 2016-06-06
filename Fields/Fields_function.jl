@@ -1,7 +1,11 @@
 # functions
+include("Fields_set.jl")
+include("Fields_find.jl")
+include("Fields_copy.jl")
 include("Fields_geometry.jl")
 include("Fields_typeof.jl")
 include("Fields_align.jl")
+include("Fields_build.jl")
 include("Fields_composite.jl")
 include("Fields_utility.jl")
 include("Fields_gradient.jl")

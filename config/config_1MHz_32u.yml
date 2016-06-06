@@ -82,7 +82,7 @@ job-config:
     range: 2
     plot-range: [25,1250]
     field: field
-    scaling: "t->(@i/4.0)^2"
+    scaling: "t->((@i+20.0)/4.0)^2"
     movie-output:
         tstart: 135.0
         tend: 145.0
