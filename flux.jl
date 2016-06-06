@@ -1,4 +1,4 @@
-using Iterators
+#using Iterators
 # Given three colinear points p, q, r, the function checks if
 # point q lies on line segment 'pr'
 @everywhere @inbounds function onSegment(p::Vector{Float64},q::Vector{Float64},r::Vector{Float64})

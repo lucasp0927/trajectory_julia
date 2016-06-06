@@ -18,7 +18,7 @@ fields-config:
                                 D-type: Complex
                                 dim: 2
                                 init-type: file
-                                filename: /home/ubuntu/data/new_potential/TM/Exy_32u_0_right.mat
+                                filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_right.mat
                                 variable: field
                                 pos: [0.0,0.0]
                                 size: [70000, 50000]
@@ -28,7 +28,7 @@ fields-config:
                                 D-type: Complex
                                 dim: 2
                                 init-type: file
-                                filename: /home/ubuntu/data/new_potential/TM/Exy_32u_0_left.mat
+                                filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_left.mat
                                 variable: field
                                 pos: [0.0,0.0]
                                 size: [70000, 50000]
@@ -51,7 +51,7 @@ fields-config:
         scaling: "t->1.0"
 trajsolver-config:
     simulation-config:
-        traj_num: 4000
+        traj_num: 500
         tstart: 0.0
         tend: 200.0
         tdiv: 0.05
@@ -79,7 +79,7 @@ trajsolver-config:
         # bottom-edge: [0.0, 99990.0, 49895.0, 49995.0]
 job-config:
     type: single-scan-scaling
-    range: 50
+    range: 2
     plot-range: [25,1250]
     field: field
     scaling: "t->(@i/4.0)^2"
@@ -105,4 +105,3 @@ job-config:
         bottom_inner_wall: [9890.0, 24880.0, 10110.0, 24880.0]
         top_beam_front: [10110.0, 25338.0, 10110.0, 25120.0]
         bottom_beam_front: [10110.0, 24880.0, 10110.0, 24662.0]
-
