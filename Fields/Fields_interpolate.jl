@@ -50,7 +50,6 @@ end
 #    return -0.5p[1]+0.5p[3]+2p[1]*x-5p[2]*x+4p[3]*x-p[4]*x-1.5(p[1]-3p[2]+3p[3]-p[4])*x^2
 end
 
-
 @generated function bicubicInterpolate{T<:ComplexOrFloat}(p::Array{T,2},x::Vector{Float64})
     quote
         arr = $(Array(T,4))
@@ -58,27 +57,3 @@ end
         return cubicInterpolate(arr, x[2]);
     end
 end
-
-#=
-double cubicInterpolate (double p[4], double x) {
-return p[1] + 0.5 * x*(p[2] - p[0] + x*(2.0*p[0] - 5.0*p[1] + 4.0*p[2] - p[3] + x*(3.0*(p[1] - p[2]) + p[3] - p[0])));
-}
-
-double bicubicInterpolate (double p[4][4], double x, double y) {
-double arr[4];
-arr[0] = cubicInterpolate(p[0], y);
-arr[1] = cubicInterpolate(p[1], y);
-arr[2] = cubicInterpolate(p[2], y);
-arr[3] = cubicInterpolate(p[3], y);
-return cubicInterpolate(arr, x);
-}
-
-double tricubicInterpolate (double p[4][4][4], double x, double y, double z) {
-double arr[4];
-arr[0] = bicubicInterpolate(p[0], y, z);
-arr[1] = bicubicInterpolate(p[1], y, z);
-arr[2] = bicubicInterpolate(p[2], y, z);
-arr[3] = bicubicInterpolate(p[3], y, z);
-return cubicInterpolate(arr, x);
-}
-=#

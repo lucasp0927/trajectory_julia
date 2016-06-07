@@ -1,14 +1,19 @@
 function align_field_tree!{T<:FieldNode}(f::T)
+    Lumberjack.debug("align top field node ",f.name)
     unalign_geo = geometry(f)
+    Lumberjack.debug("unaligned size $(unalign_geo["size"])")
     arr_sz = floor(Integer,unalign_geo["size"]./unalign_geo["res"])
     new_sz = arr_sz.*unalign_geo["res"]
     align_geo = unalign_geo
     align_geo["size"] = new_sz
+    Lumberjack.debug("aligned size $(align_geo["size"])")
+    Lumberjack.debug("aligned resolution $(align_geo["res"])")
     align_field!(f,align_geo["res"],align_geo["pos"])
     gc()
 end
 
 function align_field!{T<:FieldNode}(f::T,res::Vector{Float64},pos::Vector{Float64})
+    Lumberjack.debug("align FieldNode ",f.name)
     @assert length(res) == length(pos) "dimension mismatch!"
     for ff in f.fields
         align_field!(ff,res,pos)
@@ -16,6 +21,7 @@ function align_field!{T<:FieldNode}(f::T,res::Vector{Float64},pos::Vector{Float6
 end
 
 function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Vector{Float64},pos::Vector{Float64})
+    Lumberjack.debug("align ScalarField ",f.name)
     @assert length(res) == length(pos) "dimension mismatch!"
     unalign_geo = geometry(f)
     new_pos = ceil(unalign_geo["pos"]./res).*res
@@ -36,6 +42,7 @@ function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Vector{Float
 end
 
 function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Vector{Float64},pos::Vector{Float64})
+    Lumberjack.debug("align VectorField ",f.name)
     @assert length(res) == length(pos) "dimension mismatch!"
     unalign_geo = geometry(f)
     new_pos = ceil(unalign_geo["pos"]./res).*res

@@ -1,6 +1,7 @@
 module TrajSolver
 using Sundials
 using Fields
+using Lumberjack
 include("../constant.jl")
 include("polygon.jl")
 include("TrajSolver_init.jl")
@@ -15,6 +16,7 @@ global out_boundaries
 global result
 
 function calculate_traj()
+    Lumberjack.info("calculate trajectories...")
     @time @sync begin
         for p = 2:nprocs()
             @async remotecall_wait(p,solve_traj)
@@ -25,7 +27,17 @@ function calculate_traj()
         temp[p-1] = remotecall_fetch(p,get_result)
     end
     traj = cat(3,temp...)
-    return traj
+    result = Dict(
+                  "traj"=>traj,
+                  "tspan"=>tspan,
+                  "pos"=>Fields.fields.position,
+                  "siz"=>Fields.fields.size,
+                  "temperature"=>temperature,
+                  "init_speed"=>init_speed,
+                  "reltol"=>reltol,
+                  "abstol"=>abstol
+                  )
+    return result
 end
 
 function solve_traj()
@@ -33,11 +45,13 @@ function solve_traj()
     init_xv = distribute_atoms(init_range,temperature,tspan[1])
     #initialize sundials
     if solver == "ADAMS"
+        Lumberjack.info("Using solver ADAMS")
         mem = convert(Sundials.CVODE_ptr,Sundials.CVodeHandle(Sundials.CV_ADAMS, Sundials.CV_FUNCTIONAL))
     elseif solver == "BDF"
+        Lumberjack.info("Using solver BDF")
         mem = convert(Sundials.CVODE_ptr,Sundials.CVodeHandle(Sundials.CV_BDF, Sundials.CV_NEWTON))
     else
-        error("Unknown ODE solver $solver.")
+        Lumberjack.error("Unknown ODE solver $solver.")
     end
     init = zeros(Float64,4)
     for i = 1:my_trajnum::Int64
@@ -45,6 +59,7 @@ function solve_traj()
         yout = slice(result::Array{Float64,3},:,:,i)
         mycvode(mem,Fields.gradient!,init,tspan,yout; reltol = reltol, abstol =abstol)
     end
+    #TODO: figure out how to delete mem
     gc()
 end
 
@@ -75,11 +90,12 @@ function mycvode(mem, f::Function, y0::Vector{Float64}, t::Vector{Float64} , you
     flag = Sundials.CVodeSStolerances(mem, reltol, abstol)
     flag = Sundials.CVDense(mem, length(y0))
     yout[1:2,1] = y0[1:2]
-#    yout[3,1] = Fields.value3(y0[1:2],t[1])
+    yout[3,1] = Fields.value3(y0[1:2],t[1])
     y = copy(y0)
     tout = [t[1]]
     for k in 2:length(t)
         flag = Sundials.CVode(mem, t[k], y, tout, Sundials.CV_NORMAL)
+        #yout[3:4] are free spaces.
         yout[1:2,k] = y[1:2]
         yout[3,k] = Fields.value3(y[1:2],t[k])
 #        yout[4,k] = t[k]
@@ -88,6 +104,5 @@ function mycvode(mem, f::Function, y0::Vector{Float64}, t::Vector{Float64} , you
         end
     end
 end
-
 
 end

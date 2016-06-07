@@ -1,4 +1,5 @@
 module Fields
+using Lumberjack
 using Interpolations
 using Devectorize
 using Base.Cartesian
@@ -12,7 +13,7 @@ include("Fields_function.jl")
 # variables
 
 function init_parallel!(sfn::ScalarFieldNode)
-#    println("start initialization Fields module...")
+    Lumberjack.info("initializing Fields module...")
     @sync begin
         for p = 1:nprocs()     #initialize Fields module on each processe
         @async remotecall_fetch(p,init!,sfn)
@@ -21,7 +22,6 @@ function init_parallel!(sfn::ScalarFieldNode)
 end
 
 function init!(sfn::ScalarFieldNode)
-#    println("initialize Field module on process ", myid())
     global fields
     fields = 0
     gc()

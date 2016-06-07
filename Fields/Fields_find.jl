@@ -6,7 +6,7 @@ function find_field(criteria::Function)
             if find_field_bool(criteria,ff)
                 return find_field(criteria,ff)
             else
-                error("Cant find field.")
+                Lumberjack.error("Cant find field.")
             end
         end
     end
@@ -20,7 +20,7 @@ function find_field{T<:FieldNode}(criteria::Function,f::T)
             if find_field_bool(criteria,ff)
                 return find_field(criteria,ff)
             else
-                error("Cant find field.")
+                Lumberjack.error("Cant find field.")
             end
         end
     end
@@ -30,7 +30,7 @@ function find_field{T<:Union{ScalarField,VectorField}}(criteria::Function,f::T)
     if criteria(f)
         return f
     else
-        error("Cant find field.")
+        Lumberjack.error("Cant find field.")
     end
 end
 

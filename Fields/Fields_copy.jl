@@ -1,13 +1,16 @@
 
 function copyfield{T<:ComplexOrFloat,N}(f::ScalarField{T,N})
+    Lumberjack.debug("copy ScalarField ",f.name)
     return ScalarField{T,N}(f.field,f.position,f.size,scaling=f.scaling,name=f.name)
 end
 
 function copyfield{T<:ComplexOrFloat,N}(f::VectorField{T,N})
+    Lumberjack.debug("copy VectorField ",f.name)
     return VectorField{T,N}(f.field,f.position,f.size,scaling=f.scaling,name=f.name)
 end
 
 function copyfield{N}(f::ScalarFieldNode{N})
+    Lumberjack.debug("copy ScalarFieldNode ",f.name)
     f_arr = map(copyfield,f.fields)
     fn = ScalarFieldNode{N}(f_arr,scaling = f.scaling,name=f.name)
     fn.dim = f.dim
@@ -19,6 +22,7 @@ function copyfield{N}(f::ScalarFieldNode{N})
 end
 
 function copyfield{N}(f::VectorFieldNode{N})
+    Lumberjack.debug("copy VectorFieldNode ",f.name)
     f_arr = map(copyfield,f.fields)
     fn = VectorFieldNode{N}(f_arr,scaling = f.scaling, name=f.name)
     fn.dim = f.dim

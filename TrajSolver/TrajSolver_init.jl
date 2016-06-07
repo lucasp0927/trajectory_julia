@@ -17,6 +17,7 @@ function init_parallel(config::Dict)
 end
 
 function init!(config::Dict)
+    srand()
 #    println("initialize TrajSolver module on process ", myid())
     global my_trajnum
     global solver, reltol, abstol
@@ -47,7 +48,6 @@ function init!(config::Dict)
         return Polygon([promote(x...)...])
     end
     out_boundaries = [promote(out_boundaries...)...]::Vector{Polygon}
-#    boundary = reduce(hcat,map(d->convert(Array{Float64},d),values(config["boundary"])))
     #calculate my_trajnum
     jobs = allocate_jobs(trajnum)
     my_trajnum = jobs[2]-jobs[1]+1
@@ -55,8 +55,6 @@ function init!(config::Dict)
 end
 
 function distribute_atoms(init_range::Vector{Float64},atom_temp::Float64,t::Float64)
-#    println("initialize atoms...")
-    srand()
     x_range = init_range[1:2]
     y_range = init_range[3:4]
     U_range = Fields.composite_slow(init_range,t)
@@ -81,7 +79,7 @@ function distribute_atoms(init_range::Vector{Float64},atom_temp::Float64,t::Floa
             etot = ek+eu-U_min
             p = exp(-1.0*etot/atom_temp)
             if p<0.0 || p > 1.0
-                warn("p=$p: out of range!")
+                Lumberjack.warn("p=$p: out of range!")
             end
             init_xv[1,i] = x
             init_xv[2,i] = y
