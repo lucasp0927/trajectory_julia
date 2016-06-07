@@ -31,9 +31,9 @@ function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Vector{Float
     align_geo = Dict("pos"=>new_pos,"size"=>new_size,"res"=>res)
     ##### interpolate field
     new_arr_size = round(Int64,new_size ./ res)+one(Int64)
-    old_field_itp = interpolate(f.field, BSpline(Cubic(Flat())), OnGrid())
+#    old_field_itp = interpolate(f.field, BSpline(Cubic(Flat())), OnGrid())
     new_field = SharedArray(T,new_arr_size...)
-    itp_field!(new_field,old_field_itp,unalign_geo,align_geo)
+    itp_field!(new_field,f.field,unalign_geo,align_geo)
     @assert collect(size(new_field)) == new_arr_size
     setfield!(f,new_field,align_geo["pos"],align_geo["size"],scaling=f.scaling)
     #check
@@ -55,8 +55,8 @@ function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Vector{Float
     #loop over three components
     new_field = SharedArray(T,3,new_arr_size...)
     for i = 1:3
-        old_field_itp = interpolate(myslice(f.field,i), BSpline(Cubic(Flat())), OnGrid())
-        itp_field!(myslice(new_field,i),old_field_itp,unalign_geo,align_geo)
+#        old_field_itp = interpolate(myslice(f.field,i), BSpline(Cubic(Flat())), OnGrid())
+        itp_field!(myslice(new_field,i),myslice(f.field,i),unalign_geo,align_geo)
     end
     @assert collect(size(new_field)[2:end]) == new_arr_size
     setfield!(f,new_field,align_geo["pos"],align_geo["size"],scaling=f.scaling)
@@ -88,9 +88,10 @@ end
     return old_idx
 end
 
-@generated function itp_field!{T<:Union{Array,SubArray,SharedArray}}(new_field::T,old_field_itp::Interpolations.BSplineInterpolation,unalign_geo,align_geo)
+@generated function itp_field!{T<:Union{Array,SubArray,SharedArray},K<:Union{Array,SubArray,SharedArray}}(new_field::T,old_field::K,unalign_geo,align_geo)
     N::Int64 = ndims(new_field)
     quote
+        old_field_itp = interpolate(old_field, BSpline(Cubic(Flat())), OnGrid())
         apos::Vector{Float64} = align_geo["pos"]
         ares::Vector{Float64} = align_geo["res"]
         uapos::Vector{Float64} = unalign_geo["pos"]
