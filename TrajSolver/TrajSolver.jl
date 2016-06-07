@@ -45,10 +45,10 @@ function solve_traj()
     init_xv = distribute_atoms(init_range,temperature,tspan[1])
     #initialize sundials
     if solver == "ADAMS"
-        Lumberjack.info("Using solver ADAMS")
+        Lumberjack.debug("Using solver ADAMS")
         mem = convert(Sundials.CVODE_ptr,Sundials.CVodeHandle(Sundials.CV_ADAMS, Sundials.CV_FUNCTIONAL))
     elseif solver == "BDF"
-        Lumberjack.info("Using solver BDF")
+        Lumberjack.debug("Using solver BDF")
         mem = convert(Sundials.CVODE_ptr,Sundials.CVodeHandle(Sundials.CV_BDF, Sundials.CV_NEWTON))
     else
         Lumberjack.error("Unknown ODE solver $solver.")

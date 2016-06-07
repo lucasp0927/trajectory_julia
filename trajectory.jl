@@ -1,7 +1,9 @@
 push!(LOAD_PATH, "./Fields")
 push!(LOAD_PATH, "./TrajSolver")
+push!(LOAD_PATH, "./TrajAnalyzer")
 using Fields
 using TrajSolver
+using TrajAnalyzer
 @everywhere using Lumberjack
 include("fileio.jl")
 include("parse.jl")
@@ -20,7 +22,7 @@ end
 
 function main()
     @everywhere Lumberjack.remove_truck("console")
-    @everywhere Lumberjack.add_truck(LumberjackTruck(STDOUT, "debug"))
+    @everywhere Lumberjack.add_truck(LumberjackTruck(STDOUT, "info"))
     @everywhere Lumberjack.add_truck(LumberjackTruck("trajectory_logfile.log","debug"))
     #preparation
     sfn,output_file,job_config,calc_traj_flag,movie_flag = prepare()

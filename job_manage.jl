@@ -15,6 +15,7 @@ function single_scan_scaling(config::Dict,sfn::ScalarFieldNode,output_file,calc_
         Fields.init_parallel!(sfn)
         if calc_traj_flag
             result = calculate_traj()
+            TrajAnalyzer.set_trajs_parallel!(result)
             Lumberjack.info("save results...")
             matwrite(output_file*string(i)*".mat",result)
             traj = result["traj"]
