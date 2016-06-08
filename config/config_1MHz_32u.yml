@@ -51,7 +51,7 @@ fields-config:
         scaling: "t->1.0"
 trajsolver-config:
     simulation-config:
-        traj_num: 500
+        traj_num: 4000
         tstart: 0.0
         tend: 200.0
         tdiv: 0.05
@@ -62,7 +62,7 @@ trajsolver-config:
     atom-config:
         temperature: 100e-6
         init-speed: -426
-        init-range: [69200.0, 69650.0, 100.0, 49900.0] #[x1 x2 y1 y2]
+        init-range: [67850.0, 69650.0, 100.0, 49900.0] #[x1 x2 y1 y2]
     in-boundary: #atoms in these areas are removed from simulation
         beam1: [9890.0, 10110.0, 10110.0, 9890.0,
                 24662.0, 24662.0, 24880.0, 24880.0]
@@ -82,7 +82,7 @@ job-config:
     range: 2
     plot-range: [25,1250]
     field: field
-    scaling: "t->((@i+20.0)/4.0)^2"
+    scaling: "t->((@i+11.0)/4.0)^2"
     movie-output:
         tstart: 135.0
         tend: 145.0
@@ -105,3 +105,38 @@ job-config:
         bottom_inner_wall: [9890.0, 24880.0, 10110.0, 24880.0]
         top_beam_front: [10110.0, 25338.0, 10110.0, 25120.0]
         bottom_beam_front: [10110.0, 24880.0, 10110.0, 24662.0]
+    probe:
+        field:
+            field-type: ScalarFieldNode
+            dim: 2
+            fields:
+                 gm:
+                     field-type: ScalarField
+                     D-type: Float
+                     dim: 2
+                     init-type: file
+                     filename: /home/lucaspeng/data/spectrum/spectrum_julia/probe_d2_te.mat
+                     variable: probe
+                     res: [400, 400]
+                     pos: [8154.625, 23154.625]
+                     size: [3690.75,3690.75]
+                     scaling: "t->1.0"
+            scaling: "t->1.0"
+    spectrum:
+        gamma-1d: 0.15
+        gamma-prime: 5
+        lattice-width: 32000 #in nm
+        lattice-unit: 370 #nm
+        k-ratio: 0.98 #k = Xpoint_k * k-ratio
+        use-all-atom: true #overwrite total-atom-number when true
+        total-atom-number: 2000
+        avg-atom-number: 1000
+        iteration: 4
+        frequency: #in MHz
+            start: -10
+            end: 30
+            step: 1
+        time: #in us
+            start: 130
+            end: 145
+            step: 0.1

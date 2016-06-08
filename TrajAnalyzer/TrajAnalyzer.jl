@@ -6,8 +6,8 @@ include("../fileio.jl")
 include("../TrajSolver/polygon.jl")
 include("TrajAnalyzer_set.jl")
 include("TrajAnalyzer_output.jl")
-
-global Trajs
+include("TrajAnalyzer_spectrum.jl")
+global Trajs, Probe
 type Trajectories
     traj::SharedArray{Float64}
     tspan::Vector{Float64}

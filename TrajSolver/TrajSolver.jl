@@ -91,12 +91,14 @@ function mycvode(mem, f::Function, y0::Vector{Float64}, t::Vector{Float64} , you
     flag = Sundials.CVDense(mem, length(y0))
     yout[1:2,1] = y0[1:2]
     yout[3,1] = Fields.value3(y0[1:2],t[1])
+    #yout[3:4,1] = y0[3:4]
     y = copy(y0)
     tout = [t[1]]
     for k in 2:length(t)
         flag = Sundials.CVode(mem, t[k], y, tout, Sundials.CV_NORMAL)
         #yout[3:4] are free spaces.
         yout[1:2,k] = y[1:2]
+#        yout[3:4,k] = y[3:4]
         yout[3,k] = Fields.value3(y[1:2],t[k])
 #        yout[4,k] = t[k]
         if boundary(yout[1:2,k]) == false

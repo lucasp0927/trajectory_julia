@@ -41,6 +41,27 @@ function output_movie(mov_tspan,range,res,filename;traj=false)
     rm(movie_folder,recursive=true)
 end
 
+function output_image_gp(t,range,filename,sfn;v_min=0.0,v_max=0.0)
+    Lumberjack.debug("in TrajAnalyzer.output_image_gp()... with sfn")
+    output_data = Fields.composite_slow_with_position(range,t,[20.0,20.0],sfn)
+    current_folder = pwd()
+    Lumberjack.debug("current_folder: $current_folder")
+    hash_key = string(hash(rand()))
+    image_folder = "/tmp/image"*hash_key
+    mkdir(image_folder)
+    cd(image_folder)
+    h5write(image_folder*"/data.h5", "output", output_data)
+    run(`h5totxt data.h5 -o data.txt`)
+    cp(current_folder*"/gnuplot/output_image_gp.gp",image_folder*"/output_image_gp.gp")
+    if v_min==0.0 && v_max==0.0
+        run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4])" output_image_gp.gp`)
+    else
+        run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);set cbrange [$v_min:$v_max]" output_image_gp.gp`)
+    end
+    cd(current_folder)
+    cp(image_folder*"/data.png",filename,remove_destination=true)
+    rm(image_folder,recursive=true)
+end
 
 function output_image_gp(t,range,filename;v_min=0.0,v_max=0.0)
     output_data = Fields.composite_slow_with_position(range,t,[20.0,20.0])

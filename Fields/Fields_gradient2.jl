@@ -153,6 +153,19 @@ end
     #    return itp_spline(A,(2.0+x_1,2.0+x_2))
 end
 
+@generated function value3(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode)
+    quote
+        x = $(Array(Float64,2))
+        res = $(Array(Float64,2))
+        res[:] = (sfn::ScalarFieldNode).res
+        sample2!(sfn::ScalarFieldNode,pos,t)
+        @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
+        return bicubicInterpolate((sfn::ScalarFieldNode).sample,x)
+#        return itp_bicubic(f.sample,x)
+    end
+    #    return itp_spline(A,(2.0+x_1,2.0+x_2))
+end
+
 @generated function gradient2(pos::Vector{Float64},t::Float64)
     quote
         x = $(Array(Float64,2))
@@ -202,6 +215,20 @@ function composite_slow_with_position(range::Vector{Float64},t::Float64,res::Vec
         output[1,x[1],y[1]] = x[2]
         output[2,x[1],y[1]] = y[2]
         output[3,x[1],y[1]] = Fields.value3([x[2],y[2]],t)
+    end
+    return output
+end
+
+function composite_slow_with_position(range::Vector{Float64},t::Float64,res::Vector{Float64},sfn::ScalarFieldNode)
+    @assert range[2]-range[1] > res[1] "range too small"
+    @assert range[4]-range[3] > res[2] "range too small"
+    xx = range[1]:res[1]:range[2]
+    yy = range[3]:res[2]:range[4]
+    output = zeros(Float64,(3,length(xx),length(yy)))
+    for x in enumerate(xx), y in enumerate(yy)
+        output[1,x[1],y[1]] = x[2]
+        output[2,x[1],y[1]] = y[2]
+        output[3,x[1],y[1]] = Fields.value3([x[2],y[2]],t,sfn)
     end
     return output
 end

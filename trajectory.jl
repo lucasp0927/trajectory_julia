@@ -17,7 +17,7 @@ function prepare()
     @assert length(keys(fields_config)) == 1 "more than 1 top level fieldnode!"
     println("building field ",[k for k in keys(fields_config)][1],"...")
     sfn = Fields.buildAndAlign(fields_config["field"],0,name=ascii([k for k in keys(fields_config)][1]))
-    return sfn,output_file,job_config,parsed_args["trajectory"],parsed_args["movie"]
+    return sfn,output_file,job_config,parsed_args["trajectory"],parsed_args["movie"],trajsolver_config
 end
 
 function main()
@@ -25,10 +25,10 @@ function main()
     @everywhere Lumberjack.add_truck(LumberjackTruck(STDOUT, "debug"))
     @everywhere Lumberjack.add_truck(LumberjackTruck("trajectory_logfile.log","debug"))
     #preparation
-    sfn,output_file,job_config,calc_traj_flag,movie_flag = prepare()
+    sfn,output_file,job_config,calc_traj_flag,movie_flag,trajsolver_config = prepare()
     println("Start calculating trajectories...")
     println("initialize fields")
     Fields.init_parallel!(sfn)
-    single_scan_scaling(job_config,sfn,output_file,calc_traj_flag,movie_flag)
+    single_scan_scaling(trajsolver_config,job_config,sfn,output_file,calc_traj_flag,movie_flag)
 end
 main()
