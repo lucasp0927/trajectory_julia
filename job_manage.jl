@@ -27,23 +27,12 @@ function single_scan_scaling(config::Dict,sfn::ScalarFieldNode,output_file,calc_
         end
         for (k,v) in config["score"]
             Lumberjack.info("calculating score for area $k...")
-            @time (score[ascii(k)])[i] = calc_score(traj,v)
+            @time (score[ascii(k)])[i] = TrajAnalyzer.calc_score(v)
         end
         @time flux = calc_flux(traj,tspan,config["flux"],output_file*string(i)*"_flux.mat")
         if movie_flag
-            @time output_movie_traj(config["movie-output"],output_file*string(i)*"_traj.mp4",traj,tspan)
+            @time TrajAnalyzer.output_movie_traj(config["movie-output"],output_file*string(i)*"_traj.mp4")
         end
     end
     matwrite(output_file*"score.mat",score)
-end
-
-function calc_score(traj,area)
-    @everywhere include("./TrajSolver/polygon.jl")
-    pp = Polygon([promote(area...)...])
-    traj_s = copy_to_sharedarray!(traj)
-    score = @parallel (+) for i = 1:size(traj_s,3)
-        sum(map(j->pointInPolygon(pp,traj_s[1:2,j,i])?1:0,1:size(traj_s,2)))
-    end
-    Lumberjack.debug("score: $score")
-    return score
 end
