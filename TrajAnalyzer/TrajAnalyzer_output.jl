@@ -86,15 +86,12 @@ end
 
 
 function output_image_gp_traj(t,range,res_x,res_y,filename;v_min=0.0,v_max=0.0,tdiv=0.0)
-    #find closest index
-    t_idx=indmin(abs(Trajs.tspan-t))
-    tmp = squeeze(Trajs.traj[1:2,t_idx,:],2)
+    tmp = squeeze(Trajs[t,:],2)[1:2,:]
     dots = zeros(Float64,3,size(tmp,2))
     dots[1:2,:] = tmp[:,:]
     #make atom red before vanishing.
     if tdiv>0.0
-        t_idx_nx=indmin(abs(Trajs.tspan-(t+tdiv)))
-        tmp_next = squeeze(Trajs.traj[1:2,t_idx_nx,:],2)
+        tmp_next = squeeze(Trajs[t+tdiv,:],2)[1:2,:]
         dots[3,:] = [(isnan(tmp[1,i])==false && isnan(tmp_next[1,i])==true)?1.0:0.0 for i in 1:size(tmp,2)]
     end
     output_data = Fields.composite_slow_with_position(range,t,[res_x,res_y])

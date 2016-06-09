@@ -79,10 +79,10 @@ trajsolver-config:
         # bottom-edge: [0.0, 99990.0, 49895.0, 49995.0]
 job-config:
     type: single-scan-scaling
-    range: 2
+    range: 1
     plot-range: [25,1250]
     field: field
-    scaling: "t->((@i+11.0)/4.0)^2"
+    scaling: "t->(@i/4.0)^2"
     movie-output:
         tstart: 135.0
         tend: 145.0

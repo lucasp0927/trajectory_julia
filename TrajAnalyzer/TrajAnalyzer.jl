@@ -3,25 +3,13 @@ using Fields
 using Lumberjack
 using HDF5
 include("../fileio.jl")
+include("TrajAnalyzer_trajectories.jl")
 include("../TrajSolver/polygon.jl")
 include("TrajAnalyzer_set.jl")
 include("TrajAnalyzer_output.jl")
-include("TrajAnalyzer_spectrum.jl")
-global Trajs, Probe
-type Trajectories
-    traj::SharedArray{Float64}
-    tspan::Vector{Float64}
-    pos::Vector{Float64}
-    siz::Vector{Float64}
-    function Trajectories(result::Dict,traj_s::SharedArray{Float64})
-        traj = traj_s
-        tspan = copy(result["tspan"])
-        pos = copy(result["pos"])
-        siz = copy(result["siz"])
-        new(traj,tspan,pos,siz)
-    end
-end
 
+#include("TrajAnalyzer_spectrum.jl")
+global Trajs, Probe, ForceFields, TA_Config
 function calc_score(area)
     Lumberjack.debug("In TrajAnalyzer.calc_score()")
     pp = Polygon([promote(area...)...])

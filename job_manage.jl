@@ -16,7 +16,7 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
         if calc_traj_flag
             result = calculate_traj()
-            TrajAnalyzer.set_trajs_parallel!(result,probe_sfn)
+            TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
             Lumberjack.info("save results...")
             matwrite(output_file*string(i)*".mat",result)
             traj = result["traj"]
@@ -24,14 +24,14 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         else
             Lumberjack.info("read results...")
             result = matread(output_file*string(i)*".mat")
-            TrajAnalyzer.set_trajs_parallel!(result,probe_sfn)
+            TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
             traj = result["traj"]
             tspan = result["tspan"]
         end
-        for (k,v) in config["score"]
-            Lumberjack.info("calculating score for area $k...")
-            @time (score[ascii(k)])[i] = TrajAnalyzer.calc_score(v)
-        end
+        # for (k,v) in config["score"]
+        #     Lumberjack.info("calculating score for area $k...")
+        #     @time (score[ascii(k)])[i] = TrajAnalyzer.calc_score(v)
+        # end
         init_range = [promote(trajsolver_config["atom-config"]["init-range"]...)...]
         TrajAnalyzer.output_image_gp(0.0,init_range,output_file*string(i)*"_init_range.mat")
         movie_range = [promote(config["movie-output"]["range"]...)...]
