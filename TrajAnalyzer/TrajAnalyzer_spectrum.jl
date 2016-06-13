@@ -15,19 +15,22 @@ function calculate_transmission()
     Lumberjack.debug(string(time_range))
     Lumberjack.debug(string(length(time_range)))
     iter = TA_Config["spectrum"]["iteration"]
-    output = Array(Complex{Float64},(length(freq_range),length(time_range),iter))
-    output_matrix = Array(Complex{Float64},(2,2,length(freq_range),length(time_range),iter))
+    output = SharedArray(Complex{Float64},(length(freq_range),length(time_range),iter))
+    output_matrix = SharedArray(Complex{Float64},(2,2,length(freq_range),length(time_range),iter))
     for i in 1:iter
         Lumberjack.info("iteration: $i")
         lattice_sites::Float64 = lattice_width/lattice_unit
         #TODO: other distribution of atom_num
         atom_num = avg_atom_num::Int64
+        Lumberjack.info("atom number: $atom_num")
         atom_arr::Array{Int64,2} = generate_atom_array(atom_num,Trajs.atom_num,lattice_sites)
-        for fidx in eachindex(freq_range), tidx in eachindex(time_range)
-            output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission(time_range[tidx],freq_range[fidx],atom_arr)
+        @sync @parallel for fidx in collect(eachindex(freq_range))
+            for tidx in eachindex(time_range)
+                output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission(time_range[tidx],freq_range[fidx],atom_arr)
+            end
         end
     end
-    return output, output_matrix
+    return sdata(output), sdata(output_matrix)
 end
 
 function generate_atom_array(atom_num,total_atom_num,lattice_sites)
