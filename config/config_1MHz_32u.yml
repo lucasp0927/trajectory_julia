@@ -18,7 +18,8 @@ fields-config:
                                 D-type: Complex
                                 dim: 2
                                 init-type: file
-                                filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_right.mat
+                                #filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_right.mat
+                                filename: /home/lucaspeng/Desktop/trajectory_julia/Exy_32u_0_right.mat
                                 variable: field
                                 pos: [0.0,0.0]
                                 size: [70000, 50000]
@@ -28,7 +29,8 @@ fields-config:
                                 D-type: Complex
                                 dim: 2
                                 init-type: file
-                                filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_left.mat
+                                #filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_left.mat
+                                filename: /home/lucaspeng/Desktop/trajectory_julia/Exy_32u_0_left.mat
                                 variable: field
                                 pos: [0.0,0.0]
                                 size: [70000, 50000]
@@ -130,8 +132,8 @@ job-config:
         k-ratio: 0.98 #k = Xpoint_k * k-ratio
         use-all-atom: true #overwrite total-atom-number when true
         total-atom-number: 2000
-        avg-atom-number: 1000
-        iteration: 4
+        avg-atom-number: 500
+        iteration: 1
         frequency: #in MHz
             start: -10
             end: 30

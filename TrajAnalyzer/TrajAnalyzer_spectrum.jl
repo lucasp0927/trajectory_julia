@@ -1,19 +1,73 @@
 include("TrajAnalyzer_transfermatrix.jl")
 
-function calculate_transmission(paras::Para)
+function calculate_transmission()
     # traj selection
-    TrajAnalysis.initialize(paras.phy_para["beams-geo"])
-    traj_selected = select_traj(paras.traj,paras.t_span,paras.select)
+#    traj_selected = select_traj(paras.traj,paras.t_span,paras.select)
     # calculate transmission
-    init_parallel(paras.phy_para,paras.sim_para,paras.time_arr,paras.freq_arr,paras.t_span,traj_selected,paras.probe)
+#    init_parallel(paras.phy_para,paras.sim_para,paras.time_arr,paras.freq_arr,paras.t_span,traj_selected,paras.probe)
     #preallocate matrix
-    output = Array(Complex{Float64},(length(paras.freq_arr),length(paras.time_arr),paras.sim_para["iteration"]))
-    output_matrix = Array(Complex{Float64},(2,2,length(paras.freq_arr),length(paras.time_arr),paras.sim_para["iteration"]))
-    parallel_transmission!(output,output_matrix)
+    freq_config = TA_Config["spectrum"]["frequency"]
+    time_config = TA_Config["spectrum"]["time"]
+    freq_range = Float64(freq_config["start"]):Float64(freq_config["step"]):Float64(freq_config["end"])
+    time_range = Float64(time_config["start"]):Float64(time_config["step"]):Float64(time_config["end"])
+    Lumberjack.debug(string(freq_range))
+    Lumberjack.debug(string(length(freq_range)))
+    Lumberjack.debug(string(time_range))
+    Lumberjack.debug(string(length(time_range)))
+    iter = TA_Config["spectrum"]["iteration"]
+    output = Array(Complex{Float64},(length(freq_range),length(time_range),iter))
+    output_matrix = Array(Complex{Float64},(2,2,length(freq_range),length(time_range),iter))
+    for i in 1:iter
+        Lumberjack.info("iteration: $i")
+        lattice_sites::Float64 = lattice_width/lattice_unit
+        #TODO: other distribution of atom_num
+        atom_num = avg_atom_num::Int64
+        atom_arr::Array{Int64,2} = generate_atom_array(atom_num,Trajs.atom_num,lattice_sites)
+        for fidx in eachindex(freq_range), tidx in eachindex(time_range)
+            output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission(time_range[tidx],freq_range[fidx],atom_arr)
+        end
+    end
     return output, output_matrix
-    #output_data(output,output_matrix,paras.outputfile)
 end
 
+function generate_atom_array(atom_num,total_atom_num,lattice_sites)
+    #lattice_scale = lattice_width/lattice_unit
+    #(traj id,lattice id)*atom_num
+    atom_array = zeros(Int64,(2,atom_num))
+    atom_array[1,:] = shuffle(collect(1:total_atom_num))[1:atom_num] #atom id
+    atom_array[2,:] = sort(round(Int64,randn(atom_num)*lattice_sites)) #atom's position in unit of lattice width
+    return atom_array
+end
+
+function transmission(t::Float64,detune::Float64,atom_arr::Array{Int64,2})
+    # calculate transmission at time t and detuning detune.
+    atom_num = size(atom_arr,2)
+    x_point_k::Float64 = pi/lattice_unit::Float64
+    k::Float64 = x_point_k*k_ratio::Float64
+    #generate waveguide transfer matrix
+    ldiff::Vector{Float64} = diff(squeeze(atom_arr[2,:],1))*lattice_unit::Float64
+    M_wg::Array{Complex{Float64},3} = reduce((x,y)->cat(3,x,y),map(x->wg_transfer_matrix(k,x),ldiff))
+    #generate atomic transfer matrix
+    M_atom::Array{Complex{Float64},3} = zeros(Complex{Float64},(2,2,atom_num))
+    for i = 1:atom_num
+        pos::Vector{Float64} = Trajs[t,atom_arr[1,i]]
+        if any(isnan(pos[1:2]))
+            M_atom[:,:,i] = wg_transfer_matrix(0.0,0.0)
+        else
+            f_0 = Fields.value3(pos[1:2],t,ForceFields::ScalarFieldNode)/(-1e-3)*20
+            p_0 = Fields.value3(pos[1:2],t,Probe::ScalarFieldNode)/(-1e-3)*20
+            M_atom[:,:,i] = atom_transfer_matrix(detune,f_0,p_0*gamma_1d::Float64,gamma_prime::Float64)
+            @assert any(isnan(M_atom[:,:,i]))==false "nan error in $i p_o: $p_0"
+        end
+     end
+    M_tot::Array{Complex{Float64},2} = M_atom[:,:,1];
+    @fastmath for i = 1:atom_num - 1
+        M_tot *= M_atom[:,:,i+1]*M_wg[:,:,i]
+    end
+    return M_tot,one(Complex{Float64})/M_tot[2,2]
+end
+
+#=
 function parallel_transmission!(tran,output_matrix)
     #norm_time_arr = calc_norm_tarr(time_arr,t_span) #normalize time array
     pm = Progress(sim_para["iteration"], 1)
@@ -94,3 +148,4 @@ end
         (result::Array{Complex{Float64},2})[f[1]::Int64,t[1]::Int64] = one(Complex{Float64})/M_tot[2,2]
     end
 end
+=#

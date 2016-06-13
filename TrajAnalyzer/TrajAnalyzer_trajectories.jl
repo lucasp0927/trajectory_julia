@@ -1,16 +1,18 @@
 type Trajectories
     traj::SharedArray{Float64}  #traj[1,:,:] =>x coordinate, traj[2,:,:] => y coordinate
+    atom_num::Int64
     tspan::Vector{Float64}
     t_div::Float64
     pos::Vector{Float64}
     siz::Vector{Float64}
     function Trajectories(result::Dict,traj_s::SharedArray{Float64})
         traj = traj_s
+        atom_num = size(traj,3)
         tspan = copy(result["tspan"])
         t_div = mean(diff(tspan))
         pos = copy(result["pos"])
         siz = copy(result["siz"])
-        new(traj,tspan,t_div,pos,siz)
+        new(traj,atom_num,tspan,t_div,pos,siz)
     end
 end
 import Base.getindex
