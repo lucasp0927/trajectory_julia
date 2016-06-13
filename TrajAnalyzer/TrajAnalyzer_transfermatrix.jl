@@ -1,5 +1,7 @@
 @fastmath function wg_transfer_matrix( k::Float64 , l::Float64 )
-    return [exp(1im*k*l) zero(Complex{Float64});zero(Complex{Float64}) exp(-1im*k*l)]
+    M = [exp(1im*k*l) zero(Complex{Float64});zero(Complex{Float64}) exp(-1im*k*l)]
+    @assert abs(1-abs(det(M)))<1e-10 "det(M)!=1"
+    return M
 end
 
 function atom_transfer_matrix(f, f_0, gamma_1d, gamma_prime)
@@ -8,11 +10,20 @@ function atom_transfer_matrix(f, f_0, gamma_1d, gamma_prime)
     r::Complex{Float64} = -gamma_1d/(gamma-2.0*im*delta)
     t::Complex{Float64} = one(Complex{Float64})+r
     #t_rec = one(Complex{Float64}) #make it slower
+
+    M11::Complex{Float64} = t-(r^2)/t;
+    M12::Complex{Float64} = r/t
+    M21::Complex{Float64} = -M12#-r/t
+    M22::Complex{Float64} = one(Complex{Float64})/t
+    #=
     M22::Complex{Float64} = one(Complex{Float64})/t
     M11::Complex{Float64} = t-(r^2)/t;
     M12::Complex{Float64} = r/t
     M21::Complex{Float64} = -M12#-r/t
-    return [M11 M12;M21 M22]
+    =#
+    M = [M11 M12;M21 M22]
+    @assert abs(1-abs(det(M)))<1e-10 "det(M)!=1"
+    return M
 end
 
 @fastmath function atom_transfer_matrix_deutsch(f, f_0, p, gamma)
@@ -25,5 +36,7 @@ end
     M11::Complex{Float64} = conj(M22)#1/conj(t)#t-r^2/t;
     M12::Complex{Float64} = r/t
     M21::Complex{Float64} = -M12#-r/t
-    return [M11 M12;M21 M22]
+    M = [M11 M12;M21 M22]
+    @assert abs(1-abs(det(M)))<1e-10 "det(M)!=1"
+    return M
 end
