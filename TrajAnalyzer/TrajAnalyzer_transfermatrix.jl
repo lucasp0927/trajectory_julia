@@ -22,6 +22,7 @@ function atom_transfer_matrix(f, f_0, gamma_1d, gamma_prime)
     M21::Complex{Float64} = -M12#-r/t
     =#
     M = [M11 M12;M21 M22]
+    @assert abs2(t)<=1.0 "abs2(t)>1.0! f: $f, f_0: $f_0, gamma_1d: $gamma_1d, gamma_prime: $gamma_prime"
     @assert abs(1-abs(det(M)))<1e-10 "det(M)!=1"
     return M
 end
