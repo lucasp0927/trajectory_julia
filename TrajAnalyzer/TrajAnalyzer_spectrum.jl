@@ -1,4 +1,28 @@
 include("TrajAnalyzer_transfermatrix.jl")
+using PyCall
+function spectrum(filename)
+    output,output_matrix = calculate_transmission()
+    spectrum_data = Dict(
+                    "output"=>output,
+                    "output_matrix"=>output_matrix
+                         )
+    matwrite(filename*"_spectrum.mat",spectrum_data)
+    average_spectrum = squeeze(mean(abs2(output),3),3)
+    freq_config = TA_Config["spectrum"]["frequency"]
+    time_config = TA_Config["spectrum"]["time"]
+    fstart = Float64(freq_config["start"])
+    fend   = Float64(freq_config["end"])
+    tstart = Float64(time_config["start"])
+    tend = Float64(time_config["end"])
+    pyimport("matplotlib")[:use]("Agg")
+    @pyimport matplotlib.pyplot as plt
+    plt.imshow(average_spectrum, extent=[tstart,tend,fend,fstart],aspect="auto")
+    plt.colorbar()
+    plt.xlabel("time(us)")
+    plt.ylabel("detuning (MHz)")
+    plt.savefig(filename*"_spectrum.png")
+    plt.clf()
+end
 
 function calculate_transmission()
     # traj selection
@@ -10,10 +34,6 @@ function calculate_transmission()
     time_config = TA_Config["spectrum"]["time"]
     freq_range = Float64(freq_config["start"]):Float64(freq_config["step"]):Float64(freq_config["end"])
     time_range = Float64(time_config["start"]):Float64(time_config["step"]):Float64(time_config["end"])
-    Lumberjack.debug(string(freq_range))
-    Lumberjack.debug(string(length(freq_range)))
-    Lumberjack.debug(string(time_range))
-    Lumberjack.debug(string(length(time_range)))
     iter = TA_Config["spectrum"]["iteration"]
     output = SharedArray(Complex{Float64},(length(freq_range),length(time_range),iter))
     output_matrix = SharedArray(Complex{Float64},(2,2,length(freq_range),length(time_range),iter))
@@ -24,7 +44,7 @@ function calculate_transmission()
         atom_num = avg_atom_num::Int64
         Lumberjack.info("atom number: $atom_num")
         atom_arr::Array{Int64,2} = generate_atom_array(atom_num,Trajs.atom_num,lattice_sites)
-        @sync @parallel for fidx in collect(eachindex(freq_range))
+@time        @sync @parallel for fidx in collect(eachindex(freq_range))
             for tidx in eachindex(time_range)
                 output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission(time_range[tidx],freq_range[fidx],atom_arr)
             end
@@ -42,7 +62,7 @@ function generate_atom_array(atom_num,total_atom_num,lattice_sites)
     return atom_array
 end
 
-function transmission(t::Float64,detune::Float64,atom_arr::Array{Int64,2})
+@inbounds function transmission(t::Float64,detune::Float64,atom_arr::Array{Int64,2})
     # calculate transmission at time t and detuning detune.
     atom_num = size(atom_arr,2)
     x_point_k::Float64 = pi/lattice_unit::Float64
@@ -62,7 +82,7 @@ function transmission(t::Float64,detune::Float64,atom_arr::Array{Int64,2})
             @assert p_0 >= 0.0 "negative probe power!"
             M_atom[:,:,i] = atom_transfer_matrix(detune,f_0,p_0*gamma_1d::Float64,gamma_prime::Float64)
         end
-     end
+    end
     M_tot::Array{Complex{Float64},2} = M_atom[:,:,1];
     @fastmath for i = 1:atom_num - 1
         M_tot *= M_atom[:,:,i+1]*M_wg[:,:,i]
