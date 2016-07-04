@@ -7,6 +7,7 @@ include("../constant.jl")
 include("polygon.jl")
 include("TrajSolver_init.jl")
 include("TrajSolver_get.jl")
+include("fit_trap.jl")
 export calculate_traj
 global my_trajnum
 global solver, reltol, abstol
@@ -15,9 +16,14 @@ global radial_temperature, axial_temperature, init_speed, init_range
 global in_boundaries
 global out_boundaries
 global result
+global U_prob #probability for atom distribution
 
 function calculate_traj()
     Lumberjack.info("calculate trajectories...")
+    #calculate probablility distrubution, and construct a scalar field object.
+    Lumberjack.debug("LINK MATLAB")
+    init_U_data = Fields.composite_slow_with_position(init_range,tspan[1],Fields.fields.res)
+    fit_trap_matlab(init_U_data,axial_temperature,radial_temperature)
     @time @sync begin
         for p = 2:nprocs()
             @async remotecall_wait(p,solve_traj)
