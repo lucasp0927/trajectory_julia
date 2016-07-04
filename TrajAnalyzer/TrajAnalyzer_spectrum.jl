@@ -6,7 +6,7 @@ function spectrum(filename)
                     "output"=>output,
                     "output_matrix"=>output_matrix
                          )
-    matwrite(filename*"_spectrum.mat",spectrum_data)
+#    matwrite(filename*"_spectrum.mat",spectrum_data)
     average_spectrum = squeeze(mean(abs2(output),3),3)
     freq_config = TA_Config["spectrum"]["frequency"]
     time_config = TA_Config["spectrum"]["time"]

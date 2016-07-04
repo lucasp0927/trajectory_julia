@@ -29,4 +29,10 @@ function init!(sfn::ScalarFieldNode)
     gc()
 end
 
+function reset!()
+    global fields
+    fields = 0
+    gc()
+end
+
 end

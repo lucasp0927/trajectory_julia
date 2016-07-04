@@ -22,7 +22,7 @@ function init!(config::Dict)
     global my_trajnum
     global solver, reltol, abstol
     global trajnum, tspan, tdiv
-    global temperature, init_speed, init_range
+    global radial_temperature, axial_temperature, init_speed, init_range
     global in_boundaries, out_boundaries
     global result
     #simulation-config
@@ -36,7 +36,8 @@ function init!(config::Dict)
     reltol = float(config["solver-config"]["reltol"])::Float64
     abstol = float(config["solver-config"]["abstol"])::Float64
     #atom-config
-    temperature = float(config["atom-config"]["temperature"])::Float64
+    radial_temperature = float(config["atom-config"]["radial-temperature"])::Float64
+    axial_temperature = float(config["atom-config"]["axial-temperature"])::Float64
     init_speed = float(config["atom-config"]["init-speed"])::Float64
     init_range = convert(Vector{Float64},config["atom-config"]["init-range"])
     #boundary
@@ -54,9 +55,13 @@ function init!(config::Dict)
     result = Array(Float64,4,length(tspan),my_trajnum)
 end
 
-function distribute_atoms(init_range::Vector{Float64},atom_temp::Float64,t::Float64)
+function distribute_atoms()
+    t = tspan[1]
+    Lumberjack.debug("distrubute atoms at t=$t, t_axial=$axial_temperature, t_radial=$radial_temperature, range=$init_range")
     x_range = init_range[1:2]
     y_range = init_range[3:4]
+    x_center = mean(init_range[1:2])
+    y_center = mean(init_range[3:4])
     U_range = Fields.composite_slow(init_range,t)
     U_min = minimum(U_range)
     U_max = maximum(U_range)
@@ -71,12 +76,15 @@ function distribute_atoms(init_range::Vector{Float64},atom_temp::Float64,t::Floa
             y = (y_range[2]-y_range[1])*rand()+y_range[1]
             eu = Fields.value3([x,y],t)
             #randomize speed
+            @assert radial_temperature == axial_temperature "radial temperature and axial temperature have to be the same"
+            atom_temp = radial_temperature
             vp = sqrt(2.0*KB*atom_temp/M_CS)
             vx = -4.0*vp+8.0*vp*rand()
             vy = -4.0*vp+8.0*vp*rand()
             vz = -4.0*vp+8.0*vp*rand()
-            ek = 0.5*M_CS*(vx*vx+vy*vy+vz*vz)/KB
+            ek = 0.5*M_CS*(vx^2+vy^2+vz^2)/KB
             etot = ek+eu-U_min
+
             p = exp(-1.0*etot/atom_temp)
             if p<0.0 || p > 1.0
                 Lumberjack.warn("p=$p: out of range!")

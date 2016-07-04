@@ -2,6 +2,7 @@ module TrajSolver
 using Sundials
 using Fields
 using Lumberjack
+using Optim
 include("../constant.jl")
 include("polygon.jl")
 include("TrajSolver_init.jl")
@@ -10,7 +11,7 @@ export calculate_traj
 global my_trajnum
 global solver, reltol, abstol
 global trajnum, tspan, tdiv
-global temperature, init_speed, init_range
+global radial_temperature, axial_temperature, init_speed, init_range
 global in_boundaries
 global out_boundaries
 global result
@@ -32,7 +33,8 @@ function calculate_traj()
                   "tspan"=>tspan,
                   "pos"=>Fields.fields.position,
                   "siz"=>Fields.fields.size,
-                  "temperature"=>temperature,
+                  "radial_temperature"=>radial_temperature,
+                  "axial_temperature"=>axial_temperature,
                   "init_speed"=>init_speed,
                   "reltol"=>reltol,
                   "abstol"=>abstol
@@ -42,7 +44,7 @@ end
 
 function solve_traj()
     fill!(result,NaN)
-    init_xv = distribute_atoms(init_range,temperature,tspan[1])
+    init_xv = distribute_atoms()
     #initialize sundials
     if solver == "ADAMS"
         Lumberjack.debug("Using solver ADAMS")
