@@ -55,7 +55,7 @@ trajsolver-config:
     simulation-config:
         traj_num: 4000
         tstart: 0.0
-        tend: 20.0
+        tend: 160.0
         tdiv: 0.05
     solver-config:
         solver: ADAMS
@@ -63,7 +63,7 @@ trajsolver-config:
         abstol: 1e-6
     atom-config:
         radial-temperature: 300e-6
-        axial-temperature: 300e-6
+        axial-temperature: 30e-6
         init-speed: -426
 #        init-range: [67850.0, 69650.0, 100.0, 49900.0] #[x1 x2 y1 y2]
         init-range: [68350.0, 68810.0, 100.0, 49900.0] #[x1 x2 y1 y2]
@@ -83,10 +83,10 @@ trajsolver-config:
         # bottom-edge: [0.0, 99990.0, 49895.0, 49995.0]
 job-config:
     type: single-scan-scaling
-    range: 1
+    range: 50
     plot-range: [25,1250]
     field: field
-    scaling: "t->((@i+11)/4.0)^2"
+    scaling: "t->((@i)/4.0)^2"
     movie-output:
         tstart: 135.0
         tend: 145.0

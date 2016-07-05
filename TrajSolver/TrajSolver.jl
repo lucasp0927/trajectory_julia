@@ -4,9 +4,11 @@ using Fields
 using Lumberjack
 using Optim
 include("../constant.jl")
+include("../fileio.jl")
 include("polygon.jl")
 include("TrajSolver_init.jl")
 include("TrajSolver_get.jl")
+include("../TrajAnalyzer/TrajAnalyzer_output.jl")
 include("fit_trap.jl")
 export calculate_traj
 global my_trajnum
@@ -18,12 +20,34 @@ global out_boundaries
 global result
 global U_prob #probability for atom distribution
 
+function prepare_U_prob()
+    #calculate probablility distrubution, and construct a scalar field object.
+    Lumberjack.debug("LINK MATLAB FOR TRAP FITTING")
+    init_U_data = Fields.composite_slow_with_position(init_range,tspan[1],Fields.fields.res)
+    prob,xstart,xend,ystart,yend = fit_trap_matlab(init_U_data,axial_temperature,radial_temperature)
+    prob_s = copy_to_sharedarray!(prob)
+    prob_f = ScalarFieldNode{2}([ScalarField{Float64,2}(prob_s,[xstart,ystart],[xend-xstart,yend-ystart])])
+    Fields.set_geometry!(prob_f)
+    Fields.set_typeof!(prob_f)
+    output_image_gp(tspan[1],init_range,"init_prob_debug.png",prob_f)
+    @sync begin
+        for p = 1:nprocs()
+            @async remotecall_fetch(p,init_U_prob!,prob_f)
+        end
+    end
+end
+
+function init_U_prob!(sfn::ScalarFieldNode)
+    global U_prob
+    U_prob = 0
+    gc()
+    U_prob = Fields.copyfield(sfn)
+    gc()
+end
+
 function calculate_traj()
     Lumberjack.info("calculate trajectories...")
-    #calculate probablility distrubution, and construct a scalar field object.
-    Lumberjack.debug("LINK MATLAB")
-    init_U_data = Fields.composite_slow_with_position(init_range,tspan[1],Fields.fields.res)
-    fit_trap_matlab(init_U_data,axial_temperature,radial_temperature)
+    prepare_U_prob()
     @time @sync begin
         for p = 2:nprocs()
             @async remotecall_wait(p,solve_traj)

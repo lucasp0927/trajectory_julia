@@ -60,34 +60,27 @@ function distribute_atoms()
     Lumberjack.debug("distrubute atoms at t=$t, t_axial=$axial_temperature, t_radial=$radial_temperature, range=$init_range")
     x_range = init_range[1:2]
     y_range = init_range[3:4]
-    x_center = mean(init_range[1:2])
-    y_center = mean(init_range[3:4])
-    U_range = Fields.composite_slow(init_range,t)
-    U_min = minimum(U_range)
-    U_max = maximum(U_range)
-    U_min -= (U_max-U_min)/1000
-#    println("U_min= ",U_min)
-#    println("U_max= ",U_max)
     init_xv = zeros(Float64,(4,my_trajnum))
+    vp_a = sqrt(2.0*KB*axial_temperature/M_CS)
+    vp_r = sqrt(2.0*KB*radial_temperature/M_CS)
     for i = 1:my_trajnum::Int64
         while true
-            #randomize position
             x = (x_range[2]-x_range[1])*rand()+x_range[1]
             y = (y_range[2]-y_range[1])*rand()+y_range[1]
-            eu = Fields.value3([x,y],t)
-            #randomize speed
-            @assert radial_temperature == axial_temperature "radial temperature and axial temperature have to be the same"
-            atom_temp = radial_temperature
-            vp = sqrt(2.0*KB*atom_temp/M_CS)
-            vx = -4.0*vp+8.0*vp*rand()
-            vy = -4.0*vp+8.0*vp*rand()
-            vz = -4.0*vp+8.0*vp*rand()
-            ek = 0.5*M_CS*(vx^2+vy^2+vz^2)/KB
-            etot = ek+eu-U_min
-
-            p = exp(-1.0*etot/atom_temp)
+            p_pos = Fields.value3([x,y],t,U_prob)
+            vx = -4.0*vp_a+8.0*vp_a*rand()
+            vy = -4.0*vp_r+8.0*vp_r*rand()
+            vz = -4.0*vp_r+8.0*vp_r*rand()
+            ek_a = 0.5*M_CS*(vx^2)/KB
+            ek_r = 0.5*M_CS*(vy^2+vz^2)/KB
+            p_vel = exp(-1.0*ek_a/axial_temperature)*exp(-1.0*ek_r/radial_temperature)
+            p = p_pos*p_vel
             if p<0.0 || p > 1.0
-                Lumberjack.warn("p=$p: out of range!")
+                if abs(p)<1e-10
+                    p = 0.0
+                else
+                    Lumberjack.warn("p=$p: out of range!")
+                end
             end
             init_xv[1,i] = x
             init_xv[2,i] = y
