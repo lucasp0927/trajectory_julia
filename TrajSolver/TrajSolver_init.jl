@@ -39,7 +39,8 @@ function init!(config::Dict)
     radial_temperature = float(config["atom-config"]["radial-temperature"])::Float64
     axial_temperature = float(config["atom-config"]["axial-temperature"])::Float64
     init_speed = float(config["atom-config"]["init-speed"])::Float64
-    init_range = convert(Vector{Float64},config["atom-config"]["init-range"])
+    #    init_range = convert(Vector{Float64},config["atom-config"]["init-range"])
+    init_range = convert(Dict{ASCIIString,Vector{Float64}},config["atom-config"]["init-range"])
     #boundary
     in_boundaries = map(values(config["in-boundary"]))do x
         return Polygon([promote(x...)...])
@@ -55,19 +56,63 @@ function init!(config::Dict)
     result = Array(Float64,4,length(tspan),my_trajnum)
 end
 
+function range2sfn(range)
+    init_U_data = Fields.composite_slow_with_position(range,tspan[1],Fields.fields.res)
+    prob,xstart,xend,ystart,yend = fit_trap_matlab(init_U_data,axial_temperature,radial_temperature)
+    prob_s = copy_to_sharedarray!(prob)
+    prob_f = ScalarFieldNode{2}([ScalarField{Float64,2}(prob_s,[xstart,ystart],[xend-xstart,yend-ystart])])
+    Fields.set_geometry!(prob_f)
+    Fields.set_typeof!(prob_f)
+    output_image_gp(tspan[1],range,"init_prob_"*string(iter)*string(range)*".png",prob_f)
+    return prob_f
+end
+
+function prepare_U_prob()
+    #calculate probablility distrubution, and construct a scalar field object.
+    Lumberjack.debug("IN PREPARE_U_PROB!!!!")
+    sfns = map(range2sfn,values(init_range))
+    sfns = [promote(sfns...)...]
+    @sync begin
+        for p = 1:nprocs()
+            @async remotecall_fetch(p,init_U_prob!,sfns)
+        end
+    end
+end
+
+function init_U_prob!(sfns::Vector{ScalarFieldNode{2}})
+    global U_prob
+    U_prob = 0
+    gc()
+    U_prob = map(Fields.copyfield,sfns)
+    gc()
+end
+
 function distribute_atoms()
+    pancake_num = length(U_prob)
+    traj_num = zeros(Int64,pancake_num)
+    d,r = divrem(my_trajnum,pancake_num)
+    traj_num[:] = d
+    traj_num[end] += r
+    @assert sum(traj_num) == my_trajnum
+    init_xvs = map(i->distribute_atoms_inner(U_prob[i],traj_num[i]),1:pancake_num)
+    init_xv = cat(2,init_xvs...)
+    return init_xv
+end
+
+function distribute_atoms_inner(sfn::ScalarFieldNode{2},traj_num::Int64)
     t = tspan[1]
-    Lumberjack.debug("distrubute atoms at t=$t, t_axial=$axial_temperature, t_radial=$radial_temperature, range=$init_range")
-    x_range = init_range[1:2]
-    y_range = init_range[3:4]
-    init_xv = zeros(Float64,(4,my_trajnum))
+    x_range = [sfn.position[1],sfn.position[1]+sfn.size[1]]
+    y_range = [sfn.position[2],sfn.position[2]+sfn.size[2]]
+    Lumberjack.debug("distrubute atoms at t=$t, t_axial=$axial_temperature, t_radial=$radial_temperature, x_range=$x_range, y_range=$y_range,  traj_num=$traj_num")
+
+    init_xv = zeros(Float64,(4,traj_num))
     vp_a = sqrt(2.0*KB*axial_temperature/M_CS)
     vp_r = sqrt(2.0*KB*radial_temperature/M_CS)
-    for i = 1:my_trajnum::Int64
+    for i = 1:traj_num
         while true
             x = (x_range[2]-x_range[1])*rand()+x_range[1]
             y = (y_range[2]-y_range[1])*rand()+y_range[1]
-            p_pos = Fields.value3([x,y],t,U_prob)
+            p_pos = Fields.value3([x,y],t,sfn)
             vx = -4.0*vp_a+8.0*vp_a*rand()
             vy = -4.0*vp_r+8.0*vp_r*rand()
             vz = -4.0*vp_r+8.0*vp_r*rand()

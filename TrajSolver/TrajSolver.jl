@@ -11,6 +11,7 @@ include("TrajSolver_get.jl")
 include("../TrajAnalyzer/TrajAnalyzer_output.jl")
 include("fit_trap.jl")
 export calculate_traj
+global iter
 global my_trajnum
 global solver, reltol, abstol
 global trajnum, tspan, tdiv
@@ -20,33 +21,22 @@ global out_boundaries
 global result
 global U_prob #probability for atom distribution
 
-function prepare_U_prob()
-    #calculate probablility distrubution, and construct a scalar field object.
-    Lumberjack.debug("LINK MATLAB FOR TRAP FITTING")
-    init_U_data = Fields.composite_slow_with_position(init_range,tspan[1],Fields.fields.res)
-    prob,xstart,xend,ystart,yend = fit_trap_matlab(init_U_data,axial_temperature,radial_temperature)
-    prob_s = copy_to_sharedarray!(prob)
-    prob_f = ScalarFieldNode{2}([ScalarField{Float64,2}(prob_s,[xstart,ystart],[xend-xstart,yend-ystart])])
-    Fields.set_geometry!(prob_f)
-    Fields.set_typeof!(prob_f)
-    output_image_gp(tspan[1],init_range,"init_prob_debug.png",prob_f)
+function parallel_set_iter(i::Int64)
     @sync begin
         for p = 1:nprocs()
-            @async remotecall_fetch(p,init_U_prob!,prob_f)
+            @async remotecall_fetch(p,set_iter,i)
         end
     end
 end
 
-function init_U_prob!(sfn::ScalarFieldNode)
-    global U_prob
-    U_prob = 0
-    gc()
-    U_prob = Fields.copyfield(sfn)
-    gc()
+function set_iter(i::Int64)
+    global iter
+    iter = i
 end
 
-function calculate_traj()
+function calculate_traj(i::Int64)
     Lumberjack.info("calculate trajectories...")
+    parallel_set_iter(i)
     prepare_U_prob()
     @time @sync begin
         for p = 2:nprocs()
@@ -110,7 +100,7 @@ end
     return true
 end
 
-function mycvode(mem, f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::SubArray; reltol::Float64=1e-8, abstol::Float64=1e-7)
+@inbounds function mycvode(mem, f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::SubArray; reltol::Float64=1e-8, abstol::Float64=1e-7)
     # f, Function to be optimized of the form f(y::Vector{Float64}, fy::Vector{Float64}, t::Float64)
     #    where `y` is the input vector, and `fy` is the
     # y0, Vector of initial values

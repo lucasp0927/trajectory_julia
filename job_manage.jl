@@ -15,7 +15,7 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         # build probe beam
         probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
         if calc_traj_flag
-            result = calculate_traj()
+            result = calculate_traj(i)
             TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
             Lumberjack.info("save results...")
             matwrite(output_file*string(i)*".mat",result)
@@ -36,7 +36,7 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         #@time flux = calc_flux(traj,tspan,config["flux"],output_file*string(i)*"_flux.mat")
 
         #output intial range potential
-        init_range = [promote(trajsolver_config["atom-config"]["init-range"]...)...]
+        init_range = get_large_init_range(values(trajsolver_config["atom-config"]["init-range"]))
         t0 = trajsolver_config["simulation-config"]["tstart"]
         TrajAnalyzer.output_image_gp(t0,init_range,output_file*string(i)*"_init_range.png",save_data = true, data_filename=output_file*string(i)*"_init_range.h5")
         TrajAnalyzer.output_image_gp_traj(t0,init_range,10.0,10.0,output_file*string(i)*"_init_range_traj.png")
@@ -51,4 +51,16 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         end
     end
     matwrite(output_file*"score.mat",score)
+end
+
+function get_large_init_range(init_range)
+    #find the largest area that contain the whole init_range
+    init_range = convert(Array{Float64},cat(2,init_range...))
+    init_range_large = zeros(Float64,4)
+    init_range_large[1] = minimum(init_range[1,:])
+    init_range_large[2] = maximum(init_range[2,:])
+    init_range_large[3] = minimum(init_range[3,:])
+    init_range_large[4] = maximum(init_range[4,:])
+    println(init_range_large)
+    return init_range_large
 end
