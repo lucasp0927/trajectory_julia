@@ -45,12 +45,12 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
 #        TrajAnalyzer.spectrum(output_file*string(i))
         #probe
         movie_range = [promote(config["movie-output"]["range"]...)...]
-        TrajAnalyzer.output_image_gp(0.0,movie_range,output_file*string(i)*"_probe.png",TrajAnalyzer.Probe)
+#        TrajAnalyzer.output_image_gp(0.0,movie_range,output_file*string(i)*"_probe.png",TrajAnalyzer.Probe)
         if movie_flag
             @time TrajAnalyzer.output_movie_traj(config["movie-output"],output_file*string(i)*"_traj.mp4")
         end
     end
-    matwrite(output_file*"score.mat",score)
+ #   matwrite(output_file*"score.mat",score)
 end
 
 function get_large_init_range(init_range)
@@ -61,6 +61,5 @@ function get_large_init_range(init_range)
     init_range_large[2] = maximum(init_range[2,:])
     init_range_large[3] = minimum(init_range[3,:])
     init_range_large[4] = maximum(init_range[4,:])
-    println(init_range_large)
     return init_range_large
 end

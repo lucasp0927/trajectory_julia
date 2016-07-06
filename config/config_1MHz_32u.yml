@@ -68,8 +68,8 @@ trajsolver-config:
 #        init-range: [67850.0, 69650.0, 100.0, 49900.0] #[x1 x2 y1 y2]
         init-range:  #[x1 x2 y1 y2]
             pancake1: [68776.0, 69226.0, 100.0, 49900.0]
-            pancake2: [68350.0, 68810.0, 100.0, 49900.0]
-            pancake3: [67924.0, 68384.0, 100.0, 49900.0]
+#            pancake2: [68350.0, 68810.0, 100.0, 49900.0]
+#            pancake3: [67924.0, 68384.0, 100.0, 49900.0]
     in-boundary: #atoms in these areas are removed from simulation
         beam1: [9890.0, 10110.0, 10110.0, 9890.0,
                 24662.0, 24662.0, 24880.0, 24880.0]
@@ -89,7 +89,7 @@ job-config:
     range: 50
     plot-range: [25,1250]
     field: field
-    scaling: "t->((@i+11)/4.0)^2"
+    scaling: "t->((@i+9)/4.0)^2"
     movie-output:
         tstart: 135.0
         tend: 145.0

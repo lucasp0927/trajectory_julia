@@ -121,7 +121,7 @@ function distribute_atoms_inner(sfn::ScalarFieldNode{2},traj_num::Int64)
             p_vel = exp(-1.0*ek_a/axial_temperature)*exp(-1.0*ek_r/radial_temperature)
             p = p_pos*p_vel
             if p<0.0 || p > 1.0
-                if abs(p)<1e-10
+                if abs(p)<1e-7
                     p = 0.0
                 else
                     Lumberjack.warn("p=$p: out of range!")
