@@ -3,6 +3,8 @@ function mat2sharedarray(filename,variable)
     var = read(file, variable) # note that this does NOT introduce a variable ``varname`` into scope
     close(file)
     var_s = copy_to_sharedarray!(var)
+    var = 0
+    gc()
     return var_s
 end
 
@@ -27,7 +29,7 @@ function build_field_file(field_config::Dict,level::Integer;name::ASCIIString="f
     Lumberjack.info(padding(level),"    scaling: ",field_config["scaling"])
     Lumberjack.info(padding(level),"    reading ",var," from ",filename,"...")
     field_s = mat2sharedarray(filename,var)
-        return ft{dt,dim}(field_s,pos,sz,scaling=scaling,name=name)
+    return ft{dt,dim}(field_s,pos,sz,scaling=scaling,name=name)
 end
 
 function build_field_zero(field_config::Dict,level::Integer;name::ASCIIString="field")

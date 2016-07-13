@@ -40,6 +40,8 @@ function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Vector{Float
         #check
         res_delta = mean((f.res.-align_geo["res"])./f.res)
         @assert res_delta<=1e-10 "resolution check failed!"
+    else
+        Lumberjack.info("no need to align!")
     end
 end
 
@@ -66,6 +68,8 @@ function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Vector{Float
         #check
         res_delta = mean((f.res.-align_geo["res"])./f.res)
         @assert res_delta<=1e-10 "resolution check failed!"
+    else
+        Lumberjack.info("no need to align!")
     end
 end
 
