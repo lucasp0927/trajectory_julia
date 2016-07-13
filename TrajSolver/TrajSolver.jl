@@ -100,7 +100,7 @@ end
     return true
 end
 
-@inbounds function mycvode(mem, f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::SubArray; reltol::Float64=1e-8, abstol::Float64=1e-7)
+@inbounds function mycvode(mem, f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::SubArray; reltol::Float64=1e-8, abstol::Float64=1e-7, mxstep::Int64=Integer(1e6))
     # f, Function to be optimized of the form f(y::Vector{Float64}, fy::Vector{Float64}, t::Float64)
     #    where `y` is the input vector, and `fy` is the
     # y0, Vector of initial values
@@ -111,7 +111,7 @@ end
     flag = Sundials.CVodeSetUserData(mem, f)
     flag = Sundials.CVodeSStolerances(mem, reltol, abstol)
     flag = Sundials.CVDense(mem, length(y0))
-#    flag = Sundials.CVodeSetMaxNumSteps(mem,Integer(1e7))
+    flag = Sundials.CVodeSetMaxNumSteps(mem,mxstep)
     yout[1:2,1] = y0[1:2]
     #yout[3,1] = Fields.value3(y0[1:2],t[1])
     yout[3:4,1] = y0[3:4]
@@ -123,7 +123,15 @@ end
         yout[1:2,k] = y[1:2]
         yout[3:4,k] = y[3:4]
 #        yout[3,k] = Fields.value3(y[1:2],t[k])
-#        yout[4,k] = t[k]
+        #        yout[4,k] = t[k]
+        ###### ugly periodic hack
+        if yout[2,k]>=69800
+            yout[2,k] = 200
+        else if yout[2,k]<=200
+            yout[2,k] = 69800
+        end
+            
+        ######
         if boundary(yout[1:2,k]) == false
             break
         end
