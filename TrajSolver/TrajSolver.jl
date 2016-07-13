@@ -127,7 +127,7 @@ end
         ###### ugly periodic hack
         if yout[2,k]>=69800
             yout[2,k] = 200
-        else if yout[2,k]<=200
+        elseif yout[2,k]<=200
             yout[2,k] = 69800
         end
             
