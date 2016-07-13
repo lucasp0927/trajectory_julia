@@ -126,15 +126,15 @@ end
         #        yout[4,k] = t[k]
         ###### ugly periodic hack
         if yout[2,k]>=69800
-            yout[2,k] = 200
+            yout[4,k] = -yout[4,k]
         elseif yout[2,k]<=200
-            yout[2,k] = 69800
+            yout[4,k] = -yout[4,k]            
         end
             
         ######
-        # if boundary(yout[1:2,k]) == false
-        #     break
-        # end
+        if boundary(yout[1:2,k]) == false
+             break
+        end
     end
 end
 
