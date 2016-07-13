@@ -132,9 +132,9 @@ end
         end
             
         ######
-        if boundary(yout[1:2,k]) == false
-            break
-        end
+        # if boundary(yout[1:2,k]) == false
+        #     break
+        # end
     end
 end
 
