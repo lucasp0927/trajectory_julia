@@ -124,14 +124,7 @@ end
         yout[3:4,k] = y[3:4]
 #        yout[3,k] = Fields.value3(y[1:2],t[k])
         #        yout[4,k] = t[k]
-        ###### ugly periodic hack
-        if yout[2,k]>=69800
-            yout[4,k] = -yout[4,k]
-        elseif yout[2,k]<=200
-            yout[4,k] = -yout[4,k]            
-        end
-            
-        ######
+
         if boundary(yout[1:2,k]) == false
              break
         end
