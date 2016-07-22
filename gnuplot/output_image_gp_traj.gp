@@ -1,4 +1,4 @@
-set terminal pngcairo size 1300,1000 enhanced font 'Verdana,10'
+set terminal png size 1300,1000 enhanced font 'Verdana,10'
 set output "data.png"
 set datafile separator ","
 set style line 1 lc rgb "red"

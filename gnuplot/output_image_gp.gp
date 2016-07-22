@@ -1,4 +1,4 @@
-set terminal pngcairo size xres,yres enhanced font 'Verdana,10'
+set terminal png size xres,yres enhanced font 'Verdana,10'
 set output "data.png"
 set datafile separator ","
 set xrange [xstart:xend]

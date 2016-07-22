@@ -51,7 +51,7 @@ function output_image_gp(t,range,filename,sfn;v_min=0.0,v_max=0.0,xres=1300,yres
     mkdir(image_folder)
     cd(image_folder)
     h5write(image_folder*"/data.h5", "output", output_data)
-    run(`h5totxt data.h5 -o data.txt`)
+    run(`h5totxt -o data.txt data.h5`)
     cp(current_folder*"/gnuplot/output_image_gp.gp",image_folder*"/output_image_gp.gp")
     if v_min==0.0 && v_max==0.0
         run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);xres=$xres;yres=$yres" output_image_gp.gp`)
@@ -76,7 +76,7 @@ function output_image_gp(t,range,filename;v_min=0.0,v_max=0.0,xres=1300,yres=100
     mkdir(image_folder)
     cd(image_folder)
     h5write(image_folder*"/data.h5", "output", output_data)
-    run(`h5totxt data.h5 -o data.txt`)
+    run(`h5totxt -o data.txt data.h5`)
     cp(current_folder*"/gnuplot/output_image_gp.gp",image_folder*"/output_image_gp.gp")
     if v_min==0.0 && v_max==0.0
         run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);xres=$xres;yres=$yres" output_image_gp.gp`)
@@ -109,8 +109,8 @@ function output_image_gp_traj(t,range,res_x,res_y,filename;v_min=0.0,v_max=0.0,t
     cd(image_folder)
     h5write(image_folder*"/data.h5", "output", output_data)
     h5write(image_folder*"/dots.h5", "output", dots)
-    run(`h5totxt data.h5 -o data.txt`)
-    run(`h5totxt dots.h5 -o dots.txt`)
+    run(`h5totxt -o data.txt data.h5`)
+    run(`h5totxt -o dots.txt data.h5`)
     cp(current_folder*"/gnuplot/output_image_gp_traj.gp",image_folder*"/output_image_gp_traj.gp")
     if v_min==0.0 && v_max==0.0
         run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);time=$t" output_image_gp_traj.gp`)

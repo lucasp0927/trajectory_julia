@@ -13,10 +13,10 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
         Fields.init_parallel!(sfn)
         # build probe beam
-        probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
+#        probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
         if calc_traj_flag
             result = calculate_traj(i)
-            TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
+#            TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
             Lumberjack.info("save results...")
             matwrite(output_file*string(i)*".mat",result)
             traj = result["traj"]
