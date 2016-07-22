@@ -9,5 +9,4 @@
 *.log
 result/
 test/
-*.yml
 *.txt

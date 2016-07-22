@@ -1,0 +1,148 @@
+#time unit us
+#length unit nm
+fields-config:
+    field:
+        field-type: ScalarFieldNode
+        dim: 2
+        fields:
+            lattice-beam-wrap:
+                field-type: ScalarFieldNode
+                dim: 2
+                fields:
+                    lattice-beam:
+                        field-type: VectorFieldNode
+                        dim: 2
+                        fields:
+                            right-beam:
+                                field-type: VectorField
+                                D-type: Complex
+                                dim: 2
+                                init-type: file
+                                filename: /Disk/Lucas/gaussian_beam_right_2.0cm.mat
+                                variable: field
+                                pos: [0.0,0.0]
+                                size: [20000000, 70000]
+                                scaling: "t->1.0+0.0im"
+                            left-beam:
+                                field-type: VectorField
+                                D-type: Complex
+                                dim: 2
+                                init-type: file
+                                filename: /Disk/Lucas/gaussian_beam_left_2.0cm.mat
+                                variable: field
+                                pos: [0.0,0.0]
+                                size: [20000000, 70000]
+                                #scaling: "t->1.0+0.0im"
+                                scaling: "t->exp(2*pi*im*t)"
+                        scaling: "t->1.0+0.0im" #amplitude scaling, not power
+                scaling: "t->-1.42884e-5"
+            # gm:
+            #     field-type: ScalarField
+            #     D-type: Float
+            #     dim: 2
+            #     init-type: file
+            #     filename: D2_TE.mat
+            #     variable: gm
+            #     func: "(x,y) -> sin(x)"
+            #     res: [400, 400]
+            #     pos: [48140.4, 23147.5]
+            #     size: [3690.75,3690.75]
+            #     scaling: "t->0.0"
+        scaling: "t->1.0"
+trajsolver-config:
+    simulation-config:
+        traj_num: 1000
+        tstart: 0.0
+        tend: 48000.0
+        tdiv: 1.0
+    solver-config:
+        solver: ADAMS
+        reltol: 0.5e-10
+        abstol: 1e-8
+    atom-config:
+        radial-temperature: 30e-6
+        axial-temperature: 30e-6
+        init-speed: -426
+        init-range:  #[x1 x2 y1 y2]
+            pancake1: [19997875.0, 19998325.0, 100.0, 69900.0]
+#            pancake2: [68350.0, 68810.0, 100.0, 49900.0]
+#            pancake3: [67924.0, 68384.0, 100.0, 49900.0]
+    in-boundary: #atoms in these areas are removed from simulation
+         placeholder: [0.0, 100.0, 100.0, 0.0,
+               0.0, 0.0,   100.0, 100.0]
+#        beam1: [9890.0, 10110.0, 10110.0, 9890.0,
+#                24662.0, 24662.0, 24880.0, 24880.0]
+#        beam2: [9890.0, 10110.0, 10110.0, 9890.0,
+#                25120.0, 25120.0, 25338.0, 25338.0]
+    out-boundary:
+        edge: [100.0, 19999900.0, 19999900.0, 100.0,
+               100.0, 100.0,   69900.0, 69900.0]
+        # beam1: [49890.0, 50110.0, 24662.0, 24880.0]
+        # beam2: [49890.0, 50110.0, 25120.0, 25338.0]
+        # left-edge: [0.0, 100.0, 0.0, 49995.0]
+        # right-edge: [99890.0, 99990.0, 0.0, 49995.0]
+        # top-edge: [0.0, 99990.0, 0.0, 100.0]
+        # bottom-edge: [0.0, 99990.0, 49895.0, 49995.0]
+job-config:
+    type: single-scan-scaling
+    range: 1
+    plot-range: [25,1250]
+    field: field
+    scaling: "t->(@i+19/4.0)^2*2"
+    movie-output:
+        tstart: 135.0
+        tend: 145.0
+        tdiv: 1.0
+        range: [9000.0, 11000.0, 24000.0, 26000.0]
+        res: [10.0,10.0]
+    score:
+        gap: [9890.0, 10110.0, 10110.0, 9890.0, 25120.0, 25120.0, 24880.0, 24880.0]
+        before_gap: [10110.0, 10330.0, 10330.0, 10110.0, 25120.0, 25120.0, 24880.0, 24880.0]
+        after_gap: [9670.0, 9890.0, 9890.0, 9670.0, 25120.0, 25120.0, 24880.0, 24880.0]
+    flux: #[x1,y1,x2,y2]
+        before_gap: [10110.0, 25120.0, 10110.0, 24880.0]
+        before_gap_1: [10323.0, 25120.0, 10323.0, 24880.0]
+        before_gap_2: [10536.0, 25120.0, 10536.0, 24880.0]
+        before_gap_3: [10749.0, 25120.0, 10749.0, 24880.0]
+        before_gap_4: [10962.0, 25120.0, 10962.0, 24880.0]
+        before_gap_5: [11175.0, 25120.0, 11175.0, 24880.0]
+        after_gap: [9890.0, 25120.0, 9890.0, 24880.0]
+        top_inner_wall: [10110.0, 25120.0, 9890.0, 25120.0]
+        bottom_inner_wall: [9890.0, 24880.0, 10110.0, 24880.0]
+        top_beam_front: [10110.0, 25338.0, 10110.0, 25120.0]
+        bottom_beam_front: [10110.0, 24880.0, 10110.0, 24662.0]
+    probe:
+        field:
+            field-type: ScalarFieldNode
+            dim: 2
+            fields:
+                 gm:
+                     field-type: ScalarField
+                     D-type: Float
+                     dim: 2
+                     init-type: file
+                     filename: /home/lucas/traj_julia_work/trajectory_julia/probe_d2_te.mat
+                     variable: probe
+                     res: [400, 400]
+                     pos: [8154.625, 23154.625]
+                     size: [3690.75,3690.75]
+                     scaling: "t->1.0"
+            scaling: "t->1.0"
+    spectrum:
+        gamma-1d: 0.15
+        gamma-prime: 5
+        lattice-width: 32000 #in nm
+        lattice-unit: 370 #nm
+        k-ratio: 0.98 #k = Xpoint_k * k-ratio
+        use-all-atom: true #overwrite total-atom-number when true
+        total-atom-number: 2000
+        avg-atom-number: 4000
+        iteration: 1
+        frequency: #in MHz
+            start: -10
+            end: 30
+            step: 1
+        time: #in us
+            start: 132
+            end: 145
+            step: 0.1
