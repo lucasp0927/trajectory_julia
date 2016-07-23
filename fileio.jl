@@ -1,9 +1,7 @@
 using MAT
 ComplexOrFloat = Union{Complex{Float64},Float64}
 function copy_to_sharedarray!{T<:ComplexOrFloat,N}(arr::Array{T,N})
-    arr_s = SharedArray(T,size(arr))
-    arr_s[:] = arr
-    return arr_s
+    return convert(SharedArray,arr)
 end
 
 function mat2sharedarray(filename,variable)

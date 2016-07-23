@@ -8,7 +8,6 @@ function mat2sharedarray(filename,variable)
     return var_s
 end
 
-include("../fileio.jl")
 padding(level) = repeat("    ",level)
 function build_field_file(field_config::Dict,level::Integer;name::ASCIIString="field")
     D_type = Dict("Complex" => Complex{Float64}, "Float" => Float64)

@@ -8,6 +8,7 @@ using Base.Cartesian
 #TODO: getindex overload for fields.
 #TODO: support different resolution for different area
 global fields
+include("../fileio.jl")
 include("Fields_type.jl")
 include("Fields_function.jl")
 # variables
