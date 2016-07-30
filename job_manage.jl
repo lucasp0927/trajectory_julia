@@ -13,10 +13,10 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
         Fields.init_parallel!(sfn)
         # build probe beam
-#        probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
+        probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
         if calc_traj_flag
             result = calculate_traj(i)
-#            TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
+            TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
             Lumberjack.info("save results...")
             matwrite(output_file*string(i)*".mat",result)
             traj = result["traj"]
@@ -38,7 +38,6 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         #output intial range potential
         init_range = get_large_init_range(values(trajsolver_config["atom-config"]["init-range"]))
         t0 = trajsolver_config["simulation-config"]["tstart"]
-        TrajAnalyzer.output_image_gp(t0,[0.5e7-1000.0,0.5e7+1000.0,0.0+100.0,70000.0-100.0],output_file*string(i)*"_focus.png")
         TrajAnalyzer.output_image_gp(t0,init_range,output_file*string(i)*"_init_range.png",save_data = true, data_filename=output_file*string(i)*"_init_range.h5")
 #        TrajAnalyzer.output_image_gp_traj(t0,init_range,10.0,10.0,output_file*string(i)*"_init_range_traj.png")
 
