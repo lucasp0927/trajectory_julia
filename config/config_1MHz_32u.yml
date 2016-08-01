@@ -19,7 +19,7 @@ fields-config:
                                 dim: 2
                                 init-type: file
                                 #filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_right.mat
-                                filename: /home/lucaspeng/Desktop/trajectory_julia/Exy_32u_0_right.mat
+                                filename: /home/lucaspeng/Desktop/trajectory_julia/Exy_60u_0_right.mat
                                 variable: field
                                 pos: [0.0,0.0]
                                 size: [70000, 50000]
@@ -30,12 +30,12 @@ fields-config:
                                 dim: 2
                                 init-type: file
                                 #filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_left.mat
-                                filename: /home/lucaspeng/Desktop/trajectory_julia/Exy_32u_0_left.mat
+                                filename: /home/lucaspeng/Desktop/trajectory_julia/Exy_60u_0_left.mat
                                 variable: field
                                 pos: [0.0,0.0]
                                 size: [70000, 50000]
                                 #scaling: "t->1.0+0.0im"
-                                scaling: "t->exp(2*pi*im*t)"
+                                scaling: "t->exp(2*pi*im*0.8*t)"
                         scaling: "t->1.0+0.0im" #amplitude scaling, not power
                 scaling: "t->-1.42884e-5"
             # gm:
@@ -53,18 +53,18 @@ fields-config:
         scaling: "t->1.0"
 trajsolver-config:
     simulation-config:
-        traj_num: 200
+        traj_num: 4000
         tstart: 0.0
-        tend: 160.0
+        tend: 190.0
         tdiv: 0.05
     solver-config:
         solver: ADAMS
-        reltol: 1e-6
-        abstol: 1e-6
+        reltol: 1e-10
+        abstol: 1e-7
     atom-config:
         radial-temperature: 300e-6
         axial-temperature: 30e-6
-        init-speed: -426
+        init-speed: -340.8
 #        init-range: [67850.0, 69650.0, 100.0, 49900.0] #[x1 x2 y1 y2]
         init-range:  #[x1 x2 y1 y2]
             pancake1: [68776.0, 69226.0, 100.0, 49900.0]
@@ -89,11 +89,11 @@ job-config:
     range: 1
     plot-range: [25,1250]
     field: field
-    scaling: "t->((@i+39)/4.0)^2"
+    scaling: "t->(10/954*250)^2"
     movie-output:
-        tstart: 135.0
-        tend: 145.0
-        tdiv: 0.05
+        tstart: 168.0
+        tend: 177.0
+        tdiv: 0.1
         range: [9000.0, 11000.0, 24000.0, 26000.0]
         res: [10.0,10.0]
     score:

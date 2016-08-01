@@ -18,7 +18,8 @@ fields-config:
                                 D-type: Complex
                                 dim: 2
                                 init-type: file
-                                filename: /home/ubuntu/data/new_potential/TM/Exy_60u_0_right.mat
+                                #filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_right.mat
+                                filename: /home/lucaspeng/Desktop/trajectory_julia/Exy_60u_0_right.mat
                                 variable: field
                                 pos: [0.0,0.0]
                                 size: [70000, 50000]
@@ -28,12 +29,13 @@ fields-config:
                                 D-type: Complex
                                 dim: 2
                                 init-type: file
-                                filename: /home/ubuntu/data/new_potential/TM/Exy_60u_0_left.mat
+                                #filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_left.mat
+                                filename: /home/lucaspeng/Desktop/trajectory_julia/Exy_60u_0_left.mat
                                 variable: field
                                 pos: [0.0,0.0]
                                 size: [70000, 50000]
                                 #scaling: "t->1.0+0.0im"
-                                scaling: "t->exp(2*pi*im*t)"
+                                scaling: "t->exp(2*pi*im*0.8*t)"
                         scaling: "t->1.0+0.0im" #amplitude scaling, not power
                 scaling: "t->-1.42884e-5"
             # gm:
@@ -51,18 +53,23 @@ fields-config:
         scaling: "t->1.0"
 trajsolver-config:
     simulation-config:
-        traj_num: 4000
+        traj_num: 5000
         tstart: 0.0
-        tend: 200.0
+        tend: 190.0
         tdiv: 0.05
     solver-config:
         solver: ADAMS
-        reltol: 1e-6
-        abstol: 1e-6
+        reltol: 1e-10
+        abstol: 1e-7
     atom-config:
-        temperature: 100e-6
-        init-speed: -426
-        init-range: [69200.0, 69650.0, 100.0, 49900.0] #[x1 x2 y1 y2]
+        radial-temperature: 300e-6
+        axial-temperature: 30e-6
+        init-speed: -340.8
+#        init-range: [67850.0, 69650.0, 100.0, 49900.0] #[x1 x2 y1 y2]
+        init-range:  #[x1 x2 y1 y2]
+            pancake1: [68776.0, 69226.0, 100.0, 49900.0]
+#            pancake2: [68350.0, 68810.0, 100.0, 49900.0]
+#            pancake3: [67924.0, 68384.0, 100.0, 49900.0]
     in-boundary: #atoms in these areas are removed from simulation
         beam1: [9890.0, 10110.0, 10110.0, 9890.0,
                 24662.0, 24662.0, 24880.0, 24880.0]
@@ -79,14 +86,14 @@ trajsolver-config:
         # bottom-edge: [0.0, 99990.0, 49895.0, 49995.0]
 job-config:
     type: single-scan-scaling
-    range: 50
+    range: 1
     plot-range: [25,1250]
     field: field
-    scaling: "t->(@i/4.0)^2"
+    scaling: "t->(10/954*1000)^2"
     movie-output:
-        tstart: 135.0
-        tend: 145.0
-        tdiv: 0.05
+        tstart: 168.0
+        tend: 177.0
+        tdiv: 0.1
         range: [9000.0, 11000.0, 24000.0, 26000.0]
         res: [10.0,10.0]
     score:
@@ -105,4 +112,38 @@ job-config:
         bottom_inner_wall: [9890.0, 24880.0, 10110.0, 24880.0]
         top_beam_front: [10110.0, 25338.0, 10110.0, 25120.0]
         bottom_beam_front: [10110.0, 24880.0, 10110.0, 24662.0]
-
+    probe:
+        field:
+            field-type: ScalarFieldNode
+            dim: 2
+            fields:
+                 gm:
+                     field-type: ScalarField
+                     D-type: Float
+                     dim: 2
+                     init-type: file
+                     filename: /home/lucaspeng/data/spectrum/spectrum_julia/probe_d2_te.mat
+                     variable: probe
+                     res: [400, 400]
+                     pos: [8154.625, 23154.625]
+                     size: [3690.75,3690.75]
+                     scaling: "t->1.0"
+            scaling: "t->1.0"
+    spectrum:
+        gamma-1d: 0.15
+        gamma-prime: 5
+        lattice-width: 32000 #in nm
+        lattice-unit: 370 #nm
+        k-ratio: 0.98 #k = Xpoint_k * k-ratio
+        use-all-atom: true #overwrite total-atom-number when true
+        total-atom-number: 2000
+        avg-atom-number: 4000
+        iteration: 1
+        frequency: #in MHz
+            start: -10
+            end: 30
+            step: 1
+        time: #in us
+            start: 132
+            end: 145
+            step: 0.1

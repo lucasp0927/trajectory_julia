@@ -23,10 +23,10 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
             tspan = result["tspan"]
         else
             Lumberjack.info("read results...")
-            # result = matread(output_file*string(i)*".mat")
-            # TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
-            # traj = result["traj"]
-            # tspan = result["tspan"]
+            result = matread(output_file*string(i)*".mat")
+            TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
+            traj = result["traj"]
+            tspan = result["tspan"]
         end
         #score and flux
         # for (k,v) in config["score"]
@@ -38,16 +38,29 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         #output intial range potential
         init_range = get_large_init_range(values(trajsolver_config["atom-config"]["init-range"]))
         t0 = trajsolver_config["simulation-config"]["tstart"]
-        TrajAnalyzer.output_image_gp(t0,init_range,output_file*string(i)*"_init_range.png",save_data = true, data_filename=output_file*string(i)*"_init_range.h5")
+        #        TrajAnalyzer.output_image_gp(t0,init_range,output_file*string(i)*"_init_range.png",save_data = true, data_filename=output_file*string(i)*"_init_range.h5")
+        # println("output 0")
+        # TrajAnalyzer.output_image_gp(0.0,[10000.0-750.0,10750.0,25000.0-750.0,25000.0+750.0],output_file*string(i)*"_phase_potential_0.png",save_data = true, data_filename=output_file*string(i)*"_phase_potential_0.h5")
 #        TrajAnalyzer.output_image_gp_traj(t0,init_range,10.0,10.0,output_file*string(i)*"_init_range_traj.png")
 
         #spectrum
-#        TrajAnalyzer.spectrum(output_file*string(i))
+        #TrajAnalyzer.spectrum(output_file*string(i))
         #probe
         movie_range = [promote(config["movie-output"]["range"]...)...]
 #        TrajAnalyzer.output_image_gp(0.0,movie_range,output_file*string(i)*"_probe.png",TrajAnalyzer.Probe)
         if movie_flag
-            @time TrajAnalyzer.output_movie_traj(config["movie-output"],output_file*string(i)*"_traj.mp4")
+            TrajAnalyzer.output_movie_traj(config["movie-output"],output_file*string(i)*"_traj.mp4")
+            # output individual frames
+            config = config["movie-output"]
+            frame_range = [promote(config["range"]...)...]
+            res = config["res"]
+            res_x = res[1]
+            res_y = res[2]
+            TrajAnalyzer.output_image_gp_traj(171.5,frame_range,res_x,res_y,output_file*"frame_1.png")
+            TrajAnalyzer.output_image_gp_traj(172.4,frame_range,res_x,res_y,output_file*"frame_2.png")
+            TrajAnalyzer.output_image_gp_traj(173.1,frame_range,res_x,res_y,output_file*"frame_3.png")
+            TrajAnalyzer.output_image_gp_traj(173.9,frame_range,res_x,res_y,output_file*"frame_4.png")
+            TrajAnalyzer.output_image_gp_traj(174.3,frame_range,res_x,res_y,output_file*"frame_5.png")
         end
     end
  #   matwrite(output_file*"score.mat",score)

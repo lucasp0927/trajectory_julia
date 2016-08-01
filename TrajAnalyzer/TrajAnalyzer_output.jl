@@ -91,7 +91,6 @@ function output_image_gp(t,range,filename;v_min=0.0,v_max=0.0,xres=1300,yres=100
     rm(image_folder,recursive=true)
 end
 
-
 function output_image_gp_traj(t,range,res_x,res_y,filename;v_min=0.0,v_max=0.0,tdiv=0.0)
     tmp = squeeze(Trajs[t,:],2)[1:2,:]
     dots = zeros(Float64,3,size(tmp,2))
@@ -113,10 +112,12 @@ function output_image_gp_traj(t,range,res_x,res_y,filename;v_min=0.0,v_max=0.0,t
     run(`h5totxt -o dots.txt dots.h5`)
     cp(current_folder*"/gnuplot/output_image_gp_traj.gp",image_folder*"/output_image_gp_traj.gp")
     if v_min==0.0 && v_max==0.0
-        run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);time=$t" output_image_gp_traj.gp`)
-    else
-        run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);time=$t;set cbrange [$v_min:$v_max]" output_image_gp_traj.gp`)
+        # stupid hack to fix v_min and v_max
+        v_min = minimum(output_data[3,:,:])
+        v_max = maximum(output_data[3,:,:])
+#        run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);time=$t" output_image_gp_traj.gp`)
     end
+    run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);time=$t;set cbrange [$v_min:$v_max]" output_image_gp_traj.gp`)
     cd(current_folder)
     cp(image_folder*"/data.png",filename,remove_destination=true)
     rm(image_folder,recursive=true)
