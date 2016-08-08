@@ -44,23 +44,23 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
 #        TrajAnalyzer.output_image_gp_traj(t0,init_range,10.0,10.0,output_file*string(i)*"_init_range_traj.png")
 
         #spectrum
-        #TrajAnalyzer.spectrum(output_file*string(i))
+        TrajAnalyzer.spectrum(output_file*string(i)*"_tm")
         #probe
         movie_range = [promote(config["movie-output"]["range"]...)...]
 #        TrajAnalyzer.output_image_gp(0.0,movie_range,output_file*string(i)*"_probe.png",TrajAnalyzer.Probe)
         if movie_flag
             TrajAnalyzer.output_movie_traj(config["movie-output"],output_file*string(i)*"_traj.mp4")
             # output individual frames
-            config = config["movie-output"]
-            frame_range = [promote(config["range"]...)...]
-            res = config["res"]
-            res_x = res[1]
-            res_y = res[2]
-            TrajAnalyzer.output_image_gp_traj(171.5,frame_range,res_x,res_y,output_file*"frame_1.png")
-            TrajAnalyzer.output_image_gp_traj(172.4,frame_range,res_x,res_y,output_file*"frame_2.png")
-            TrajAnalyzer.output_image_gp_traj(173.1,frame_range,res_x,res_y,output_file*"frame_3.png")
-            TrajAnalyzer.output_image_gp_traj(173.9,frame_range,res_x,res_y,output_file*"frame_4.png")
-            TrajAnalyzer.output_image_gp_traj(174.3,frame_range,res_x,res_y,output_file*"frame_5.png")
+            # config = config["movie-output"]
+            # frame_range = [promote(config["range"]...)...]
+            # res = config["res"]
+            # res_x = res[1]
+            # res_y = res[2]
+            # TrajAnalyzer.output_image_gp_traj(171.5,frame_range,res_x,res_y,output_file*"frame_1.png")
+            # TrajAnalyzer.output_image_gp_traj(172.4,frame_range,res_x,res_y,output_file*"frame_2.png")
+            # TrajAnalyzer.output_image_gp_traj(173.1,frame_range,res_x,res_y,output_file*"frame_3.png")
+            # TrajAnalyzer.output_image_gp_traj(173.9,frame_range,res_x,res_y,output_file*"frame_4.png")
+            # TrajAnalyzer.output_image_gp_traj(174.3,frame_range,res_x,res_y,output_file*"frame_5.png")
         end
     end
  #   matwrite(output_file*"score.mat",score)
