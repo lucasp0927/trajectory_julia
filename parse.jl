@@ -13,6 +13,9 @@ function parse_commandline()
         "--trajectory", "-T"
         help = "calculate trajectories"
         action = :store_true
+        "--spectrum", "-S"
+        help = "calculate spectrum"
+        action = :store_true
         "--movie", "-M"
         help = "render movies"
         action = :store_true
@@ -22,6 +25,7 @@ end
 
 function parse_config(filename)
     config = YAML.load(open(filename))
+    simu_type = config["simulation-type"]
     fields_config = config["fields-config"]
     trajsolver_config = config["trajsolver-config"]
     job_config = config["job-config"]

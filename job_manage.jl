@@ -1,7 +1,7 @@
 using PyCall
 include("output.jl")
 include("flux.jl")
-function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,output_file,calc_traj_flag::Bool,movie_flag::Bool)
+function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,output_file,calc_traj_flag::Bool,spectrum_flag::Bool,movie_flag::Bool)
     range = config["range"]
     field_name = config["field"]
     scaling = config["scaling"]
@@ -36,19 +36,22 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         #@time flux = calc_flux(traj,tspan,config["flux"],output_file*string(i)*"_flux.mat")
 
         #output intial range potential
-        init_range = get_large_init_range(values(trajsolver_config["atom-config"]["init-range"]))
-        t0 = trajsolver_config["simulation-config"]["tstart"]
+        #init_range = get_large_init_range(values(trajsolver_config["atom-config"]["init-range"]))
+        #t0 = trajsolver_config["simulation-config"]["tstart"]
         #        TrajAnalyzer.output_image_gp(t0,init_range,output_file*string(i)*"_init_range.png",save_data = true, data_filename=output_file*string(i)*"_init_range.h5")
         # println("output 0")
         # TrajAnalyzer.output_image_gp(0.0,[10000.0-750.0,10750.0,25000.0-750.0,25000.0+750.0],output_file*string(i)*"_phase_potential_0.png",save_data = true, data_filename=output_file*string(i)*"_phase_potential_0.h5")
 #        TrajAnalyzer.output_image_gp_traj(t0,init_range,10.0,10.0,output_file*string(i)*"_init_range_traj.png")
 
         #spectrum
-        TrajAnalyzer.spectrum(output_file*string(i)*"_tm")
+        if spectrum_flag
+            TrajAnalyzer.spectrum(output_file*string(i)*"_tm")
+        end
         #probe
-        movie_range = [promote(config["movie-output"]["range"]...)...]
+
 #        TrajAnalyzer.output_image_gp(0.0,movie_range,output_file*string(i)*"_probe.png",TrajAnalyzer.Probe)
         if movie_flag
+            movie_range = [promote(config["movie-output"]["range"]...)...]
             TrajAnalyzer.output_movie_traj(config["movie-output"],output_file*string(i)*"_traj.mp4")
             # output individual frames
             # config = config["movie-output"]

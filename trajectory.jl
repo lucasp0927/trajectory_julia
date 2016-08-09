@@ -1,4 +1,4 @@
-addprocs(16, exeflags="--depwarn=no")
+addprocs(4, exeflags="--depwarn=no")
 push!(LOAD_PATH, "./Fields")
 push!(LOAD_PATH, "./TrajSolver")
 push!(LOAD_PATH, "./TrajAnalyzer")
@@ -18,7 +18,7 @@ function prepare()
     @assert length(keys(fields_config)) == 1 "more than 1 top level fieldnode!"
     println("building field ",[k for k in keys(fields_config)][1],"...")
     sfn = Fields.buildAndAlign(fields_config["field"],0,name=ascii([k for k in keys(fields_config)][1]))
-    return sfn,output_file,job_config,parsed_args["trajectory"],parsed_args["movie"],trajsolver_config
+    return sfn,output_file,job_config,parsed_args["trajectory"],parsed_args["spectrum"],parsed_args["movie"],trajsolver_config
 end
 
 function main()
@@ -26,10 +26,10 @@ function main()
     @everywhere Lumberjack.add_truck(LumberjackTruck(STDOUT, "info"))
     @everywhere Lumberjack.add_truck(LumberjackTruck("trajectory_logfile.log","debug"))
     #preparation
-    sfn,output_file,job_config,calc_traj_flag,movie_flag,trajsolver_config = prepare()
+    sfn,output_file,job_config,calc_traj_flag,spectrum_flag,movie_flag,trajsolver_config = prepare()
     println("Start calculating trajectories...")
     println("initialize fields")
     Fields.init_parallel!(sfn)
-    single_scan_scaling(trajsolver_config,job_config,sfn,output_file,calc_traj_flag,movie_flag)
+    single_scan_scaling(trajsolver_config,job_config,sfn,output_file,calc_traj_flag,spectrum_flag,movie_flag)
 end
 main()
