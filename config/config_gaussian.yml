@@ -35,7 +35,7 @@ fields-config:
                                 #scaling: "t->1.0+0.0im"
                                 scaling: "t->exp(2*pi*im*t)"
                         scaling: "t->1.0+0.0im" #amplitude scaling, not power
-                scaling: "t->-1.42884e-5"
+                scaling: "t->-1.42884e-5*(0.125+(t-2.3474e4)^2*1.58789e-9)"
             # gm:
             #     field-type: ScalarField
             #     D-type: Float
