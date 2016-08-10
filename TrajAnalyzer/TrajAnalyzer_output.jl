@@ -15,7 +15,7 @@ function output_movie_traj_flux(config,filename,result,tspan,flux)
 end
 
 function output_movie(mov_tspan,range,res,filename;traj=false)
-    output_0 = Fields.composite_slow(range,0.0)
+    output_0 = Fields.composite(range,0.0)
     v_min = minimum(output_0)
     v_max = maximum(output_0)
     hash_key = string(hash(rand()))
@@ -43,7 +43,7 @@ end
 
 function output_image_gp(t,range,filename,sfn;v_min=0.0,v_max=0.0,xres=1300,yres=1000,save_data=false,data_filename = "")
     Lumberjack.debug("in TrajAnalyzer.output_image_gp()... with sfn")
-    output_data = Fields.composite_slow_with_position(range,t,[10.0,10.0],sfn)
+    output_data = Fields.composite_with_position(range,t,[10.0,10.0],sfn)
     current_folder = pwd()
     Lumberjack.debug("current_folder: $current_folder")
     hash_key = string(hash(rand()))
@@ -68,7 +68,7 @@ end
 
 function output_image_gp(t,range,filename;v_min=0.0,v_max=0.0,xres=1300,yres=1000,save_data=false,data_filename = "")
     Lumberjack.debug("in TrajAnalyzer.output_image_gp()")
-    output_data = Fields.composite_slow_with_position(range,t,[10.0,10.0])
+    output_data = Fields.composite_with_position(range,t,[10.0,10.0])
     current_folder = pwd()
     Lumberjack.debug("current_folder: $current_folder")
     hash_key = string(hash(rand()))
@@ -100,7 +100,7 @@ function output_image_gp_traj(t,range,res_x,res_y,filename;v_min=0.0,v_max=0.0,t
         tmp_next = squeeze(Trajs[t+tdiv,:],2)[1:2,:]
         dots[3,:] = [(isnan(tmp[1,i])==false && isnan(tmp_next[1,i])==true)?1.0:0.0 for i in 1:size(tmp,2)]
     end
-    output_data = Fields.composite_slow_with_position(range,t,[res_x,res_y])
+    output_data = Fields.composite_with_position(range,t,[res_x,res_y])
     current_folder = pwd()
     hash_key = string(hash(rand()))
     image_folder = "/tmp/image"*hash_key

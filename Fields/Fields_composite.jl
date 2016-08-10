@@ -1,8 +1,50 @@
 #####composition: for FieldNode object return composite field at time t, replace scaling with x->1.0
+function composite(range::Vector{Float64},t::Float64)
+    res = (fields::ScalarFieldNode).res
+    @assert range[2]-range[1] > res[1] "range too small"
+    @assert range[4]-range[3] > res[2] "range too small"
+    xx = range[1]:res[1]:range[2]
+    yy = range[3]:res[2]:range[4]
+    output = zeros(Float64,(length(xx),length(yy)))
+    for x in enumerate(xx), y in enumerate(yy)
+        output[x[1],y[1]] = Fields.value([x[2],y[2]],t)
+    end
+    return output
+end
+
+function composite_with_position(range::Vector{Float64},t::Float64,res::Vector{Float64})
+    @assert range[2]-range[1] > res[1] "range too small"
+    @assert range[4]-range[3] > res[2] "range too small"
+    xx = range[1]:res[1]:range[2]
+    yy = range[3]:res[2]:range[4]
+    output = zeros(Float64,(3,length(xx),length(yy)))
+    for x in enumerate(xx), y in enumerate(yy)
+        output[1,x[1],y[1]] = x[2]
+        output[2,x[1],y[1]] = y[2]
+        output[3,x[1],y[1]] = Fields.value([x[2],y[2]],t)
+    end
+    return output
+end
+
+function composite_with_position(range::Vector{Float64},t::Float64,res::Vector{Float64},sfn::ScalarFieldNode)
+    @assert range[2]-range[1] > res[1] "range too small"
+    @assert range[4]-range[3] > res[2] "range too small"
+    xx = range[1]:res[1]:range[2]
+    yy = range[3]:res[2]:range[4]
+    output = zeros(Float64,(3,length(xx),length(yy)))
+    for x in enumerate(xx), y in enumerate(yy)
+        output[1,x[1],y[1]] = x[2]
+        output[2,x[1],y[1]] = y[2]
+        output[3,x[1],y[1]] = Fields.value([x[2],y[2]],t,sfn)
+    end
+    return output
+end
+
 function composite{T<:Union{VectorField,ScalarField}}(f::T,t::Real)
     return T(f.field*f.scaling(t),f.position,f.size,scaling = t->1.0)
 end
 
+#=
 function composite{N}(f::VectorFieldNode{N},t::Real)
     #remember scaling
     output_type = typeoffield(f)
@@ -24,7 +66,7 @@ function composite{N}(f::VectorFieldNode{N},t::Real)
         ### add all vector fields
         fill_field_vec!(vf_output,vf.field,vf_start_idx,vf_end_idx)
     end
-    return VectorField{output_type,N}(vf_output::Array{output_type,N+1},pos,sz;scaling = t->1.0)        
+    return VectorField{output_type,N}(vf_output::Array{output_type,N+1},pos,sz;scaling = t->1.0)
 end
 
 function composite{N}(f::ScalarFieldNode{N},t::Real)
@@ -66,7 +108,7 @@ function composite{N}(f::ScalarFieldNode{N},t::Real)
         output = real(output)
         return ScalarField{Float64,N}(output::Array{Float64,N},pos,sz;scaling = t->1.0)
     else
-        return ScalarField{Complex{Float64},N}(output::Array{Complex{Float64},N},pos,sz;scaling = t->1.0)        
+        return ScalarField{Complex{Float64},N}(output::Array{Complex{Float64},N},pos,sz;scaling = t->1.0)
     end
 end
 
@@ -86,7 +128,7 @@ end
         @nloops $N i field begin
             (@nref $N output k->sf_start_idx[k]+i_k-1)+=(@nref $N field k->i_k)
         end
-    end    
+    end
 end
 
 # @generated  function fill_field_vec!{T<:ComplexOrFloat,K<:ComplexOrFloat,N}(output::Array{T,N},field::Array{K,N},vf_start_idx::Vector,vf_end_idx::Vector)
@@ -104,4 +146,4 @@ end
 #     end
 #     parse(ex_str[1:end-1]*"]+=field")
 # end
-
+=#

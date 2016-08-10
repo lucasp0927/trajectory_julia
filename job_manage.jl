@@ -1,5 +1,5 @@
 using PyCall
-include("output.jl")
+#include("output.jl")
 include("flux.jl")
 function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,output_file,calc_traj_flag::Bool,spectrum_flag::Bool,movie_flag::Bool)
     range = config["range"]

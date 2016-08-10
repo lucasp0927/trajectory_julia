@@ -57,7 +57,7 @@ function init!(config::Dict)
 end
 
 function range2sfn(range)
-    init_U_data = Fields.composite_slow_with_position(range,tspan[1],Fields.fields.res)
+    init_U_data = Fields.composite_with_position(range,tspan[1],Fields.fields.res)
     prob,xstart,xend,ystart,yend = fit_trap_matlab(init_U_data,axial_temperature,radial_temperature)
     prob_s = copy_to_sharedarray!(prob)
     prob_f = ScalarFieldNode{2}([ScalarField{Float64,2}(prob_s,[xstart,ystart],[xend-xstart,yend-ystart])])
