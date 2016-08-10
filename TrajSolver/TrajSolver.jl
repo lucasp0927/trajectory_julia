@@ -113,7 +113,7 @@ end
     flag = Sundials.CVDense(mem, length(y0))
     flag = Sundials.CVodeSetMaxNumSteps(mem,mxstep)
     yout[1:2,1] = y0[1:2]
-    #yout[3,1] = Fields.value3(y0[1:2],t[1])
+    #yout[3,1] = Fields.value(y0[1:2],t[1])
     yout[3:4,1] = y0[3:4]
     y = copy(y0)
     tout = [t[1]]
@@ -122,7 +122,7 @@ end
         #yout[3:4] are free spaces.
         yout[1:2,k] = y[1:2]
         yout[3:4,k] = y[3:4]
-#        yout[3,k] = Fields.value3(y[1:2],t[k])
+#        yout[3,k] = Fields.value(y[1:2],t[k])
         #        yout[4,k] = t[k]
 
         if boundary(yout[1:2,k]) == false

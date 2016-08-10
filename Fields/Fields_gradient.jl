@@ -215,7 +215,7 @@ end
 #    sample[:] .+= f.sample[:]
 end
 
-@generated function value3(pos::Vector{Float64},t::Real)
+@generated function value(pos::Vector{Float64},t::Real)
     quote
         x = $(Array(Float64,2))
         res = $(Array(Float64,2))
@@ -228,7 +228,7 @@ end
     #    return itp_spline(A,(2.0+x_1,2.0+x_2))
 end
 
-@generated function value3(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode)
+@generated function value(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode)
     quote
         x = $(Array(Float64,2))
         res = $(Array(Float64,2))
@@ -264,7 +264,7 @@ function composite_slow(range::Vector{Float64},t::Float64)
     yy = range[3]:res[2]:range[4]
     output = zeros(Float64,(length(xx),length(yy)))
     for x in enumerate(xx), y in enumerate(yy)
-        output[x[1],y[1]] = Fields.value3([x[2],y[2]],t)
+        output[x[1],y[1]] = Fields.value([x[2],y[2]],t)
     end
     return output
 end
@@ -278,7 +278,7 @@ function composite_slow_with_position(range::Vector{Float64},t::Float64,res::Vec
     for x in enumerate(xx), y in enumerate(yy)
         output[1,x[1],y[1]] = x[2]
         output[2,x[1],y[1]] = y[2]
-        output[3,x[1],y[1]] = Fields.value3([x[2],y[2]],t)
+        output[3,x[1],y[1]] = Fields.value([x[2],y[2]],t)
     end
     return output
 end
@@ -292,7 +292,7 @@ function composite_slow_with_position(range::Vector{Float64},t::Float64,res::Vec
     for x in enumerate(xx), y in enumerate(yy)
         output[1,x[1],y[1]] = x[2]
         output[2,x[1],y[1]] = y[2]
-        output[3,x[1],y[1]] = Fields.value3([x[2],y[2]],t,sfn)
+        output[3,x[1],y[1]] = Fields.value([x[2],y[2]],t,sfn)
     end
     return output
 end

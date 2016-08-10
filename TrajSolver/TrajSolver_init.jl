@@ -112,7 +112,7 @@ function distribute_atoms_inner(sfn::ScalarFieldNode{2},traj_num::Int64)
         while true
             x = (x_range[2]-x_range[1])*rand()+x_range[1]
             y = (y_range[2]-y_range[1])*rand()+y_range[1]
-            p_pos = Fields.value3([x,y],t,sfn)
+            p_pos = Fields.value([x,y],t,sfn)
             vx = -4.0*vp_a+8.0*vp_a*rand()
             vy = -4.0*vp_r+8.0*vp_r*rand()
             vz = -4.0*vp_r+8.0*vp_r*rand()
