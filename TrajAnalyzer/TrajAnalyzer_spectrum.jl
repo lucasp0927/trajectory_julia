@@ -6,9 +6,8 @@ function spectrum(filename)
                     "output"=>output,
                     "output_matrix"=>output_matrix
                          )
-    #matwrite(filename*"_spectrum.mat",spectrum_data)
     average_spectrum = squeeze(mean(abs2(output),3),3)
-    h5write("average_spectrum_tm.h5", "/spectrum", average_spectrum)
+    h5write(filename*"_avg_spectrum_tm.h5", "/spectrum", average_spectrum)
     freq_config = TA_Config["spectrum"]["frequency"]
     time_config = TA_Config["spectrum"]["time"]
     fstart = Float64(freq_config["start"])
@@ -35,6 +34,7 @@ function calculate_transmission()
     time_config = TA_Config["spectrum"]["time"]
     freq_range = Float64(freq_config["start"]):Float64(freq_config["step"]):Float64(freq_config["end"])
     time_range = Float64(time_config["start"]):Float64(time_config["step"]):Float64(time_config["end"])
+    @assert Trajs.tspan[1]<time_range[1] && Trajs.tspan[end]>time_range[end] "spectrum time range out of range!"
     iter = TA_Config["spectrum"]["iteration"]
     output = SharedArray(Complex{Float64},(length(freq_range),length(time_range),iter))
     output_matrix = SharedArray(Complex{Float64},(2,2,length(freq_range),length(time_range),iter))

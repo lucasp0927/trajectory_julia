@@ -9,4 +9,10 @@
 *.log
 result/
 test/
+plot/
+debug/
+config/
+1MHz/
+250kHz
+*.h5
 *.txt
