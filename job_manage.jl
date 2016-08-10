@@ -13,10 +13,8 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
         Fields.init_parallel!(sfn)
         # build probe beam
-        probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
         if calc_traj_flag
             result = calculate_traj(i)
-            TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
             Lumberjack.info("save results...")
             matwrite(output_file*string(i)*".mat",result)
             traj = result["traj"]
@@ -24,9 +22,20 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         else
             Lumberjack.info("read results...")
             result = matread(output_file*string(i)*".mat")
-            TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
             traj = result["traj"]
             tspan = result["tspan"]
+        end
+        if spectrum_flag || movie_flag
+            Lumberjack.info("Initialize TrajAnalyzer...")
+            probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
+            TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
+        end
+        if spectrum_flag
+            TrajAnalyzer.spectrum(output_file*string(i)*"_tm")
+        end
+        if movie_flag
+            movie_range = [promote(config["movie-output"]["range"]...)...]
+            TrajAnalyzer.output_movie_traj(config["movie-output"],output_file*string(i)*"_traj.mp4")
         end
         #score and flux
         # for (k,v) in config["score"]
@@ -34,7 +43,6 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         #     @time (score[ascii(k)])[i] = TrajAnalyzer.calc_score(v)
         # end
         #@time flux = calc_flux(traj,tspan,config["flux"],output_file*string(i)*"_flux.mat")
-
         #output intial range potential
         #init_range = get_large_init_range(values(trajsolver_config["atom-config"]["init-range"]))
         #t0 = trajsolver_config["simulation-config"]["tstart"]
@@ -42,17 +50,7 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         # println("output 0")
         # TrajAnalyzer.output_image_gp(0.0,[10000.0-750.0,10750.0,25000.0-750.0,25000.0+750.0],output_file*string(i)*"_phase_potential_0.png",save_data = true, data_filename=output_file*string(i)*"_phase_potential_0.h5")
 #        TrajAnalyzer.output_image_gp_traj(t0,init_range,10.0,10.0,output_file*string(i)*"_init_range_traj.png")
-
-        #spectrum
-        if spectrum_flag
-            TrajAnalyzer.spectrum(output_file*string(i)*"_tm")
-        end
-        #probe
-
 #        TrajAnalyzer.output_image_gp(0.0,movie_range,output_file*string(i)*"_probe.png",TrajAnalyzer.Probe)
-        if movie_flag
-            movie_range = [promote(config["movie-output"]["range"]...)...]
-            TrajAnalyzer.output_movie_traj(config["movie-output"],output_file*string(i)*"_traj.mp4")
             # output individual frames
             # config = config["movie-output"]
             # frame_range = [promote(config["range"]...)...]
@@ -64,7 +62,6 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
             # TrajAnalyzer.output_image_gp_traj(173.1,frame_range,res_x,res_y,output_file*"frame_3.png")
             # TrajAnalyzer.output_image_gp_traj(173.9,frame_range,res_x,res_y,output_file*"frame_4.png")
             # TrajAnalyzer.output_image_gp_traj(174.3,frame_range,res_x,res_y,output_file*"frame_5.png")
-        end
     end
  #   matwrite(output_file*"score.mat",score)
 end
