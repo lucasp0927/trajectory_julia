@@ -7,7 +7,11 @@ function spectrum(filename)
                     "output_matrix"=>output_matrix
                          )
     average_spectrum = squeeze(mean(abs2(output),3),3)
-    h5write(filename*"_avg_spectrum_tm.h5", "/spectrum", average_spectrum)
+    h5_filename = filename*"_avg_spectrum_tm.h5"
+    if isfile(h5_filename) == true
+        rm(h5_filename)
+    end
+    h5write(h5_filename, "/spectrum", average_spectrum)
     freq_config = TA_Config["spectrum"]["frequency"]
     time_config = TA_Config["spectrum"]["time"]
     fstart = Float64(freq_config["start"])

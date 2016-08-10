@@ -165,7 +165,7 @@ end
     end
     #    return itp_spline(A,(2.0+x_1,2.0+x_2))
 end
-
+#=
 @generated function gradient2(pos::Vector{Float64},t::Float64)
     quote
         x = $(Array(Float64,2))
@@ -176,7 +176,7 @@ end
         return itp_bicubic_grad((fields::ScalarFieldNode).sample,x,res)
     end
 end
-
+=#
 @generated function gradient!(t::Float64,posvel::Vector{Float64},grad::Vector{Float64})
     quote
         x = $(Array(Float64,2))
