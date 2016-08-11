@@ -1,5 +1,6 @@
 #time unit us
 #length unit nm
+simulation-type: 2D
 fields-config:
     field:
         field-type: ScalarFieldNode
@@ -18,9 +19,8 @@ fields-config:
                                 D-type: Complex
                                 dim: 2
                                 init-type: file
-                                #filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_right.mat
-                                filename: /home/lucaspeng/Desktop/trajectory_julia/Exy_60u_0_right.mat
-                                variable: field
+                                filename: /Users/lucaspeng/Desktop/beam.mat
+                                variable: field1
                                 pos: [0.0,0.0]
                                 size: [70000, 50000]
                                 scaling: "t->1.0+0.0im"
@@ -29,9 +29,8 @@ fields-config:
                                 D-type: Complex
                                 dim: 2
                                 init-type: file
-                                #filename: /home/lucaspeng/data/new_traj/TM/Exy_32u_0_left.mat
-                                filename: /home/lucaspeng/Desktop/trajectory_julia/Exy_60u_0_left.mat
-                                variable: field
+                                filename: /Users/lucaspeng/Desktop/beam.mat
+                                variable: field2
                                 pos: [0.0,0.0]
                                 size: [70000, 50000]
                                 #scaling: "t->1.0+0.0im"
@@ -53,9 +52,9 @@ fields-config:
         scaling: "t->1.0"
 trajsolver-config:
     simulation-config:
-        traj_num: 4000
+        traj_num: 10
         tstart: 0.0
-        tend: 190.0
+        tend: 2.0
         tdiv: 0.05
     solver-config:
         solver: ADAMS
@@ -91,8 +90,8 @@ job-config:
     field: field
     scaling: "t->(10/954*250)^2"
     movie-output:
-        tstart: 168.0
-        tend: 177.0
+        tstart: 0.1
+        tend: 0.9
         tdiv: 0.1
         range: [9000.0, 11000.0, 24000.0, 26000.0]
         res: [10.0,10.0]
@@ -122,9 +121,9 @@ job-config:
                      D-type: Float
                      dim: 2
                      init-type: file
-                     filename: /home/lucaspeng/data/spectrum/spectrum_julia/probe_d2_te.mat
+                     filename: /Users/lucaspeng/Desktop/beam.mat
                      variable: probe
-                     res: [400, 400]
+#                     res: [400, 400]
                      pos: [8154.625, 23154.625]
                      size: [3690.75,3690.75]
                      scaling: "t->1.0"
@@ -136,14 +135,14 @@ job-config:
         lattice-unit: 370 #nm
         k-ratio: 0.98 #k = Xpoint_k * k-ratio
         use-all-atom: true #overwrite total-atom-number when true
-        total-atom-number: 2000
-        avg-atom-number: 4000
+        total-atom-number: 10
+        avg-atom-number: 10
         iteration: 1
         frequency: #in MHz
             start: -10
             end: 30
             step: 1
         time: #in us
-            start: 132
-            end: 145
+            start: 0.1
+            end: 0.9
             step: 0.1

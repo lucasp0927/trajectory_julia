@@ -91,7 +91,10 @@ function output_image_gp(t,range,filename;v_min=0.0,v_max=0.0,xres=1300,yres=100
     rm(image_folder,recursive=true)
 end
 
-function output_image_gp_traj(t,range,res_x,res_y,filename;v_min=0.0,v_max=0.0,tdiv=0.0)
+function output_image_gp_traj(t,range,res_x,res_y,filename;v_min=0.0,v_max=0.1,tdiv=0.0)
+    if (v_max-v_min <= eps())
+        v_max = v_max + 0.1
+    end
     tmp = squeeze(Trajs[t,:],2)[1:2,:]
     dots = zeros(Float64,3,size(tmp,2))
     dots[1:2,:] = tmp[:,:]
