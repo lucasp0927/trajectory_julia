@@ -23,7 +23,7 @@ end
             v = func((@ntuple $N k->x_k[i_k])...)
             f[(@ntuple $N k->i_k)...] = v
         end
-        return ScalarField{T,2}(copy_to_sharedarray!(f::Array{T,$N}),pos,size,scaling=scaling,name=name)
+        return ScalarField{T,$N}(copy_to_sharedarray!(f::Array{T,$N}),pos,size,scaling=scaling,name=name)
     end
 end
 
