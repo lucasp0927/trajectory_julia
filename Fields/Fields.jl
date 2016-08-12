@@ -3,6 +3,7 @@ using Lumberjack
 using Interpolations
 using Devectorize
 using Base.Cartesian
+using Base.Test
 #using FastAnonymous
 #TODO: align use Flat() boundary condition, add more
 #TODO: getindex overload for fields.
@@ -34,6 +35,12 @@ function reset!()
     global fields
     fields = 0
     gc()
+end
+
+function test()
+    test_zero_field()
+    test_typeof()
+    test_find()
 end
 
 end

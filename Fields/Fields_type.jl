@@ -21,7 +21,7 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     function VectorField(f::SharedArray{T},pos::Vector{Float64},sz::Vector{Float64};scaling::Function =  t->1.0, name::ASCIIString = "VectorField")
         res = sz./(collect(size(f))[2:N+1]-1)
         @assert all(x->x!=0,res) "zero resolution!"
-        length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,res,scaling,N,zeros(T,(3,4,4)),[0.0,0.0],[0,0,0,0],zero(Complex{Float64}),name):Lumberjack.error("dimension error!")
+        length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,res,scaling,N,zeros(T,(3,4,4)),[0.0,0.0],[0,0,0,0],zero(Complex{Float64}),ascii(name)):Lumberjack.error("dimension error!")
     end
 end
 
@@ -40,7 +40,7 @@ type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     function ScalarField(f::SharedArray{T,N},pos::Vector{Float64},sz::Vector{Float64};scaling::Function =  t->1.0, name::ASCIIString = "ScalarField")
         res = sz./(collect(size(f))[1:N]-1)
         @assert all(x->x!=0,res) "zero resolution!"
-        length(pos)==length(sz)==N==ndims(f)?new(f,pos,sz,res,scaling,N,zeros(T,(4,4)),[0.0,0.0],[0,0,0,0],zero(Float64),name):Lumberhack.error("dimension error!")
+        length(pos)==length(sz)==N==ndims(f)?new(f,pos,sz,res,scaling,N,zeros(T,(4,4)),[0.0,0.0],[0,0,0,0],zero(Float64),ascii(name)):Lumberhack.error("dimension error!")
     end
 end
 
@@ -57,7 +57,7 @@ type VectorFieldNode{N} <: AbstractVectorField
     name::ASCIIString
     function VectorFieldNode{T<:AbstractVectorField}(f::Vector{T};scaling::Function  =  t->1.0+0.0im,name::ASCIIString="VectorFieldNode")
         @assert all(x->x.dim==N,f) "dimension error!"
-        new(f,scaling,N,[],[],[],Complex{Float64},zeros(Complex{Float64},(3,4,4)),zero(Complex{Float64}),name)
+        new(f,scaling,N,[],[],[],Complex{Float64},zeros(Complex{Float64},(3,4,4)),zero(Complex{Float64}),ascii(name))
     end
 end
 
@@ -76,8 +76,8 @@ type ScalarFieldNode{N} <: AbstractScalarField
     name::ASCIIString
     function ScalarFieldNode{T<:Field}(f::Vector{T};scaling::Function =  t->1.0, name::ASCIIString="ScalarFieldNode")
         @assert all(x->x.dim==N,f) "dimension error!"
-        flag = length(f) == 1 && typeof(f[1])<:AbstractVectorField
-        new(f,scaling,N,[],[],[],Complex{Float64},zeros(Float64,(4,4)),zeros(Complex{Float64},(3,4,4)),zero(Float64),flag, name)
+        flag = (length(f) == 1) && typeof(f[1])<:AbstractVectorField
+        new(f,scaling,N,[],[],[],Complex{Float64},zeros(Float64,(4,4)),zeros(Complex{Float64},(3,4,4)),zero(Float64),flag, ascii(name))
     end
 end
 

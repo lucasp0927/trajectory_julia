@@ -1,4 +1,3 @@
-
 function copyfield{T<:ComplexOrFloat,N}(f::ScalarField{T,N})
     Lumberjack.debug("copy ScalarField ",f.name)
     return ScalarField{T,N}(f.field,f.position,f.size,scaling=f.scaling,name=f.name)
