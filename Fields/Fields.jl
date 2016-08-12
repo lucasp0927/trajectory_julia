@@ -38,9 +38,14 @@ function reset!()
 end
 
 function test()
+    Lumberjack.info("testing zero_field")
     test_zero_field()
+    Lumberjack.info("testing typeof")
     test_typeof()
+    Lumberjack.info("testing find")
     test_find()
+    Lumberjack.info("testing geometry")
+    test_geometry()
 end
 
 end

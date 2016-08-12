@@ -1,13 +1,3 @@
-function mat2sharedarray(filename,variable)
-    file = matopen(filename)
-    var = read(file, variable) # note that this does NOT introduce a variable ``varname`` into scope
-    close(file)
-    var_s = copy_to_sharedarray!(var)
-    var = 0
-    gc()
-    return var_s
-end
-
 padding(level) = repeat("    ",level)
 function build_field_file(field_config::Dict,level::Integer;name::ASCIIString="field")
     D_type = Dict("Complex" => Complex{Float64}, "Float" => Float64)
