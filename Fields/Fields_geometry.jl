@@ -58,4 +58,23 @@ function test_geometry()
         @test sfn2.size == repmat([100.0],dim)
         @test sfn2.position == repmat([0.0],dim)
     end
+    for dim in [2,3]
+        float_vf1 = zero_field(VectorField{Float64,dim},repmat([201],dim), repmat([50.0],dim),repmat([50.0],dim),name = "float_vf1")
+        @test geometry(float_vf1) == Dict("res"=>repmat([0.25],dim),"size"=>repmat([50.0],dim),"pos"=>repmat([50.0],dim))
+        float_vf2 = zero_field(VectorField{Float64,dim},repmat([101],dim),repmat([0.0],dim),repmat([100.0],dim),name = "float_vf2")
+        @test geometry(float_vf2) == Dict("res"=>repmat([1.0],dim),"size"=>repmat([100.0],dim),"pos"=>repmat([0.0],dim))
+        complex_vf = zero_field(VectorField{Complex{Float64},dim},repmat([121],dim),repmat([20.0],dim),repmat([60.0],dim),name = "complex_vf")
+        @test geometry(complex_vf) == Dict("res"=>repmat([0.5],dim),"size"=>repmat([60.0],dim),"pos"=>repmat([20.0],dim))
+        vfn1 = VectorFieldNode{dim}([float_vf1,complex_vf],name = ascii("vfn1"))
+        @test geometry(vfn1) == Dict("res"=>repmat([0.5],dim),"size"=>repmat([80.0],dim),"pos"=>repmat([20.0],dim))
+        vfn2 = VectorFieldNode{dim}([float_vf2,vfn1],name = ascii("vfn2"))
+        @test geometry(vfn2) == Dict("res"=>repmat([1.0],dim),"size"=>repmat([100.0],dim),"pos"=>repmat([0.0],dim))
+        set_geometry!(vfn2)
+        @test vfn1.res == repmat([0.5],dim)
+        @test vfn1.size ==repmat([80.0],dim)
+        @test vfn1.position == repmat([20.0],dim)
+        @test vfn2.res == repmat([1.0],dim)
+        @test vfn2.size == repmat([100.0],dim)
+        @test vfn2.position == repmat([0.0],dim)
+    end
 end

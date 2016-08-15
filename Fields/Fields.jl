@@ -46,6 +46,11 @@ function test()
     test_find()
     Lumberjack.info("testing geometry")
     test_geometry()
+    Lumberjack.info("testing align")
+    test_align()
+    Lumberjack.info("testing build")
+    test_build()
+
 end
 
 end

@@ -23,7 +23,7 @@ end
 
 function main()
     @everywhere Lumberjack.remove_truck("console")
-    @everywhere Lumberjack.add_truck(LumberjackTruck(STDOUT, "info"))
+    @everywhere Lumberjack.add_truck(LumberjackTruck(STDOUT, "debug"))
     @everywhere Lumberjack.add_truck(LumberjackTruck("trajectory_logfile.log","debug"))
     #preparation
     sfn,output_file,job_config,calc_traj_flag,spectrum_flag,movie_flag,trajsolver_config = prepare()

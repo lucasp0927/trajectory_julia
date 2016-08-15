@@ -112,3 +112,6 @@ end
         end
     end
 end
+
+function test_align()
+end
