@@ -145,7 +145,7 @@ function test_align()
     end
 
     function test_interpolate{T<:ComplexOrFloat}(f::ScalarField{T,2},func)
-        println("testing ",f.name)
+        Lumberjack.info("testing ",f.name)
         sz = size(f.field)
         pos = f.position
         res = f.res
@@ -158,11 +158,11 @@ function test_align()
             end
         end
         err = sum/(sz[1]*sz[2])
-        println(err)
+        Lumberjack.info(string(err))
         return err
     end
     function test_interpolate{T<:ComplexOrFloat}(f::ScalarField{T,3},func)
-        println("testing ",f.name)
+        Lumberjack.info("testing ",f.name)
         sz = size(f.field)
         pos = f.position
         res = f.res
@@ -176,11 +176,11 @@ function test_align()
             end
         end
         err = sum/(sz[1]*sz[2]*sz[3])
-        println(err)
+        Lumberjack.info(string(err))
         return err
     end
     function test_interpolate{T<:ComplexOrFloat}(f::VectorField{T,3},func)
-        println("testing ",f.name)
+        Lumberjack.info("testing ",f.name)
         sz = size(f.field)
         pos = f.position
         res = f.res
@@ -194,11 +194,11 @@ function test_align()
             end
         end
         err = sum/(sz[1]*sz[2]*sz[3]*3)
-        println(err)
+        Lumberjack.info(string(err))
         return err
     end
     function test_interpolate{T<:ComplexOrFloat}(f::VectorField{T,2},func)
-        println("testing ",f.name)
+        Lumberjack.info("testing ",f.name)
         sz = size(f.field)
         pos = f.position
         res = f.res
@@ -211,12 +211,12 @@ function test_align()
             end
         end
         err = sum/(3*sz[1]*sz[2])
-        println(err)
+        Lumberjack.info(string(err))
         return err
     end
 
     #2D scalar
-    println("2D Scalar")
+    Lumberjack.info("2D Scalar")
     func1 = (x,y)->(sin(x/10.0)+cos(y/10.0))*exp(-((x-75.0)^2+(y-75.0)^2)/20^2)
     func2 = (x,y)->(sin(x/10.0)+cos(y/10.0))*exp(-((x-50.0)^2+(y-50.0)^2)/30^2)
     func3 = (x,y)->(sin(x/10.0)+cos(y/10.0))*exp(-((x-50.0)^2+(y-50.0)^2)/20^2)
@@ -241,7 +241,7 @@ function test_align()
 
 
     #2D vector
-    println("2D Vector")
+    Lumberjack.info("2D Vector")
     func1 = (x,y)->repmat([(sin(x/10.0)+cos(y/10.0))*exp(-((x-75.0)^2+(y-75.0)^2)/20^2)],3)
     func2 = (x,y)->repmat([(sin(x/10.0)+cos(y/10.0))*exp(-((x-50.0)^2+(y-50.0)^2)/30^2)],3)
     func3 = (x,y)->repmat([(sin(x/10.0)+cos(y/10.0))*exp(-((x-50.0)^2+(y-50.0)^2)/20^2)],3)
@@ -265,7 +265,7 @@ function test_align()
     @test test_interpolate(complex_vf,func3)<= 1e-2
 
     #3D Scalar
-    println("3D Scalar")
+    Lumberjack.info("3D Scalar")
     func1 = (x,y,z)->(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-75.0)^2+(y-75.0)^2)/20^2)*exp(-(z-5.0)^2/(2.0^2))
     func2 = (x,y,z)->(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-50.0)^2+(y-50.0)^2)/30^2)*exp(-(z-5.0)^2/(2.0^2))
     func3 = (x,y,z)->(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-50.0)^2+(y-50.0)^2)/20^2)*exp(-(z-5.0)^2/(2.0^2))
@@ -288,7 +288,7 @@ function test_align()
     @test test_interpolate(float_sf2,func2) <= 1e-2
     @test test_interpolate(complex_sf,func3)<= 1e-2
     #3D Vector
-    println("3D Vector")
+    Lumberjack.info("3D Vector")
     func1 = (x,y,z)->repmat([(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-75.0)^2+(y-75.0)^2)/20^2)*exp(-(z-5.0)^2/(2.0^2))],3)
     func2 = (x,y,z)->repmat([(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-50.0)^2+(y-50.0)^2)/30^2)*exp(-(z-5.0)^2/(2.0^2))],3)
     func3 = (x,y,z)->repmat([(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-50.0)^2+(y-50.0)^2)/20^2)*exp(-(z-5.0)^2/(2.0^2))],3)

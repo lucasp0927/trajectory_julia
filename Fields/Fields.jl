@@ -1,9 +1,9 @@
 module Fields
-using Lumberjack
 using Interpolations
 using Devectorize
 using Base.Cartesian
 using Base.Test
+using Lumberjack
 #using FastAnonymous
 #TODO: align use Flat() boundary condition, add more
 #TODO: getindex overload for fields.
@@ -38,9 +38,9 @@ function reset!()
 end
 
 function test()
-#    @everywhere using Lumberjack
-#    @everywhere Lumberjack.remove_truck("console")
-    #    @everywhere Lumberjack.add_truck(LumberjackTruck(STDOUT, "debug"))
+    #    @everywhere using Lumberjack
+    Lumberjack.remove_truck("console")
+    Lumberjack.add_truck(LumberjackTruck(STDOUT, "info"))
     Lumberjack.info("testing zero_field")
     test_zero_field()
     Lumberjack.info("testing typeof")
@@ -51,8 +51,8 @@ function test()
     test_geometry()
     Lumberjack.info("testing align")
     test_align()
-#    Lumberjack.info("testing build")
-#    test_build()
+    Lumberjack.info("testing build")
+    test_build()
 
 end
 
