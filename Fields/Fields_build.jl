@@ -114,6 +114,5 @@ end
 function test_build()
     #2D
     fconfig = Dict{Any,Any}("scaling"=>"t->1.0","field-type"=>"ScalarFieldNode","fields"=>Dict{Any,Any}("lattice-beam-wrap"=>Dict{Any,Any}("scaling"=>"t->-1.42884e-5","field-type"=>"ScalarFieldNode","fields"=>Dict{Any,Any}("lattice-beam"=>Dict{Any,Any}("scaling"=>"t->1.0+0.0im","field-type"=>"VectorFieldNode","fields"=>Dict{Any,Any}("right-beam"=>Dict{Any,Any}("scaling"=>"t->1.0+0.0im","field-type"=>"VectorField","D-type"=>"Complex","init-type"=>"file","dim"=>2,"filename"=>"/Users/lucaspeng/Desktop/beam.mat","size"=>Any[70000,50000],"pos"=>Any[0.0,0.0],"variable"=>"field1"),"left-beam"=>Dict{Any,Any}("scaling"=>"t->exp(2*pi*im*0.8*t)","field-type"=>"VectorField","D-type"=>"Complex","init-type"=>"file","dim"=>2,"filename"=>"/Users/lucaspeng/Desktop/beam.mat","size"=>Any[70000,50000],"pos"=>Any[0.0,0.0],"variable"=>"field2")),"dim"=>2)),"dim"=>2)),"dim"=>2)
-    println(fconfig)
     #3D
 end

@@ -38,6 +38,9 @@ function reset!()
 end
 
 function test()
+#    @everywhere using Lumberjack
+#    @everywhere Lumberjack.remove_truck("console")
+    #    @everywhere Lumberjack.add_truck(LumberjackTruck(STDOUT, "debug"))
     Lumberjack.info("testing zero_field")
     test_zero_field()
     Lumberjack.info("testing typeof")
@@ -48,8 +51,8 @@ function test()
     test_geometry()
     Lumberjack.info("testing align")
     test_align()
-    Lumberjack.info("testing build")
-    test_build()
+#    Lumberjack.info("testing build")
+#    test_build()
 
 end
 
