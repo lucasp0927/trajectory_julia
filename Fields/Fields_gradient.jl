@@ -190,3 +190,7 @@ end
     #    return itp_spline(A,(2.0+x_1,2.0+x_2))
 end
 =#
+
+function test_gradient()
+    println("test")
+end

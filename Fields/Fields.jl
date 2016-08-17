@@ -39,6 +39,7 @@ end
 
 function test()
     #    @everywhere using Lumberjack
+    #=
     Lumberjack.remove_truck("console")
     Lumberjack.add_truck(LumberjackTruck(STDOUT, "info"))
     Lumberjack.info("testing zero_field")
@@ -53,6 +54,9 @@ function test()
     test_align()
     Lumberjack.info("testing build")
     test_build()
+=#
+    Lumberjack.info("testing interpolate")
+    test_interpolate()
     Lumberjack.info("testing gradient")
     test_gradient()
 end

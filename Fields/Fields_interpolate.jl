@@ -7,7 +7,7 @@ function itp_bicubic(A::Array,pos::Vector{Float64})
     return bicubicInterpolate(A,pos[1],pos[2])
 end
 
-@generated function itp_bicubic_grad{T<:ComplexOrFloat}(A::Array{T},pos::Vector{Float64},res::Vector{Float64})
+@generated function itp_bicubic_grad{T<:ComplexOrFloat}(A::Array{T,2},pos::Vector{Float64},res::Vector{Float64})
     quote
         arr = $(Array(T,4))
         grad = $(Array(T,2))
@@ -19,14 +19,14 @@ end
     end
 end
 
-@fastmath @inbounds function cubicInterpolate{T<:ComplexOrFloat}(p::Array{T,1},x::Float64)
+@fastmath @inbounds function cubicInterpolate{T<:Union{AbstractArray{Float64,1},AbstractArray{Complex{Float64},1}}}(p::T,x::Float64)
     #    @assert length(p) == 4 "wrong length"
     #   p1 p2 p3 p4
     #x= -1 0  1  2
 #    return p[2]+0.5*(p[3]-p[1])*x+(p[1]-2.5*p[2]+2.0*p[3]-0.5*p[4])*x^2 +0.5*(-p[1]+3.0*(p[2]-p[3])+p[4])*x^3
     return p[2] + 0.5 * x*(p[3] - p[1] + x*(2.0*p[1] - 5.0*p[2] + 4.0*p[3] - p[4] + x*(3.0*(p[2] - p[3]) + p[4] - p[1])));
 end
-
+#=
 @fastmath @inbounds function cubicInterpolate{T<:ComplexOrFloat}(p::SubArray{T,1},x::Float64)
     #    @assert length(p) == 4 "wrong length"
     #   p1 p2 p3 p4
@@ -34,14 +34,14 @@ end
 #    return p[2]+0.5*(p[3]-p[1])*x+(p[1]-2.5*p[2]+2.0*p[3]-0.5*p[4])*x^2 +0.5*(-p[1]+3.0*(p[2]-p[3])+p[4])*x^3
     return p[2] + 0.5 * x*(p[3] - p[1] + x*(2.0*p[1] - 5.0*p[2] + 4.0*p[3] - p[4] + x*(3.0*(p[2] - p[3]) + p[4] - p[1])));
 end
-
-@fastmath @inbounds function cubicInterpolate_grad{T<:ComplexOrFloat}(p::Array{T,1},x::Float64)
+=#
+@fastmath @inbounds function cubicInterpolate_grad{T<:Union{AbstractArray{Float64,1},AbstractArray{Complex{Float64},1}}}(p::T,x::Float64)
     #    @assert length(p) == 4 "wrong length"
     #   p1 p2 p3 p4
     #x= -1 0  1  2
     return 0.5(p[3]-p[1])+(2p[1]-5p[2]+4p[3]-p[4])*x-1.5(p[1]-3p[2]+3p[3]-p[4])*x^2
 end
-
+#=
 @fastmath @inbounds function cubicInterpolate_grad{T<:ComplexOrFloat}(p::SubArray{T,1},x::Float64)
     #    @assert length(p) == 4 "wrong length"
     #   p1 p2 p3 p4
@@ -49,11 +49,33 @@ end
     return 0.5(p[3]-p[1])+(2p[1]-5p[2]+4p[3]-p[4])*x-1.5(p[1]-3p[2]+3p[3]-p[4])*x^2
 #    return -0.5p[1]+0.5p[3]+2p[1]*x-5p[2]*x+4p[3]*x-p[4]*x-1.5(p[1]-3p[2]+3p[3]-p[4])*x^2
 end
-
+=#
 @generated function bicubicInterpolate{T<:ComplexOrFloat}(p::Array{T,2},x::Vector{Float64})
+    #p is a 4x4 array
     quote
         arr = $(Array(T,4))
         @nexprs 4 j->(arr[j] = cubicInterpolate(slice(p,:,j), x[1]);)
         return cubicInterpolate(arr, x[2]);
     end
+end
+
+function test_interpolate()
+    #2d bicubic Interpolation
+    x_grid = linspace(0.0,1.0,11)
+    y_grid = linspace(0.0,1.0,11)
+    sample = [1.0 1.1 1.2 1.3;
+              1.1 1.2 1.4 1.5;
+              1.2 1.5 1.7 1.8;
+              1.5 1.8 1.9 2.1]
+    sample = sample + 0.2*rand(4,4)
+    Lumberjack.info(string(sample))
+    sample_itp = interpolate(sample, BSpline(Cubic(Line())), OnGrid())
+    sum_err = 0.0
+    for x in x_grid,y in y_grid
+        my_itp = bicubicInterpolate(sample,[x,y])
+        sum_err += abs(sample_itp[2.0+x,2.0+y]-my_itp)/my_itp
+    end
+    err = sum_err/(length(x_grid)*length(y_grid))
+    Lumberjack.info("err: ",string(err))
+    @test err < 2e-2
 end

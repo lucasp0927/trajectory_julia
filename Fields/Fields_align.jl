@@ -44,7 +44,6 @@ function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Vector{Float
     if (unalign_geo["pos"] == align_geo["pos"])&&(unalign_geo["res"] == align_geo["res"])
         Lumberjack.info("no need to align!")
     else
-        #    old_field_itp = interpolate(f.field, BSpline(Cubic(Flat())), OnGrid())
         new_field = SharedArray(T,new_arr_size...)
         itp_field!(new_field,f.field,unalign_geo,align_geo)
         @assert collect(size(new_field)) == new_arr_size
@@ -75,7 +74,6 @@ function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Vector{Float
         #loop over three components
         new_field = SharedArray(T,3,new_arr_size...)
         for i = 1:3
-            #        old_field_itp = interpolate(myslice(f.field,i), BSpline(Cubic(Flat())), OnGrid())
             itp_field!(myslice(new_field,i),myslice(f.field,i),unalign_geo,align_geo)
         end
         @assert collect(size(new_field)[2:end]) == new_arr_size
