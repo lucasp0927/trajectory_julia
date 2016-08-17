@@ -58,17 +58,34 @@ end
         return cubicInterpolate(arr, x[2]);
     end
 end
+@generated function bicubicInterpolate{T<:ComplexOrFloat}(p::SubArray{T,2},x::Vector{Float64})
+    #p is a 4x4 array
+    quote
+        arr = $(Array(T,4))
+        @nexprs 4 j->(arr[j] = cubicInterpolate(slice(p,:,j), x[1]);)
+        return cubicInterpolate(arr, x[2]);
+    end
+end
+
+@generated function tricubicInterpolate{T<:ComplexOrFloat}(p::Array{T,3},x::Vector{Float64})
+    # p in a 4x4x4 array
+    quote
+        arr = $(Array(T,4))
+        @nexprs 4 j->(arr[j] = bicubicInterpolate(slice(p,:,:,j), x[1:2]);)
+        return cubicInterpolate(arr, x[3]);
+    end
+end
 
 function test_interpolate()
-    #2d bicubic Interpolation
+    Lumberjack.info("2D interpolation test")
     x_grid = linspace(0.0,1.0,11)
     y_grid = linspace(0.0,1.0,11)
-    sample = [1.0 1.1 1.2 1.3;
-              1.1 1.2 1.4 1.5;
-              1.2 1.5 1.7 1.8;
-              1.5 1.8 1.9 2.1]
-    sample = sample + 0.2*rand(4,4)
-    Lumberjack.info(string(sample))
+    # sample = [1.0 1.1 1.2 1.3;
+    #           1.1 1.2 1.4 1.5;
+    #           1.2 1.5 1.7 1.8;
+    #           1.5 1.8 1.9 2.1]
+    # sample = sample + 0.2*rand(4,4)
+    sample = [1.0+x/(8+2*rand())+y/(8+2*rand())+0.1*rand() for x=1:4,y=1:4]
     sample_itp = interpolate(sample, BSpline(Cubic(Line())), OnGrid())
     sum_err = 0.0
     for x in x_grid,y in y_grid
@@ -77,5 +94,19 @@ function test_interpolate()
     end
     err = sum_err/(length(x_grid)*length(y_grid))
     Lumberjack.info("err: ",string(err))
-    @test err < 2e-2
+    @test err < 3e-2
+    Lumberjack.info("3D interpolation test")
+    x_grid = linspace(0.0,1.0,11)
+    y_grid = linspace(0.0,1.0,11)
+    z_grid = linspace(0.0,1.0,11)
+    sample = [1.0+x/(8+2*rand())+y/(8+2*rand())+z/(8+2*rand())+0.1*rand() for x=1:4,y=1:4,z=1:4]
+    sample_itp = interpolate(sample, BSpline(Cubic(Line())), OnGrid())
+    sum_err = 0.0
+    for x in x_grid,y in y_grid, z in z_grid
+        my_itp = tricubicInterpolate(sample,[x,y,z])
+        sum_err += abs(sample_itp[2.0+x,2.0+y,2.0+z]-my_itp)/my_itp
+    end
+    err = sum_err/(length(x_grid)*length(y_grid)*length(z_grid))
+    Lumberjack.info("err: ",string(err))
+    @test err < 3e-2
 end
