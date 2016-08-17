@@ -14,6 +14,7 @@ function align_field_tree!{T<:FieldNode}(f::T)
     Lumberjack.debug("aligned resolution $(align_geo["res"])")
     align_field!(f,align_geo["res"],align_geo["pos"])
     set_geometry!(f)
+    set_typeof!(f)
     gc()
 end
 

@@ -53,7 +53,8 @@ function test()
     test_align()
     Lumberjack.info("testing build")
     test_build()
-
+    Lumberjack.info("testing gradient")
+    test_gradient()
 end
 
 end

@@ -1,9 +1,8 @@
 function buildAndAlign(field_config::Dict,level::Integer;name::ASCIIString = "field")
     sfn = build_field(field_config,level,name=name)
+    set_typeof!(sfn)
     Lumberjack.info("aligning fields...")
     align_field_tree!(sfn)
-    set_geometry!(sfn)
-    set_typeof!(sfn)
     return sfn
 end
 
@@ -27,6 +26,12 @@ function build_field_file(field_config::Dict,level::Integer;name::ASCIIString="f
     Lumberjack.info(padding(level),"    scaling: ",field_config["scaling"])
     Lumberjack.info(padding(level),"    reading ",var," from ",filename,"...")
     field_s = mat2sharedarray(filename,var)
+    if ft == ScalarField
+        @assert ndims(field_s) == dim
+    else
+        @assert ndims(field_s) == dim+1
+        @assert size(field_s,1) == 3
+    end
     return ft{dt,dim}(field_s,pos,sz,scaling=scaling,name=name)
 end
 
@@ -112,7 +117,8 @@ function build_field(field_config::Dict,level::Integer;name::ASCIIString = "fiel
 end
 
 function test_build()
-    #2D
-    fconfig = Dict{Any,Any}("scaling"=>"t->1.0","field-type"=>"ScalarFieldNode","fields"=>Dict{Any,Any}("lattice-beam-wrap"=>Dict{Any,Any}("scaling"=>"t->-1.42884e-5","field-type"=>"ScalarFieldNode","fields"=>Dict{Any,Any}("lattice-beam"=>Dict{Any,Any}("scaling"=>"t->1.0+0.0im","field-type"=>"VectorFieldNode","fields"=>Dict{Any,Any}("right-beam"=>Dict{Any,Any}("scaling"=>"t->1.0+0.0im","field-type"=>"VectorField","D-type"=>"Complex","init-type"=>"file","dim"=>2,"filename"=>"/Users/lucaspeng/Desktop/beam.mat","size"=>Any[70000,50000],"pos"=>Any[0.0,0.0],"variable"=>"field1"),"left-beam"=>Dict{Any,Any}("scaling"=>"t->exp(2*pi*im*0.8*t)","field-type"=>"VectorField","D-type"=>"Complex","init-type"=>"file","dim"=>2,"filename"=>"/Users/lucaspeng/Desktop/beam.mat","size"=>Any[70000,50000],"pos"=>Any[0.0,0.0],"variable"=>"field2")),"dim"=>2)),"dim"=>2)),"dim"=>2)
+    #2D vector
+    fconfig = Dict{Any,Any}("scaling"=>"t->1.0","field-type"=>"ScalarFieldNode","fields"=>Dict{Any,Any}("lattice-beam-wrap"=>Dict{Any,Any}("scaling"=>"t->-1.42884e-5","field-type"=>"ScalarFieldNode","fields"=>Dict{Any,Any}("lattice-beam"=>Dict{Any,Any}("scaling"=>"t->1.0+0.0im","field-type"=>"VectorFieldNode","fields"=>Dict{Any,Any}("right-beam"=>Dict{Any,Any}("scaling"=>"t->1.0+0.0im","field-type"=>"VectorField","D-type"=>"Complex","init-type"=>"file","dim"=>2,"filename"=>"/home/lucaspeng/Desktop/trajectory_julia/Exy_60u_0_right.mat","size"=>Any[70000,50000],"pos"=>Any[0.0,0.0],"variable"=>"field"),"left-beam"=>Dict{Any,Any}("scaling"=>"t->exp(2*pi*im*0.8*t)","field-type"=>"VectorField","D-type"=>"Complex","init-type"=>"file","dim"=>2,"filename"=>"/home/lucaspeng/Desktop/trajectory_julia/Exy_60u_0_left.mat","size"=>Any[70000,50000],"pos"=>Any[0.0,0.0],"variable"=>"field")),"dim"=>2)),"dim"=>2)),"dim"=>2)
+    buildAndAlign(fconfig,0,name = "field")
     #3D
 end

@@ -4,59 +4,6 @@ using Base.LinAlg.BLAS
 include("Fields_interpolate.jl")
 include("../constant.jl")
 
-@inbounds function sample{T<:ComplexOrFloat}(f::ScalarField{T,2},pos::Vector{Float64},t::Real;order::Integer = 3)
-    rel_pos::Vector{Float64} = pos-f.position::Vector{Float64}
-    pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64})+1)
-    return (sub(f.field,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2)*f.scaling(t)::ComplexOrFloat)::Array{T,2}
-end
-
-@inbounds function sample{T<:ComplexOrFloat}(f::VectorField{T,2},pos::Vector{Float64},t::Real;order::Integer = 3)
-    rel_pos::Vector{Float64} = pos-f.position::Vector{Float64}
-    pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64})+1)
-#    return (f.field[:,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2])::Array{T,3}
-    return (sub(f.field,:,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2)*f.scaling(t)::ComplexOrFloat)::Array{T,3}
-end
-
-function sample(f::VectorFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
-    # get (order+1)x(order+1) pixels of local field
-    output_type::DataType = f.typeof
-    return sample_inner(output_type,f,pos,t,order=order)::Array{output_type,3}
-end
-
-function sample_inner{T<:ComplexOrFloat}(::Type{T},f::VectorFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
-    output::Array{T,3} = zeros(T,(3,4,4))
-    loop_field!(f.fields,pos,t,output)
-    return (output*f.scaling(t)::ComplexOrFloat)::Array{T,3}
-end
-
-function sample(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
-    # get (order+1)x(order+1) pixels of local field
-    output_type::DataType = f.typeof
-    return sample_inner(output_type,f,pos,t,order=order)::Array{Float64,2}
-end
-
-function sample_inner{T<:ComplexOrFloat}(::Type{T},f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
-    sfoutput::Array{Float64,2} = zeros(Float64,(4,4))#TODO: Float64 should be T
-    vfoutput::Array{T,3} = zeros(T,(3,4,4))
-    for ff in f.fields
-        if in_field(ff,pos)
-            sum_field(ff,pos,t,sfoutput,vfoutput,order = order)
-        end
-    end
-    vfoutput_abs2::Array{Float64,2} = squeeze(sumabs2(vfoutput,1),1)
-    sfoutput .+= vfoutput_abs2::Array{Float64,2}
-    return (sfoutput*f.scaling(t)::ComplexOrFloat)::Array{Float64,2}
-#    vf_arr::Vector{AbstractVectorField} = filter(x->isa(x,AbstractVectorField),f.fields)
-#    sf_arr::Vector{AbstractScalarField} = filter(x->isa(x,AbstractScalarField),f.fields)
-
-    # if ~isempty(sf_arr)
-    #     loop_field!(sf_arr,pos,t,output)
-    # end
-    # if ~isempty(vf_arr)
-    #     loop_field!(vf_arr,pos,t,vf_output)
-    # end
-end
-
 @inbounds @fastmath function in_field{T<:Field}(f::T,pos::Vector{Float64})
     # fpos = collect(f.position)
     # fsize = collect(f.size)
