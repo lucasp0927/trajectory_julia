@@ -13,26 +13,6 @@ include("../constant.jl")
     return (f.res[1]::Float64<(pos[1]-f.position[1]::Float64)<(f.size[1]::Float64-f.res[1]::Float64) && f.res[2]::Float64<(pos[2]-f.position[2]::Float64)<(f.size[2]::Float64-f.res[2]::Float64))
 end
 
-function sum_field{T<:AbstractVectorField,K<:ComplexOrFloat}(f::T,pos::Vector{Float64},t::Real,sf_output::Array{Float64,2},vf_output::Array{K,3};order::Integer = 3)
-    tmp = sample(f,pos,t;order=order)::Array{K}
-    vf_output[:] += tmp[:]
-end
-
-function sum_field{T<:AbstractScalarField,K<:ComplexOrFloat}(f::T,pos::Vector{Float64},t::Real,sf_output::Array{Float64,2},vf_output::Array{K,3};order::Integer = 3)
-    tmp = sample(f,pos,t;order=order)::Array{Float64}
-    sf_output[:] += tmp[:]
-end
-
-
-@inbounds @fastmath function loop_field!{T<:Field,K<:ComplexOrFloat}(f_arr::Vector{T},pos::Vector{Float64},t::Real,output::Array{K};order::Integer = 3)
-    ff = filter(x->in_field(x,pos),f_arr)
-    for vf in ff
-        tmp = sample(vf,pos,t;order=order)::Array{K}
-        output[:] += tmp[:]
-    end
-end
-
-
 @fastmath @inbounds function sample2!{T<:ComplexOrFloat}(f::ScalarField{T,2},pos::Vector{Float64},t::Real)
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
     f.rel_pos[2] = pos[2]-f.position[2]::Float64
@@ -142,12 +122,6 @@ end
     #    f.sample[:,:] .+= squeeze(sumabs2(f.vf_sample,1),1)[:,:]
 end
 
-# @inbounds function scale_sample!{T<:ComplexOrFloat,N,K<:ComplexOrFloat}(sample::Array{T,N},s::K)
-#     for i in eachindex(sample)
-#         sample[i] *=s
-#     end
-# end
-
 @fastmath @inbounds function add_fields!{T<:AbstractVectorField}(f::T,sample::Array{Float64,2},vf_sample::Array{Complex{Float64},3})
     for i in eachindex(vf_sample)
         vf_sample[i] += f.sample[i]
@@ -203,28 +177,6 @@ end
     end
 end
 
-#=
-function value(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
-    A = sample(f,pos,t;order=order)::Array{Float64,2}
-#    A = float(real(A)) #TODO: change this
-    res = f.res::Vector{Float64}
-    @nexprs 2 j->x_j = rem(pos[j],res[j])/res[j]
-    return itp_bicubic(A,[x_1,x_2])
-#    return itp_spline(A,(2.0+x_1,2.0+x_2))
-end
-=#
-
-#=
-function gradient(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real;order::Integer = 3)
-#        A = Array(Float64,4,4)
-        A = sample(f,pos,t;order=order)::Array{Float64,2}
-        #    A = float(real(A)) #TODO: change this
-        res = f.res::Vector{Float64}
-        @nexprs 2 j->x_j = rem(pos[j],res[j])/res[j]
-        return itp_bicubic_grad(A,[x_1,x_2],res)
-    #    return itp_spline(A,(2.0+x_1,2.0+x_2))
-end
-=#
 
 #=
 @generated function value2(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real)
