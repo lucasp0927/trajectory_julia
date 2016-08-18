@@ -1,12 +1,3 @@
-function itp_spline(A::Array,pos::Vector{Float64})
-    itp = interpolate(A, BSpline(Cubic(Line())), OnGrid())
-    return itp[pos...]
-end
-
-function itp_bicubic(A::Array,pos::Vector{Float64})
-    return bicubicInterpolate(A,pos[1],pos[2])
-end
-
 @generated function itp_bicubic_grad{T<:ComplexOrFloat}(A::Array{T,2},pos::Vector{Float64},res::Vector{Float64})
     quote
         arr = $(Array(T,4))
@@ -18,6 +9,27 @@ end
         return grad
     end
 end
+
+@generated function itp_tricubic_grad{T<:ComplexOrFloat}(A::Array{T,3},pos::Vector{Float64},res::Vector{Float64})
+    quote
+        arr = $(Array(T,4,4))
+        grad = $(Array(T,3))
+        for k = 1:4
+            @nexprs 4 j->(arr[j,k] = cubicInterpolate_grad(slice(A,:,j,k), pos[1]);)
+        end
+        grad[1] = bicubicInterpolate(arr, pos[2:3])/res[1];
+        for k = 1:4
+            @nexprs 4 j->(arr[j,k] = cubicInterpolate_grad(slice(A,j,:,k), pos[2]);)
+        end
+        grad[2] = bicubicInterpolate(arr, pos[1:2:3])/res[2];
+        for k = 1:4
+            @nexprs 4 j->(arr[j,k] = cubicInterpolate_grad(slice(A,j,k,:), pos[3]);)
+        end
+        grad[3] = bicubicInterpolate(arr, pos[1:2])/res[3];
+        return grad
+    end
+end
+
 
 @fastmath @inbounds function cubicInterpolate{T<:Union{AbstractArray{Float64,1},AbstractArray{Complex{Float64},1}}}(p::T,x::Float64)
     #    @assert length(p) == 4 "wrong length"
@@ -85,7 +97,7 @@ function test_interpolate()
     #           1.2 1.5 1.7 1.8;
     #           1.5 1.8 1.9 2.1]
     # sample = sample + 0.2*rand(4,4)
-    sample = [1.0+x/(8+2*rand())+y/(8+2*rand())+0.1*rand() for x=1:4,y=1:4]
+    sample = [1.0+x/8+x^2/10+y/8+y^2/12 for x=1:4,y=1:4]
     sample_itp = interpolate(sample, BSpline(Cubic(Line())), OnGrid())
     sum_err = 0.0
     for x in x_grid,y in y_grid
@@ -95,16 +107,35 @@ function test_interpolate()
     err = sum_err/(length(x_grid)*length(y_grid))
     Lumberjack.info("err: ",string(err))
     @test err < 3e-2
+    #test gradient
+    sum_err = 0.0
+    for x in x_grid,y in y_grid
+        my_itp = itp_bicubic_grad(sample,[x,y],[1.0,1.0])
+        sum_err += norm(gradient(sample_itp,2.0+x,2.0+y)-my_itp)/norm(my_itp)
+    end
+    err = sum_err/(length(x_grid)*length(y_grid))
+    Lumberjack.info("err: ",string(err))
+    @test err < 3e-2
+
     Lumberjack.info("3D interpolation test")
     x_grid = linspace(0.0,1.0,11)
     y_grid = linspace(0.0,1.0,11)
     z_grid = linspace(0.0,1.0,11)
-    sample = [1.0+x/(8+2*rand())+y/(8+2*rand())+z/(8+2*rand())+0.1*rand() for x=1:4,y=1:4,z=1:4]
+    sample = [1.0+x/8+y/8+z/8+x^2/10+y^2/10+z^2/10 for x=1:4,y=1:4,z=1:4]
     sample_itp = interpolate(sample, BSpline(Cubic(Line())), OnGrid())
     sum_err = 0.0
     for x in x_grid,y in y_grid, z in z_grid
         my_itp = tricubicInterpolate(sample,[x,y,z])
         sum_err += abs(sample_itp[2.0+x,2.0+y,2.0+z]-my_itp)/my_itp
+    end
+    err = sum_err/(length(x_grid)*length(y_grid)*length(z_grid))
+    Lumberjack.info("err: ",string(err))
+    @test err < 3e-2
+
+    sum_err = 0.0
+    for x in x_grid,y in y_grid, z in z_grid
+        my_itp = itp_tricubic_grad(sample,[x,y,z],[1.0,1.0,1.0])
+        sum_err += norm(gradient(sample_itp,2.0+x,2.0+y,2.0+z)-my_itp)/norm(my_itp)
     end
     err = sum_err/(length(x_grid)*length(y_grid)*length(z_grid))
     Lumberjack.info("err: ",string(err))
