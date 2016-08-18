@@ -4,13 +4,15 @@ using Base.LinAlg.BLAS
 include("Fields_interpolate.jl")
 include("../constant.jl")
 
-@inbounds @fastmath function in_field{T<:Field}(f::T,pos::Vector{Float64})
-    # fpos = collect(f.position)
-    # fsize = collect(f.size)
-    # fres = collect(f.res)
-    # rel_pos = pos-fpos
-    # return all(i->fres[i]<rel_pos[i]<fsize[i]-fres[i],1:length(fsize))
+#@inbounds @fastmath function in_field{T<:Field}(f::T,pos::Vector{Float64})
+
+@inbounds @fastmath function in_field{T<:Union{FieldNode2D,ComplexField2D,FloatField2D}}(f::T,pos::Vector{Float64})
     return (f.res[1]::Float64<(pos[1]-f.position[1]::Float64)<(f.size[1]::Float64-f.res[1]::Float64) && f.res[2]::Float64<(pos[2]-f.position[2]::Float64)<(f.size[2]::Float64-f.res[2]::Float64))
+end
+
+@inbounds @fastmath function in_field{T<:Union{FieldNode3D,ComplexField3D,FloatField3D}}(f::T,pos::Vector{Float64})
+    # periodic in z direction?
+    return (f.res[1]::Float64<(pos[1]-f.position[1]::Float64)<(f.size[1]::Float64-f.res[1]::Float64) && f.res[2]::Float64<(pos[2]-f.position[2]::Float64)<(f.size[2]::Float64-f.res[2]::Float64) && f.res[3]::Float64<(pos[3]-f.position[3]::Float64)<(f.size[3]::Float64-f.res[3]::Float64))
 end
 
 @fastmath @inbounds function sample2!{T<:ComplexOrFloat}(f::ScalarField{T,2},pos::Vector{Float64},t::Real)
@@ -192,5 +194,5 @@ end
 =#
 
 function test_gradient()
-    println("test")
+
 end

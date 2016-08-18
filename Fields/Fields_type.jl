@@ -82,3 +82,9 @@ type ScalarFieldNode{N} <: AbstractScalarField
 end
 
 FieldNode = Union{VectorFieldNode,ScalarFieldNode}
+FieldNode2D = Union{VectorFieldNode{2},ScalarFieldNode{2}}
+FieldNode3D = Union{VectorFieldNode{3},ScalarFieldNode{3}}
+ComplexField2D = Union{VectorField{Complex{Float64},2},ScalarField{Complex{Float64},2}}
+ComplexField3D = Union{VectorField{Complex{Float64},3},ScalarField{Complex{Float64},3}}
+FloatField2D = Union{VectorField{Float64,2},ScalarField{Float64,2}}
+FloatField3D = Union{VectorField{Float64,3},ScalarField{Float64,3}}
