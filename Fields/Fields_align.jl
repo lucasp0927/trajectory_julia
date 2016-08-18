@@ -196,6 +196,7 @@ function test_align()
         Lumberjack.info(string(err))
         return err
     end
+
     function test_interpolate{T<:ComplexOrFloat}(f::VectorField{T,2},func)
         Lumberjack.info("testing ",f.name)
         sz = size(f.field)

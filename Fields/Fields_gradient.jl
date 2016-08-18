@@ -60,7 +60,7 @@ end
 end
 
 @inbounds function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::ScalarField{T,3},pidx::Vector{Int64},s::K)
-    copy!(f.sample,sub(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]),pidx[5]:pidx[6])
+    copy!(f.sample,sub(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4],pidx[5]:pidx[6]))
     scal!(64,s,f.sample,1)
 end
 #2D vector sample
@@ -322,10 +322,112 @@ end
         grad[1] = posvel[4]
         grad[2] = posvel[5]
         grad[3] = posvel[6]
-        grad[4:6] = -1.0*itp_bicubic_grad((sfn::ScalarFieldNode).sample,x,res)*KB/M_CS
+        grad[4:6] = -1.0*itp_tricubic_grad((sfn::ScalarFieldNode).sample,x,res)*KB/M_CS
     end
 end
 
 function test_gradient()
-
+    test_num = 10000
+    func1_2d(x,y)=(sin(x/40.0)+cos(y/20.0))*exp(-((x-200.0)^2+(y-200.0)^2)/100^2)::Float64
+    func2_2d(x,y)=(sin(x/20.0)+cos(y/50.0))*exp(-((x-400.0)^2+(y-400.0)^2)/200^2)::Float64
+    func3_2d(x,y)=(sin(x/50.0)+cos(y/30.0))*exp(-((x-600.0)^2+(y-600.0)^2)/300^2)::Float64
+    func1_3d(x,y,z)=(sin(x/40.0)+cos(y/20.0)+sin(z/30.0))*exp(-((x-200.0)^2+(y-200.0)^2)/100^2)*exp(-(z-50.0)^2/30^2)::Float64
+    func2_3d(x,y,z)=(sin(x/20.0)+cos(y/50.0)+sin(z/30.0))*exp(-((x-400.0)^2+(y-400.0)^2)/200^2)*exp(-(z-50.0)^2/30^2)::Float64
+    func3_3d(x,y,z)=(sin(x/50.0)+cos(y/30.0)+sin(z/30.0))*exp(-((x-600.0)^2+(y-600.0)^2)/300^2)*exp(-(z-50.0)^2/30^2)::Float64
+    ######################
+    #Test 2D value
+    ######################
+    Lumberjack.info("testing 2D value")
+    #prepare interpolation
+    f1 = convert(Array{Float64},[func1_2d(x,y) for x = 1:1000, y = 1:1000])
+    f2 = convert(Array{Float64},[func2_2d(x,y) for x = 1:1000, y = 1:1000])
+    f3 = convert(Array{Float64},[func3_2d(x,y) for x = 1:1000, y = 1:1000])
+    f2d = f1.+f2.+f3
+    f_itp_2d = interpolate(f2d, BSpline(Cubic(Line())), OnGrid())
+    #prepare field
+    float_sf1_2d = func2field(ScalarField{Float64,2},func1_2d,repmat([2500],2),repmat([1.0],2),repmat([999.0],2),name = "float_sf1")
+    float_sf2_2d = func2field(ScalarField{Float64,2},func2_2d,repmat([2000],2),repmat([1.0],2),repmat([999.0],2),name = "float_sf2")
+    float_sf3_2d = func2field(ScalarField{Float64,2},func3_2d,repmat([1001],2),repmat([1.0],2),repmat([999.0],2),name = "float_sf3")
+    sfn1_2d = ScalarFieldNode{2}([float_sf1_2d,float_sf3_2d],name = ascii("sfn1"))
+    sfn2_2d = ScalarFieldNode{2}([float_sf2_2d,sfn1_2d],name = ascii("sfn2"))
+    align_field_tree!(sfn2_2d)
+    sum_err = 0.0
+@time    for i = 1:test_num
+        x = 998.0*rand()+1.0
+        y = 998.0*rand()+1.0
+        ref = f_itp_2d[x,y]
+        result = value([x,y],0.0,sfn2_2d)
+        sum_err += abs(ref-result)/abs(ref)
+    end
+    err = sum_err/test_num
+    Lumberjack.info("err: ",string(err))
+    @test err<3e-2
+    ######################
+    #Test 3D value
+    ######################
+    Lumberjack.info("testing 3D value")
+    #prepare interpolation
+    f1 = convert(Array{Float64},[func1_3d(x,y,z) for x = 1:1000, y = 1:1000, z=1:100])
+    f2 = convert(Array{Float64},[func2_3d(x,y,z) for x = 1:1000, y = 1:1000, z=1:100])
+    f3 = convert(Array{Float64},[func3_3d(x,y,z) for x = 1:1000, y = 1:1000, z=1:100])
+    f1_s = convert(SharedArray,f1)
+    f2_s = convert(SharedArray,f2)
+    f3_s = convert(SharedArray,f3)
+    f3d = f1.+f2.+f3
+    f_itp_3d = interpolate(f3d, BSpline(Cubic(Line())), OnGrid())
+    #prepare field
+    float_sf1_3d = ScalarField{Float64,3}(f1_s,[1.0,1.0,1.0],[999.0,999.0,99.0],name="float_sf1")
+#    float_sf1 = func2field(ScalarField{Float64,3},func1_3d,[500,500,100],repmat([1.0],3),[500.0,500.0,100.0],name = "float_sf1")
+    float_sf2_3d = ScalarField{Float64,3}(f2_s,[1.0,1.0,1.0],[999.0,999.0,99.0],name="float_sf2")
+#    float_sf2 = func2field(ScalarField{Float64,3},func2_3d,[500,500,100],repmat([1.0],3),[500.0,500.0,100.0],name = "float_sf2")
+    float_sf3_3d = ScalarField{Float64,3}(f3_s,[1.0,1.0,1.0],[999.0,999.0,99.0],name="float_sf3")
+#    float_sf3 = func2field(ScalarField{Float64,3},func3_3d,[500,500,100],repmat([1.0],3),[500.0,500.0,100.0],name = "float_sf3")
+    sfn1_3d = ScalarFieldNode{3}([float_sf1_3d,float_sf3_3d],name = ascii("sfn1"))
+    sfn2_3d = ScalarFieldNode{3}([float_sf2_3d,sfn1_3d],name = ascii("sfn2"))
+    align_field_tree!(sfn2_3d)
+    sum_err = 0.0
+@time    for i = 1:test_num
+        x = 998.0*rand()+1.0
+        y = 998.0*rand()+1.0
+        z = 98.0*rand()+1.0
+        ref = f_itp_3d[x,y,z]
+        result = value([x,y,z],0.0,sfn2_3d)
+        sum_err += abs(ref-result)/abs(ref)
+    end
+    err = sum_err/test_num
+    Lumberjack.info("err: ",string(err))
+    @test err<3e-2
+    ######################
+    #Test 2D gradient
+    ######################
+    grad = zeros(Float64,4)
+    sum_err = 0.0
+@time    for i = 1:test_num
+        x = 998.0*rand()+1.0
+        y = 998.0*rand()+1.0
+        ref = -1.0*gradient(f_itp_2d,x,y)*KB/M_CS
+        gradient!(0.0,[x,y,0.0,0.0],grad,sfn2_2d)
+        result = grad[3:4]
+        sum_err += norm(ref-result)/norm(ref)
+    end
+    err = sum_err/test_num
+    Lumberjack.info("err: ",string(err))
+    @test err<3e-2
+    ######################
+    #Test 3D gradient
+    ######################
+    grad = zeros(Float64,6)
+    sum_err = 0.0
+@time    for i = 1:test_num
+        x = 998.0*rand()+1.0
+        y = 998.0*rand()+1.0
+        z = 98.0*rand()+1.0
+        ref = -1.0*gradient(f_itp_3d,x,y,z)*KB/M_CS
+        gradient!(0.0,[x,y,z,0.0,0.0,0.0],grad,sfn2_3d)
+        result = grad[4:6]
+        sum_err += norm(ref-result)/norm(ref)
+    end
+    err = sum_err/test_num
+    Lumberjack.info("err: ",string(err))
+    @test err<3e-2
 end
