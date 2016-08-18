@@ -9,6 +9,7 @@ using Lumberjack
 #TODO: getindex overload for fields.
 #TODO: support different resolution for different area
 global fields
+global value
 include("../fileio.jl")
 include("Fields_type.jl")
 include("Fields_function.jl")

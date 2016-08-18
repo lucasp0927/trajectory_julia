@@ -240,7 +240,9 @@ end
 #    sample[:] .+= f.sample[:]
 end
 #########################
-@generated function value(pos::Vector{Float64},t::Real)
+
+#=
+@generated function value2D(pos::Vector{Float64},t::Real)
     quote
         x = $(Array(Float64,2))
         res = $(Array(Float64,2))
@@ -248,12 +250,26 @@ end
         sample2!(fields::ScalarFieldNode,pos,t)
         @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
         return bicubicInterpolate((fields::ScalarFieldNode).sample,x)
-#        return itp_bicubic(f.sample,x)
     end
-    #    return itp_spline(A,(2.0+x_1,2.0+x_2))
 end
 
-@generated function value(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode)
+@generated function value3D(pos::Vector{Float64},t::Real)
+    quote
+        x = $(Array(Float64,3))
+        res = $(Array(Float64,3))
+        res[:] = (fields::ScalarFieldNode).res
+        sample2!(fields::ScalarFieldNode,pos,t)
+        @nexprs 3 j->x[j] = rem(pos[j],res[j])/res[j]
+        return tricubicInterpolate((fields::ScalarFieldNode).sample,x)
+    end
+end
+=#
+
+function value(pos::Vector{Float64},t::Real)
+    value(pos,t,fields)
+end
+
+@generated function value(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode{2})
     quote
         x = $(Array(Float64,2))
         res = $(Array(Float64,2))
@@ -261,39 +277,54 @@ end
         sample2!(sfn::ScalarFieldNode,pos,t)
         @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
         return bicubicInterpolate((sfn::ScalarFieldNode).sample,x)
-#        return itp_bicubic(f.sample,x)
     end
-    #    return itp_spline(A,(2.0+x_1,2.0+x_2))
 end
 
-@generated function gradient!(t::Float64,posvel::Vector{Float64},grad::Vector{Float64})
+@generated function value(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode{3})
+    quote
+        x = $(Array(Float64,3))
+        res = $(Array(Float64,3))
+        res[:] = (sfn::ScalarFieldNode).res
+        sample2!(sfn::ScalarFieldNode,pos,t)
+        @nexprs 3 j->x[j] = rem(pos[j],res[j])/res[j]
+        return tricubicInterpolate((sfn::ScalarFieldNode).sample,x)
+    end
+end
+
+function gradient!(t::Float64,posvel::Vector{Float64},grad::Vector{Float64})
+    gradient!(t,posvel,grad,fields)
+end
+
+@generated function gradient!(t::Float64,posvel::Vector{Float64},grad::Vector{Float64},sfn::ScalarFieldNode{2})
     quote
         x = $(Array(Float64,2))
         res = $(Array(Float64,2))
         pos = $(Array(Float64,2))
-        res[:] = (fields::ScalarFieldNode).res
+        res[:] = (sfn::ScalarFieldNode).res
         pos[:] = posvel[1:2]
         @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
-        sample2!(fields::ScalarFieldNode,pos,t)
+        sample2!(sfn::ScalarFieldNode,pos,t)
         grad[1] = posvel[3]
         grad[2] = posvel[4]
-        grad[3:4] = -1.0*itp_bicubic_grad((fields::ScalarFieldNode).sample,x,res)*KB/M_CS
+        grad[3:4] = -1.0*itp_bicubic_grad((sfn::ScalarFieldNode).sample,x,res)*KB/M_CS
     end
 end
 
-
-#=
-@generated function value2(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real)
+@generated function gradient!(t::Float64,posvel::Vector{Float64},grad::Vector{Float64},sfn::ScalarFieldNode{3})
     quote
-        x = $(Array(Float64,2))
-        sample2!(f,pos,t)
-        @nexprs 2 j->x[j] = rem(pos[j],f.res[j])/f.res[j]
-        return bicubicInterpolate(f.sample,x)
-#        return itp_bicubic(f.sample,x)
+        x = $(Array(Float64,3))
+        res = $(Array(Float64,3))
+        pos = $(Array(Float64,3))
+        res[:] = (sfn::ScalarFieldNode).res
+        pos[:] = posvel[1:3]
+        @nexprs 3 j->x[j] = rem(pos[j],res[j])/res[j]
+        sample2!(sfn::ScalarFieldNode,pos,t)
+        grad[1] = posvel[4]
+        grad[2] = posvel[5]
+        grad[3] = posvel[6]
+        grad[4:6] = -1.0*itp_bicubic_grad((sfn::ScalarFieldNode).sample,x,res)*KB/M_CS
     end
-    #    return itp_spline(A,(2.0+x_1,2.0+x_2))
 end
-=#
 
 function test_gradient()
 
