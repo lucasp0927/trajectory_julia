@@ -15,6 +15,8 @@ end
     return (f.res[1]::Float64<(pos[1]-f.position[1]::Float64)<(f.size[1]::Float64-f.res[1]::Float64) && f.res[2]::Float64<(pos[2]-f.position[2]::Float64)<(f.size[2]::Float64-f.res[2]::Float64) && f.res[3]::Float64<(pos[3]-f.position[3]::Float64)<(f.size[3]::Float64-f.res[3]::Float64))
 end
 
+
+#2D Scalar sample
 @fastmath @inbounds function sample2!{T<:ComplexOrFloat}(f::ScalarField{T,2},pos::Vector{Float64},t::Real)
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
     f.rel_pos[2] = pos[2]-f.position[2]::Float64
@@ -31,7 +33,7 @@ end
     sample_field(f,f.pidx,f.s)
 end
 
-@inbounds function sample_field{T<:ComplexOrFloat}(f::ScalarField,pidx::Vector{Int64},s::T)
+@inbounds function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::ScalarField{T,2},pidx::Vector{Int64},s::K)
 #    blascopy!(16,f.field[pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2],1,f.sample,1)
     copy!(f.sample,sub(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]))
     scal!(16,s,f.sample,1)
@@ -42,7 +44,23 @@ end
     #     f.sample[i] *=s
     # end
 end
+#3D scalar sample
+@fastmath @inbounds function sample2!{T<:ComplexOrFloat}(f::ScalarField{T,3},pos::Vector{Float64},t::Real)
+    f.rel_pos[1] = pos[1]-f.position[1]::Float64
+    f.rel_pos[2] = pos[2]-f.position[2]::Float64
+    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))
+    f.pidx[2] = f.pidx[1]+3
+    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))
+    f.pidx[4] = f.pidx[3]+3
+    f.s::Float64 = (f.scaling::Function)(t)::Float64
+    sample_field(f,f.pidx,f.s)
+end
 
+@inbounds function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::ScalarField{T,3},pidx::Vector{Int64},s::K)
+    copy!(f.sample,sub(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]))
+    scal!(16,s,f.sample,1)
+end
+#2D vector sample
 @fastmath @inbounds function sample2!{T<:ComplexOrFloat}(f::VectorField{T,2},pos::Vector{Float64},t::Real)
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
     f.rel_pos[2] = pos[2]-f.position[2]::Float64
@@ -61,7 +79,7 @@ end
     sample_field(f,f.pidx,f.s)
 end
 
-@inbounds function sample_field{T<:ComplexOrFloat}(f::VectorField,pidx::Vector{Int64},s::T)
+@inbounds function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::VectorField{T,2},pidx::Vector{Int64},s::K)
 #    blascopy!(48,f.field[:,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2],1,f.sample,1)
     #    f.sample[:,:,:] = sub(f.field,:,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2)
     copy!(f.sample,sub(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4]))
