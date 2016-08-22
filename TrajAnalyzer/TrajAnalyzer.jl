@@ -2,6 +2,7 @@ module TrajAnalyzer
 using Fields
 using Lumberjack
 using HDF5
+using PyCall
 include("../fileio.jl")
 include("TrajAnalyzer_trajectories.jl")
 include("../TrajSolver/polygon.jl")
@@ -11,6 +12,7 @@ include("TrajAnalyzer_spectrum.jl")
 
 global Trajs, Probe, ForceFields, TA_Config
 global avg_atom_num,lattice_width,lattice_unit,k_ratio,gamma_1d,gamma_prime
+@pyimport platform
 function calc_score(area)
     Lumberjack.debug("In TrajAnalyzer.calc_score()")
     pp = Polygon([promote(area...)...])

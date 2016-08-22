@@ -31,7 +31,7 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
             TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
         end
         if spectrum_flag
-            TrajAnalyzer.spectrum(output_file*string(i)*"_tm")
+            TrajAnalyzer.spectrum(output_file*string(i)*"_te")
         end
         if movie_flag
             movie_range = [promote(config["movie-output"]["range"]...)...]

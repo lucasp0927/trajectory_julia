@@ -18,9 +18,14 @@ function spectrum(filename)
     fend   = Float64(freq_config["end"])
     tstart = Float64(time_config["start"])
     tend = Float64(time_config["end"])
+    #plot using matplotlib
     pyimport("matplotlib")[:use]("Agg")
     @pyimport matplotlib.pyplot as plt
-    plt.imshow(average_spectrum, extent=[tstart,tend,fend,fstart],aspect="auto")
+    @pyimport numpy as np
+    freq_range = Float64(freq_config["start"]):Float64(freq_config["step"]):Float64(freq_config["end"])
+    time_range = Float64(time_config["start"]):Float64(time_config["step"]):Float64(time_config["end"])
+    plt.pcolormesh(np.asarray(time_range),np.asarray(freq_range),average_spectrum,cmap="RdBu")
+    plt.axis([tstart, tend, fstart, fend])
     plt.colorbar()
     plt.xlabel("time(us)")
     plt.ylabel("detuning (MHz)")
@@ -84,7 +89,7 @@ end
         else
             f_0 = Fields.value(pos[1:2],t,ForceFields::ScalarFieldNode)/(-1e-3)*20
             p_0 = Fields.value(pos[1:2],t,Probe::ScalarFieldNode)
-            @assert p_0 >= 0.0 "negative probe power!"
+#            @assert p_0 >= 0.0 "negative probe power!"
             M_atom[:,:,i] = atom_transfer_matrix(detune,f_0,p_0*gamma_1d::Float64,gamma_prime::Float64)
         end
     end
