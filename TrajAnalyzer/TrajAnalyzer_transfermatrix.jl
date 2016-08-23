@@ -1,6 +1,6 @@
 @fastmath function wg_transfer_matrix( k::Float64 , l::Float64 )
     M = [exp(1im*k*l) zero(Complex{Float64});zero(Complex{Float64}) exp(-1im*k*l)]
-    @assert abs(1-abs(det(M)))<1e-10 "det(M)!=1"
+#    @assert abs(1-abs(det(M)))<1e-10 "det(M)!=1"
     return M
 end
 

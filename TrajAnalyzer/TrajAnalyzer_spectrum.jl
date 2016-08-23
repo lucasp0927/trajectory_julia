@@ -88,7 +88,7 @@ end
         if any(isnan(pos[1:2]))
             M_atom[:,:,i] = wg_transfer_matrix(0.0,0.0)
         else
-            f_0 = Fields.value(pos[1:2],t,ForceFields::ScalarFieldNode)/(-1e-3)*20
+            f_0 = Fields.value(pos[1:2],t,ForceFields::ScalarFieldNode)*(-2e4) #*20.0/(-1e-3)
             p_0 = Fields.value(pos[1:2],t,Probe::ScalarFieldNode)
 #            @assert p_0 >= 0.0 "negative probe power!"
             M_atom[:,:,i] = atom_transfer_matrix(detune,f_0,p_0*gamma_1d::Float64,gamma_prime::Float64)
