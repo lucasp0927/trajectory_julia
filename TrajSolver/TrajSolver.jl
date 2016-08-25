@@ -70,6 +70,7 @@ function calculate_traj(i::Int64)
                   "reltol"=>reltol,
                   "abstol"=>abstol
                   )
+    gc()
     return result    
 end
 
