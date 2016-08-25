@@ -3,6 +3,8 @@ using Sundials
 using Fields
 using Lumberjack
 using Optim
+using ProgressMeter
+
 include("../constant.jl")
 include("../fileio.jl")
 include("polygon.jl")
@@ -42,7 +44,8 @@ function calculate_traj(i::Int64)
     i = 1
     # function to produce the next work item from the queue.
     # in this case it's just an index.
-    nextidx() = (idx=i; i+=1; idx)
+    pm = Progress(trajnum, 1)
+    nextidx() = (next!(pm);idx=i; i+=1; idx)
     @time @sync begin
         for p = 2:nprocs()
             @async begin
