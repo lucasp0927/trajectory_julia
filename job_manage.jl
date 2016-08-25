@@ -30,12 +30,14 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
             probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
             TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
         end
-        if spectrum_flag
-            TrajAnalyzer.spectrum(output_file*string(i)*"_te")
-        end
         if movie_flag
+            Lumberjack.info("Outputing Movie...")
             movie_range = [promote(config["movie-output"]["range"]...)...]
             TrajAnalyzer.output_movie_traj(config["movie-output"],output_file*string(i)*"_traj.mp4")
+        end
+        if spectrum_flag
+            Lumberjack.info("Calculating Spectrum...")
+            TrajAnalyzer.spectrum(output_file*string(i)*"_te")
         end
         #score and flux
         # for (k,v) in config["score"]

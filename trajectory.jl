@@ -1,4 +1,4 @@
-addprocs(8, exeflags="--depwarn=no")
+addprocs(36, exeflags="--depwarn=no")
 push!(LOAD_PATH, "./Fields")
 push!(LOAD_PATH, "./TrajSolver")
 push!(LOAD_PATH, "./TrajAnalyzer")
@@ -24,7 +24,7 @@ end
 function main()
     @everywhere Lumberjack.remove_truck("console")
     @everywhere Lumberjack.add_truck(LumberjackTruck(STDOUT, "info"))
-    @everywhere Lumberjack.add_truck(LumberjackTruck("trajectory_logfile.log","debug"))
+#    @everywhere Lumberjack.add_truck(LumberjackTruck("trajectory_logfile.log","debug"))
     #preparation
     sfn,output_file,job_config,calc_traj_flag,spectrum_flag,movie_flag,trajsolver_config = prepare()
     println("Start calculating trajectories...")
