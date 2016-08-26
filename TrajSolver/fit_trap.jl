@@ -1,9 +1,27 @@
 using HDF5
 using MATLAB
 
-function fit_trap_matlab(data,axial_t,radial_t)
-    prob,xstart,xend,ystart,yend = mxcall(:fit_trap,5,data,axial_t,radial_t)
+function fit_trap(data,axial_t,radial_t)
+    if axial_t == radial_t
+        Lumberjack.info("axial temperature = radial temperature, no need for matlab.")
+#        prob,xstart,xend,ystart,yend = mxcall(:fit_trap,5,data,axial_t,radial_t)
+        prob,xstart,xend,ystart,yend = iso_temp_prob_dist(data,axial_t)
+    else
+        prob,xstart,xend,ystart,yend = mxcall(:fit_trap,5,data,axial_t,radial_t)
+    end
     return prob,xstart,xend,ystart,yend
 end
 
-#coeff = [fitr.p00, fitr.p10, fitr.p01, fitr.p20, fitr.p11, fitr.p02, fitr.p30, fitr.p21, fitr.p12, fitr.p03, fitr.p40, fitr.p31, fitr.p22, fitr.p13, fitr.p04];
+function iso_temp_prob_dist(data,temp)
+    xx = squeeze(data[1,:,:],1)
+    yy = squeeze(data[2,:,:],1)
+    uu = squeeze(data[3,:,:],1)
+    uu_norm = uu-minimum(uu)
+    prob = exp(-uu_norm/temp)
+    prob = prob/(maximum(prob)*1.01)
+    xstart = xx[1,1]
+    xend = xx[end,1]
+    ystart = yy[1,1]
+    yend = yy[1,end]
+    return prob,xstart,xend,ystart,yend
+end

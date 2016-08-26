@@ -58,7 +58,7 @@ end
 
 function range2sfn(range)
     init_U_data = Fields.composite_with_position(range,tspan[1],Fields.fields.res)
-    prob,xstart,xend,ystart,yend = fit_trap_matlab(init_U_data,axial_temperature,radial_temperature)
+    prob,xstart,xend,ystart,yend = fit_trap(init_U_data,axial_temperature,radial_temperature)
     prob_s = copy_to_sharedarray!(prob)
     prob_f = ScalarFieldNode{2}([ScalarField{Float64,2}(prob_s,[xstart,ystart],[xend-xstart,yend-ystart])])
     Fields.set_geometry!(prob_f)
@@ -69,7 +69,6 @@ end
 
 function prepare_U_prob()
     #calculate probablility distrubution, and construct a scalar field object.
-    Lumberjack.debug("IN PREPARE_U_PROB!!!!")
     sfns = map(range2sfn,values(init_range))
     sfns = [promote(sfns...)...]
     @sync begin
