@@ -35,7 +35,11 @@ function output_movie(mov_tspan,range,res,filename;traj=false)
         end
     end
     cd(movie_folder)
-    run(pipeline(`ffmpeg -framerate 5 -i img%04d.png -s:v 1300x1000 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p out.mp4`,stderr=current_folder*"/ffmpeg.log"))
+    if contains(platform.platform(),"Ubuntu-12.04")
+        run(pipeline(`avconv -framerate 5 -i img%04d.png -s:v 1300x1000 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p out.mp4`,stderr=current_folder*"/ffmpeg.log"))
+    else
+        run(pipeline(`ffmpeg -framerate 5 -i img%04d.png -s:v 1300x1000 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p out.mp4`,stderr=current_folder*"/ffmpeg.log"))
+    end
     cd(current_folder)
     cp(movie_folder*"/out.mp4",filename,remove_destination=true)
     rm(movie_folder,recursive=true)

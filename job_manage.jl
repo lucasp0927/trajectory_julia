@@ -30,12 +30,14 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
             probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
             TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
         end
-        if spectrum_flag
-            TrajAnalyzer.spectrum(output_file*string(i)*"_tm")
-        end
         if movie_flag
+            Lumberjack.info("Outputing Movie...")
             movie_range = [promote(config["movie-output"]["range"]...)...]
             TrajAnalyzer.output_movie_traj(config["movie-output"],output_file*string(i)*"_traj.mp4")
+        end
+        if spectrum_flag
+            Lumberjack.info("Calculating Spectrum...")
+            TrajAnalyzer.spectrum(output_file*string(i)*"_te")
         end
         #score and flux
         # for (k,v) in config["score"]
@@ -44,9 +46,9 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         # end
         #@time flux = calc_flux(traj,tspan,config["flux"],output_file*string(i)*"_flux.mat")
         #output intial range potential
-        #init_range = get_large_init_range(values(trajsolver_config["atom-config"]["init-range"]))
-        #t0 = trajsolver_config["simulation-config"]["tstart"]
-        #        TrajAnalyzer.output_image_gp(t0,init_range,output_file*string(i)*"_init_range.png",save_data = true, data_filename=output_file*string(i)*"_init_range.h5")
+        init_range = get_large_init_range(values(trajsolver_config["atom-config"]["init-range"]))
+        t0 = trajsolver_config["simulation-config"]["tstart"]
+        TrajAnalyzer.output_image_gp(t0,init_range,output_file*string(i)*"_init_range.png",save_data = true, data_filename=output_file*string(i)*"_init_range.h5")
         # println("output 0")
         # TrajAnalyzer.output_image_gp(0.0,[10000.0-750.0,10750.0,25000.0-750.0,25000.0+750.0],output_file*string(i)*"_phase_potential_0.png",save_data = true, data_filename=output_file*string(i)*"_phase_potential_0.h5")
 #        TrajAnalyzer.output_image_gp_traj(t0,init_range,10.0,10.0,output_file*string(i)*"_init_range_traj.png")

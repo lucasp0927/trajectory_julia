@@ -88,6 +88,7 @@ function init_U_prob!(sfns::Vector{ScalarFieldNode{2}})
 end
 
 function distribute_atoms()
+    #distribute my_trajnum atoms among pancakes.
     pancake_num = length(U_prob)
     traj_num = zeros(Int64,pancake_num)
     d,r = divrem(my_trajnum,pancake_num)

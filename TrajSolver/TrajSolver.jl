@@ -3,6 +3,8 @@ using Sundials
 using Fields
 using Lumberjack
 using Optim
+using ProgressMeter
+
 include("../constant.jl")
 include("../fileio.jl")
 include("polygon.jl")
@@ -38,6 +40,44 @@ function calculate_traj(i::Int64)
     Lumberjack.info("calculate trajectories...")
     parallel_set_iter(i)
     prepare_U_prob()
+    traj = Array(Float64,4,length(tspan),trajnum)
+    i = 1
+    # function to produce the next work item from the queue.
+    # in this case it's just an index.
+    pm = Progress(trajnum, 1)
+    nextidx() = (next!(pm);idx=i; i+=1; idx)
+    @time @sync begin
+        for p = 2:nprocs()
+            @async begin
+                while true
+                    idx = nextidx()
+                    if idx>trajnum
+                        break
+                    end
+                    traj[:,:,idx] = remotecall_fetch(p,solve_traj_one_shot)
+                end
+            end
+        end
+    end
+    result = Dict(
+                  "traj"=>traj,
+                  "tspan"=>tspan,
+                  "pos"=>Fields.fields.position,
+                  "siz"=>Fields.fields.size,
+                  "radial_temperature"=>radial_temperature,
+                  "axial_temperature"=>axial_temperature,
+                  "init_speed"=>init_speed,
+                  "reltol"=>reltol,
+                  "abstol"=>abstol
+                  )
+    gc()
+    return result    
+end
+
+function calculate_traj_unbalanced(i::Int64)
+    Lumberjack.info("calculate trajectories...")
+    parallel_set_iter(i)
+    prepare_U_prob()
     @time @sync begin
         for p = 2:nprocs()
             @async remotecall_wait(p,solve_traj)
@@ -61,6 +101,30 @@ function calculate_traj(i::Int64)
                   )
     return result
 end
+
+function solve_traj_one_shot()
+    if solver == "ADAMS"
+        Lumberjack.debug("Using solver ADAMS")
+        mem = convert(Sundials.CVODE_ptr,Sundials.CVodeHandle(Sundials.CV_ADAMS, Sundials.CV_FUNCTIONAL))
+    elseif solver == "BDF"
+        Lumberjack.debug("Using solver BDF")
+        mem = convert(Sundials.CVODE_ptr,Sundials.CVodeHandle(Sundials.CV_BDF, Sundials.CV_NEWTON))
+    else
+        Lumberjack.error("Unknown ODE solver $solver.")
+    end
+    init_xv = distribute_atoms_one_shot()
+    yout = Array(Float64,4,length(tspan))
+    fill!(yout,NaN)
+    mycvode(mem,Fields.gradient!,init_xv,tspan,yout;reltol=reltol, abstol=abstol)
+    return yout
+end
+
+function distribute_atoms_one_shot()
+    pancake_id = rand(1:length(U_prob))
+    init_xv = squeeze(distribute_atoms_inner(U_prob[pancake_id],1),2)
+    return init_xv
+end
+
 
 function solve_traj()
     fill!(result,NaN)
@@ -100,7 +164,7 @@ end
     return true
 end
 
-@inbounds function mycvode(mem, f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::SubArray; reltol::Float64=1e-8, abstol::Float64=1e-7, mxstep::Int64=Integer(1e6))
+@inbounds function mycvode{T<:AbstractArray}(mem, f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::T; reltol::Float64=1e-8, abstol::Float64=1e-7, mxstep::Int64=Integer(1e6))
     # f, Function to be optimized of the form f(y::Vector{Float64}, fy::Vector{Float64}, t::Float64)
     #    where `y` is the input vector, and `fy` is the
     # y0, Vector of initial values

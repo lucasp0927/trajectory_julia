@@ -1,8 +1,10 @@
 function init_parallel!(result::Dict,probe_sfn::ScalarFieldNode,ForceFields_sfn::ScalarFieldNode,config::Dict)
     traj_s = copy_to_sharedarray!(result["traj"])
+    result_wo_traj = result
+    delete!(result_wo_traj,"traj")
     @sync begin
         for p = 1:nprocs()
-            @async remotecall_wait(p,init!,result,traj_s,probe_sfn,ForceFields_sfn,config)
+            @async remotecall_wait(p,init!,result_wo_traj,traj_s,probe_sfn,ForceFields_sfn,config)
         end
     end
 end
