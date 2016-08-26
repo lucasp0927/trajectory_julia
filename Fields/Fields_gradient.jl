@@ -391,18 +391,9 @@ function test_gradient()
     ######################
     Lumberjack.info("testing 3D value")
     #prepare interpolation
-    println(1)
-    #    f1 = convert(Array{Float64},[func1_3d(x,y,z) for x = 1:1000, y = 1:1000, z=1:100])
     f1_s = SharedArray(Float64, (1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->func1_3d(ind2sub(S,x)...),Base.localindexes(S)))
-
-    println(2)
     f2_s = SharedArray(Float64, (1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->func2_3d(ind2sub(S,x)...),Base.localindexes(S)))
-    #    f2 = convert(Array{Float64},[func2_3d(x,y,z) for x = 1:1000, y = 1:1000, z=1:100])
-    println(3)
     f3_s = SharedArray(Float64, (1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->func3_3d(ind2sub(S,x)...),Base.localindexes(S)))
-    #    f3 = convert(Array{Float64},[func3_3d(x,y,z) for x = 1:1000, y = 1:1000, z=1:100])
-    println(4)
-#    f4_s = SharedArray(Complex{Float64}, (3,1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->func4_3d2(ind2sub(S,x)...),Base.localindexes(S)))
     f4_s = SharedArray(Complex{Float64}, (3,1000,1000,100), init=sa_init )
     for i = 1:100
         x = rand(1:1000)
@@ -418,10 +409,6 @@ function test_gradient()
     =#
     println(5)
     f4norm2_s = SharedArray(Float64, (1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->norm(func4_3d(ind2sub(S,x)...))^2,Base.localindexes(S)))
-#    f4 = convert(Array{Float64},[norm(f4_s[:,x,y,z])^2 for x = 1:1000, y = 1:1000, z=1:100])
-#    f1 = sdata(f1_s)
-#    f2 = sdata(f2_s)
-#    f3 = sdata(f3_s)
     f3d = f1_s.+f2_s.+f3_s.+f4norm2_s
     f_itp_3d = interpolate(f3d, BSpline(Cubic(Line())), OnGrid())
     #prepare field
