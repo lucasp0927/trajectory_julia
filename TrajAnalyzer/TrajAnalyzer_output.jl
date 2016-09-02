@@ -104,7 +104,7 @@ function output_image_gp_traj(t,range,res_x,res_y,filename;v_min=0.0,v_max=0.1,t
     dots[1:2,:] = tmp[:,:]
     #make atom red before vanishing.
     if tdiv>0.0
-        tmp_next = squeeze(Trajs[t+tdiv,:],2)[1:2,:]
+        tmp_next = (Trajs[t+tdiv,:])[1:2,:]
         dots[3,:] = [(isnan(tmp[1,i])==false && isnan(tmp_next[1,i])==true)?1.0:0.0 for i in 1:size(tmp,2)]
     end
     output_data = Fields.composite_with_position(range,t,[res_x,res_y])
