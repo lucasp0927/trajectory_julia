@@ -1,11 +1,7 @@
 include("TrajAnalyzer_transfermatrix.jl")
 using PyCall
 function spectrum(filename)
-    #profiling
-    Profile.init(delay=0.01)
-    ######first run
     output,output_matrix = calculate_transmission()
-
     spectrum_data = Dict(
                     "output"=>output,
                     "output_matrix"=>output_matrix
@@ -16,14 +12,6 @@ function spectrum(filename)
         rm(h5_filename)
     end
     h5write(h5_filename, "/spectrum", average_spectrum)
-
-    ######second run
-    Profile.clear()
-    @profile @time output,output_matrix = calculate_transmission()
-    ######save result
-    open("profile.bin", "w") do f serialize(f, Profile.retrieve()) end
-    #####
-
     #plot using matplotlib
     freq_config = TA_Config["spectrum"]["frequency"]
     time_config = TA_Config["spectrum"]["time"]
@@ -45,7 +33,7 @@ function spectrum(filename)
     plt.clf()
 end
 
-function calculate_transmission()
+@inbounds function calculate_transmission()
     # traj selection
 #    traj_selected = select_traj(paras.traj,paras.t_span,paras.select)
     # calculate transmission
@@ -66,8 +54,7 @@ function calculate_transmission()
         atom_num = avg_atom_num::Int64
         Lumberjack.info("atom number: $atom_num")
         atom_arr::Array{Int64,2} = generate_atom_array(atom_num,Trajs.atom_num,lattice_sites)
-        #@time        @sync @parallel for fidx in collect(eachindex(freq_range))
-        @time for fidx in collect(eachindex(freq_range))
+        @time @sync @parallel for fidx in collect(eachindex(freq_range))
             for tidx in eachindex(time_range)
                 output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission(time_range[tidx],freq_range[fidx],atom_arr)
             end
