@@ -1,4 +1,4 @@
-addprocs(8, exeflags="--depwarn=no")
+addprocs(16, exeflags="--depwarn=no")
 push!(LOAD_PATH, "./Fields")
 push!(LOAD_PATH, "./TrajSolver")
 push!(LOAD_PATH, "./TrajAnalyzer")
