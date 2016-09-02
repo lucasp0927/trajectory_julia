@@ -31,7 +31,7 @@ import Base.getindex
     return result
 end
 
-@inbounds function getindex{T<:Union{Range,Colon}}(tr::Trajectories,t::Float64,traj_id::T)
+@inbounds function getindex{T<:Range}(tr::Trajectories,t::Float64,traj_id::T)
     #Linear interpolation
     #TODO: higher order interpolation
 #    @assert t>=tr.tspan[1] && t<=tr.tspan[end]
@@ -45,6 +45,25 @@ end
     end
     return result
 end
+
+@inbounds function getindex{T<:Colon}(tr::Trajectories,t::Float64,traj_id::T)
+    getindex(tr,t,range(1,size(tr.traj,3)))
+    #Linear interpolation
+    #TODO: higher order interpolation
+    #    @assert t>=tr.tspan[1] && t<=tr.tspan[end]
+    #=
+    t_idx = searchsortedlast(tr.tspan,t)
+    t_div = tr.t_div::Float64
+    r = (t-tr.tspan[t_idx])/t_div
+    result = Array(Float64,size(tr.traj,1),size(tr.traj,3))
+    @simd for i = 1:size(tr.traj,1)
+        result[i,:] = tr.traj[i,t_idx,:].*(1.0-r)
+        result[i,:] += tr.traj[i,t_idx+1,:].*r
+    end
+    return result
+=#
+end
+
 
 function getindex{T<:Range}(tr::Trajectories,t_range::T,traj_id)
     #Linear interpolation
