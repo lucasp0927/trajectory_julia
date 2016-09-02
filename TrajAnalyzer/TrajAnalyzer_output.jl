@@ -99,7 +99,7 @@ function output_image_gp_traj(t,range,res_x,res_y,filename;v_min=0.0,v_max=0.1,t
     if (v_max-v_min <= eps())
         v_max = v_max + 0.1
     end
-    tmp = squeeze(Trajs[t,:],2)[1:2,:]
+    tmp = (Trajs[t,:])[1:2,:]
     dots = zeros(Float64,3,size(tmp,2))
     dots[1:2,:] = tmp[:,:]
     #make atom red before vanishing.

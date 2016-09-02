@@ -31,7 +31,7 @@ import Base.getindex
     return result
 end
 
-@inbounds function getindex{T<:Range}(tr::Trajectories,t::Float64,traj_id::T)
+@inbounds function getindex{T<:Union{Range,Colon}}(tr::Trajectories,t::Float64,traj_id::T)
     #Linear interpolation
     #TODO: higher order interpolation
 #    @assert t>=tr.tspan[1] && t<=tr.tspan[end]
