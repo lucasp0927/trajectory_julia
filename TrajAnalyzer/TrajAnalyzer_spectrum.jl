@@ -50,11 +50,11 @@ function calculate_transmission()
     output_matrix = SharedArray(Complex{Float64},(2,2,length(freq_range),length(time_range),iter))
     for i in 1:iter
         Lumberjack.info("iteration: $i")
-        lattice_sites::Float64 = lattice_width/lattice_unit
+        lattice_scale::Float64 = lattice_width/lattice_unit
         #TODO: other distribution of atom_num
         atom_num = avg_atom_num::Int64
         Lumberjack.info("atom number: $atom_num")
-        atom_arr::Array{Int64,2} = generate_atom_array(atom_num,Trajs.atom_num,lattice_sites)
+        atom_arr::Array{Int64,2} = generate_atom_array(atom_num,Trajs.atom_num,lattice_scale)
 @time        @sync @parallel for fidx in collect(eachindex(freq_range))
             for tidx in eachindex(time_range)
                 output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission(time_range[tidx],freq_range[fidx],atom_arr)
@@ -64,12 +64,12 @@ function calculate_transmission()
     return sdata(output), sdata(output_matrix)
 end
 
-function generate_atom_array(atom_num,total_atom_num,lattice_sites)
+function generate_atom_array(atom_num,total_atom_num,lattice_scale)
     #lattice_scale = lattice_width/lattice_unit
     #(traj id,lattice id)*atom_num
     atom_array = zeros(Int64,(2,atom_num))
     atom_array[1,:] = shuffle(collect(1:total_atom_num))[1:atom_num] #atom id
-    atom_array[2,:] = sort(round(Int64,randn(atom_num)*lattice_sites)) #atom's position in unit of lattice width
+    atom_array[2,:] = sort(round(Int64,randn(atom_num)*lattice_scale)) #atom's position in unit of lattice width
     return atom_array
 end
 
@@ -100,4 +100,3 @@ end
     end
     return M_tot,one(Complex{Float64})/M_tot[2,2]
 end
-
