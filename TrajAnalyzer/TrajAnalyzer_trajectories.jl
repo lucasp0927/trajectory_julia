@@ -16,11 +16,22 @@ type Trajectories
     end
 end
 import Base.getindex
-function getindex(tr::Trajectories,t::Float64,traj_id)
+@inbounds function getindex(tr::Trajectories,t::Float64,traj_id)
     #Linear interpolation
     #TODO: higher order interpolation
-    t_idx = indmin(abs(tr.tspan-t))::Int64
+    t_idx = searchsortedlast(tr.tspan,t)
+#    t_idx = indmin(abs(tr.tspan-t))::Int64
     t_div = tr.t_div::Float64
+    r = (t-tr.tspan[t_idx])/t_div
+    result = Array(Float64,size(tr.traj,1))
+#    r = dt/t_div
+    @simd for i = 1:size(tr.traj,1)
+        result[i] = tr.traj[i,t_idx,traj_id]*(1.0-r)
+        result[i] += tr.traj[i,t_idx+1,traj_id]*r
+    end
+    return result
+#tr.traj[:,t_idx,traj_id]*(1.0-dt/t_div) .+ tr.traj[:,t_idx+1,traj_id]*dt/t_div
+#=
     if t>=tr.tspan[t_idx]
         dt = t-tr.tspan[t_idx]
         return tr.traj[:,t_idx,traj_id]*(1.0-dt/t_div) .+ tr.traj[:,t_idx+1,traj_id]*dt/t_div
@@ -28,6 +39,7 @@ function getindex(tr::Trajectories,t::Float64,traj_id)
         dt = tr.tspan[t_idx]-t
         return tr.traj[:,t_idx,traj_id]*(1.0-dt/t_div) .+ tr.traj[:,t_idx-1,traj_id]*dt/t_div
     end
+=#
 end
 
 function getindex{T<:Range}(tr::Trajectories,t_range::T,traj_id)
