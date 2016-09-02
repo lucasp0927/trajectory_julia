@@ -12,7 +12,6 @@ function spectrum(filename)
         rm(h5_filename)
     end
     h5write(h5_filename, "/spectrum", average_spectrum)
-
     #plot using matplotlib
     freq_config = TA_Config["spectrum"]["frequency"]
     time_config = TA_Config["spectrum"]["time"]
@@ -34,7 +33,7 @@ function spectrum(filename)
     plt.clf()
 end
 
-function calculate_transmission()
+@inbounds function calculate_transmission()
     # traj selection
 #    traj_selected = select_traj(paras.traj,paras.t_span,paras.select)
     # calculate transmission
@@ -54,9 +53,36 @@ function calculate_transmission()
         #TODO: other distribution of atom_num
         atom_num = avg_atom_num::Int64
         Lumberjack.info("atom number: $atom_num")
-        atom_arr::Array{Int64,2} = generate_atom_array(atom_num,Trajs.atom_num,lattice_scale)
-@time        @sync @parallel for fidx in collect(eachindex(freq_range))
-            for tidx in eachindex(time_range)
+        atom_arr::Array{Int64,2} = generate_atom_array(atom_num,Trajs.atom_num,lattice_sites)
+        #pmap implementation
+        #TODO: put for tidx into remotecall_fetch
+        # function to produce the next work item from the queue.
+        # in this case it's just an index.
+        #=
+        freq_range_len = length(freq_range)
+        j = 1
+        pm = Progress(freq_range_len, 1)
+        nextidx() = (next!(pm);idx=j; j+=1; idx)
+        @time @sync begin
+            for p = 2:nprocs()
+                @async begin
+                    while true
+                        fidx = nextidx()
+                        if fidx>freq_range_len
+                            break
+                        end
+                        for tidx in eachindex(time_range)
+                            output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = remotecall_fetch(p,transmission,time_range[tidx],freq_range[fidx],atom_arr)
+                        end
+                    end
+                end
+            end
+        end
+        =#
+        #parallel for implementation
+#        @time @sync @parallel for fidx in collect(eachindex(freq_range))
+            @time for fidx in collect(eachindex(freq_range))
+            @sync @parallel for tidx in eachindex(time_range)
                 output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission(time_range[tidx],freq_range[fidx],atom_arr)
             end
         end
@@ -80,7 +106,13 @@ end
     k::Float64 = x_point_k*k_ratio::Float64
     #generate waveguide transfer matrix
     ldiff::Vector{Float64} = diff(squeeze(atom_arr[2,:],1))*lattice_unit::Float64
-    M_wg::Array{Complex{Float64},3} = reduce((x,y)->cat(3,x,y),map(x->wg_transfer_matrix(k,x),ldiff))
+#    println(size(ldiff))
+#    M_wg::Array{Complex{Float64},3} = reduce((x,y)->cat(3,x,y),map(x->wg_transfer_matrix(k,x),ldiff))
+#    println(size(M_wg))
+    M_wg = zeros(Complex{Float64},2,2,length(ldiff))
+    for i = 1:length(ldiff)
+        M_wg[:,:,i] = wg_transfer_matrix(k,ldiff[i])
+    end
     #generate atomic transfer matrix
     M_atom::Array{Complex{Float64},3} = zeros(Complex{Float64},(2,2,atom_num))
     for i = 1:atom_num

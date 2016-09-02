@@ -41,9 +41,10 @@ function calculate_traj(i::Int64)
     parallel_set_iter(i)
     prepare_U_prob()
     traj = Array(Float64,4,length(tspan),trajnum)
-    i = 1
+
     # function to produce the next work item from the queue.
     # in this case it's just an index.
+    i = 1
     pm = Progress(trajnum, 1)
     nextidx() = (next!(pm);idx=i; i+=1; idx)
     @time @sync begin
@@ -71,7 +72,7 @@ function calculate_traj(i::Int64)
                   "abstol"=>abstol
                   )
     gc()
-    return result    
+    return result
 end
 
 function calculate_traj_unbalanced(i::Int64)

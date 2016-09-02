@@ -3,6 +3,8 @@ using Fields
 using Lumberjack
 using HDF5
 using PyCall
+using ProgressMeter
+
 include("../fileio.jl")
 include("TrajAnalyzer_trajectories.jl")
 include("../TrajSolver/polygon.jl")

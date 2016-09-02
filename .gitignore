@@ -14,5 +14,10 @@ debug/
 config/
 1MHz/
 250kHz
+job/
 *.h5
 *.txt
+*.sh.e*
+*.sh.o*
+*.sh.pe*
+*.sh.po*
