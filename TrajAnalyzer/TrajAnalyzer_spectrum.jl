@@ -53,7 +53,7 @@ end
         #TODO: other distribution of atom_num
         atom_num = avg_atom_num::Int64
         Lumberjack.info("atom number: $atom_num")
-        atom_arr::Array{Int64,2} = generate_atom_array(atom_num,Trajs.atom_num,lattice_sites)
+        atom_arr::Array{Int64,2} = generate_atom_array(atom_num,Trajs.atom_num,lattice_scale)
         #pmap implementation
         #TODO: put for tidx into remotecall_fetch
         # function to produce the next work item from the queue.
