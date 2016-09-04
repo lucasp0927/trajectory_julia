@@ -1,5 +1,7 @@
 using HDF5
-using MATLAB
+try
+    using MATLAB
+end
 
 function fit_trap(data,axial_t,radial_t)
     if axial_t == radial_t
