@@ -81,8 +81,8 @@ end
         =#
         #parallel for implementation
 #        @time @sync @parallel for fidx in collect(eachindex(freq_range))
-            @time for fidx in collect(eachindex(freq_range))
-            @sync @parallel for tidx in eachindex(time_range)
+         @time @sync @parallel for fidx in collect(eachindex(freq_range))
+            for tidx in eachindex(time_range)
                 output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission(time_range[tidx],freq_range[fidx],atom_arr)
             end
         end
