@@ -63,7 +63,9 @@ function range2sfn(range)
     prob_f = ScalarFieldNode{2}([ScalarField{Float64,2}(prob_s,[xstart,ystart],[xend-xstart,yend-ystart])])
     Fields.set_geometry!(prob_f)
     Fields.set_typeof!(prob_f)
-    output_image_gp(tspan[1],range,"init_prob_"*string(iter)*string(range)*".png",prob_f)
+    try
+       output_image_gp(tspan[1],range,"init_prob_"*string(iter)*string(range)*".png",prob_f)
+    end
     return prob_f
 end
 
