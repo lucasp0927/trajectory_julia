@@ -104,19 +104,10 @@ function calculate_traj_unbalanced(i::Int64)
 end
 
 function solve_traj_one_shot()
-    if solver == "ADAMS"
-        Lumberjack.debug("Using solver ADAMS")
-        mem = convert(Sundials.CVODE_ptr,Sundials.CVodeHandle(Sundials.CV_ADAMS, Sundials.CV_FUNCTIONAL))
-    elseif solver == "BDF"
-        Lumberjack.debug("Using solver BDF")
-        mem = convert(Sundials.CVODE_ptr,Sundials.CVodeHandle(Sundials.CV_BDF, Sundials.CV_NEWTON))
-    else
-        Lumberjack.error("Unknown ODE solver $solver.")
-    end
     init_xv = distribute_atoms_one_shot()
     yout = Array(Float64,4,length(tspan))
     fill!(yout,NaN)
-    mycvode(mem,Fields.gradient!,init_xv,tspan,yout;reltol=reltol, abstol=abstol)
+    mycvode(Fields.gradient!,init_xv,tspan,yout;reltol=reltol, abstol=abstol)
     return yout
 end
 
@@ -126,7 +117,7 @@ function distribute_atoms_one_shot()
     return init_xv
 end
 
-
+#=
 function solve_traj()
     fill!(result,NaN)
     init_xv = distribute_atoms()
@@ -149,7 +140,7 @@ function solve_traj()
     #TODO: figure out how to delete mem
     gc()
 end
-
+=#
 @inbounds function boundary(pos::Vector{Float64})
     #return false if particle should be removed
     for p in in_boundaries::Vector{Polygon}
@@ -165,34 +156,54 @@ end
     return true
 end
 
-@inbounds function mycvode{T<:AbstractArray}(mem, f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::T; reltol::Float64=1e-8, abstol::Float64=1e-7, mxstep::Int64=Integer(1e6))
+@inbounds function mycvode{T<:AbstractArray}(f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::T; reltol::Float64=1e-8, abstol::Float64=1e-7, mxstep::Int64=Integer(1e6), userdata::Any=nothing)
     # f, Function to be optimized of the form f(y::Vector{Float64}, fy::Vector{Float64}, t::Float64)
     #    where `y` is the input vector, and `fy` is the
     # y0, Vector of initial values
     # t, Vector of time values at which to record integration results
     # reltol, Relative Tolerance to be used (default=1e-4)
     # abstol, Absolute Tolerance to be used (default=1e-6)
-    flag = Sundials.CVodeInit(mem, cfunction(Sundials.cvodefun, Int32, (Sundials.realtype, Sundials.N_Vector, Sundials.N_Vector, Ref{Function})), t[1], Sundials.nvector(y0).ptr[1])
-    flag = Sundials.CVodeSetUserData(mem, f)
-    flag = Sundials.CVodeSStolerances(mem, reltol, abstol)
-    flag = Sundials.CVDense(mem, length(y0))
-    flag = Sundials.CVodeSetMaxNumSteps(mem,mxstep)
-    yout[1:2,1] = y0[1:2]
-    #yout[3,1] = Fields.value(y0[1:2],t[1])
-    yout[3:4,1] = y0[3:4]
-    y = copy(y0)
-    tout = [t[1]]
-    for k in 2:length(t)
-        flag = Sundials.CVode(mem, t[k], y, tout, Sundials.CV_NORMAL)
-        #yout[3:4] are free spaces.
-        yout[1:2,k] = y[1:2]
-        yout[3:4,k] = y[3:4]
-#        yout[3,k] = Fields.value(y[1:2],t[k])
-        #        yout[4,k] = t[k]
+    if solver == "BDF"
+        mem = Sundials.CVodeCreate(Sundials.CV_BDF, Sundials.CV_NEWTON)
+    elseif solver == "ADAMS"
+        mem = Sundials.CVodeCreate(Sundials.CV_ADAMS, Sundials.CV_FUNCTIONAL)
+    end
+    if mem == C_NULL
+        Lumberjack.error("Failed to allocate CVODE solver object")
+    end
 
-        if boundary(yout[1:2,k]) == false
-             break
+    try
+        userfun = Sundials.UserFunctionAndData(f, userdata)
+        y0nv = Sundials.NVector(y0)
+        #flag = Sundials.CVodeInit(mem, cfunction(Sundials.cvodefun, Int32, (Sundials.realtype, Sundials.N_Vector, Sundials.N_Vector, Ref{Function})), t[1], Sundials.nvector(y0).ptr[1])
+        flag = Sundials.CVodeInit(mem, cfunction(Sundials.cvodefun, Cint, (Sundials.realtype, Sundials.N_Vector, Sundials.N_Vector, Ref{typeof(userfun)})), t[1], convert(Sundials.N_Vector, y0nv))
+        flag = Sundials.CVodeSetUserData(mem, userfun)
+        flag = Sundials.CVodeSStolerances(mem, reltol, abstol)
+        flag = Sundials.CVDense(mem, length(y0))
+#        flag = Sundials.CVodeSetUserData(mem, f)
+#        flag = Sundials.CVodeSStolerances(mem, reltol, abstol)
+#        flag = Sundials.CVDense(mem, length(y0))
+#        flag = Sundials.CVodeSetMaxNumSteps(mem,mxstep)
+        yout[1:2,1] = y0[1:2]
+        #yout[3,1] = Fields.value(y0[1:2],t[1])
+        yout[3:4,1] = y0[3:4]
+        ynv = Sundials.NVector(copy(y0))
+        tout = [t[1]]
+        for k in 2:length(t)
+            flag = Sundials.CVode(mem, t[k], ynv, tout, Sundials.CV_NORMAL)
+            #yout[3:4] are free spaces.
+            #yout[1:2,k] = y[1:2]
+            #yout[3:4,k] = y[3:4]
+            yout[:,k] = convert(Vector,ynv)
+            #        yout[3,k] = Fields.value(y[1:2],t[k])
+            #        yout[4,k] = t[k]
+
+            if boundary(yout[1:2,k]) == false
+                break
+            end
         end
+    finally
+        Sundials.CVodeFree(Ref{Sundials.CVODEMemPtr}(mem))
     end
 end
 
