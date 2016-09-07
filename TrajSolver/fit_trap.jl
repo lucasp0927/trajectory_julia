@@ -15,9 +15,9 @@ function fit_trap(data,axial_t,radial_t)
 end
 
 function iso_temp_prob_dist(data,temp)
-    xx = squeeze(data[1,:,:],1)
-    yy = squeeze(data[2,:,:],1)
-    uu = squeeze(data[3,:,:],1)
+    xx = data[1,:,:]
+    yy = data[2,:,:]
+    uu = data[3,:,:]
     uu_norm = uu-minimum(uu)
     prob = exp(-uu_norm/temp)
     prob = prob/(maximum(prob)*1.01)

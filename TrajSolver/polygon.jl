@@ -10,8 +10,8 @@ type Polygon
         end
         @assert size(poly,1) == 2
         n = size(poly,2)
-        x = squeeze(poly[1,:],1)
-        y = squeeze(poly[2,:],1)
+        x = poly[1,:]
+        y = poly[2,:]
         constant = Array(Float64,n)
         multiple = Array(Float64,n)
         j = n

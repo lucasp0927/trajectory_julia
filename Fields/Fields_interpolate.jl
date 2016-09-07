@@ -2,9 +2,9 @@
     quote
         arr = $(Array(T,4))
         grad = $(Array(T,2))
-        @nexprs 4 j->(arr[j] = cubicInterpolate_grad(slice(A,:,j), pos[1]);)
+        @nexprs 4 j->(arr[j] = cubicInterpolate_grad(view(A,:,j), pos[1]);)
         grad[1] = cubicInterpolate(arr, pos[2])/res[1];
-        @nexprs 4 j->(arr[j] = cubicInterpolate_grad(slice(A,j,:), pos[2]);)
+        @nexprs 4 j->(arr[j] = cubicInterpolate_grad(view(A,j,:), pos[2]);)
         grad[2] = cubicInterpolate(arr, pos[1])/res[2];
         return grad
     end
@@ -15,15 +15,15 @@ end
         arr = $(Array(T,4,4))
         grad = $(Array(T,3))
         for k = 1:4
-            @nexprs 4 j->(arr[j,k] = cubicInterpolate_grad(slice(A,:,j,k), pos[1]);)
+            @nexprs 4 j->(arr[j,k] = cubicInterpolate_grad(view(A,:,j,k), pos[1]);)
         end
         grad[1] = bicubicInterpolate(arr, pos[2:3])/res[1];
         for k = 1:4
-            @nexprs 4 j->(arr[j,k] = cubicInterpolate_grad(slice(A,j,:,k), pos[2]);)
+            @nexprs 4 j->(arr[j,k] = cubicInterpolate_grad(view(A,j,:,k), pos[2]);)
         end
         grad[2] = bicubicInterpolate(arr, pos[1:2:3])/res[2];
         for k = 1:4
-            @nexprs 4 j->(arr[j,k] = cubicInterpolate_grad(slice(A,j,k,:), pos[3]);)
+            @nexprs 4 j->(arr[j,k] = cubicInterpolate_grad(view(A,j,k,:), pos[3]);)
         end
         grad[3] = bicubicInterpolate(arr, pos[1:2])/res[3];
         return grad
@@ -66,7 +66,7 @@ end
     #p is a 4x4 array
     quote
         arr = $(Array(T,4))
-        @nexprs 4 j->(arr[j] = cubicInterpolate(slice(p,:,j), x[1]);)
+        @nexprs 4 j->(arr[j] = cubicInterpolate(view(p,:,j), x[1]);)
         return cubicInterpolate(arr, x[2]);
     end
 end
@@ -74,7 +74,7 @@ end
     #p is a 4x4 array
     quote
         arr = $(Array(T,4))
-        @nexprs 4 j->(arr[j] = cubicInterpolate(slice(p,:,j), x[1]);)
+        @nexprs 4 j->(arr[j] = cubicInterpolate(view(p,:,j), x[1]);)
         return cubicInterpolate(arr, x[2]);
     end
 end
@@ -83,7 +83,7 @@ end
     # p in a 4x4x4 array
     quote
         arr = $(Array(T,4))
-        @nexprs 4 j->(arr[j] = bicubicInterpolate(slice(p,:,:,j), x[1:2]);)
+        @nexprs 4 j->(arr[j] = bicubicInterpolate(view(p,:,:,j), x[1:2]);)
         return cubicInterpolate(arr, x[3]);
     end
 end

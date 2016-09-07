@@ -85,12 +85,12 @@ end
 
 #TODO clean this up with meta programming?
 @generated function myslice{T<:ComplexOrFloat,N}(A::Array{T,N},i::Integer)
-    ex_str = "slice(A,i"*repeat(",:",N-1)*")"
+    ex_str = "view(A,i"*repeat(",:",N-1)*")"
     parse(ex_str)
 end
 
 @generated function myslice{T<:ComplexOrFloat,N}(A::SharedArray{T,N},i::Integer)
-    ex_str = "slice(A,i"*repeat(",:",N-1)*")"
+    ex_str = "view(A,i"*repeat(",:",N-1)*")"
     parse(ex_str)
 end
 

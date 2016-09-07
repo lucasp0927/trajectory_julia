@@ -35,7 +35,7 @@ end
 
 @inbounds function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::ScalarField{T,2},pidx::Vector{Int64},s::K)
 #    blascopy!(16,f.field[pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2],1,f.sample,1)
-    copy!(f.sample,sub(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]))
+    copy!(f.sample,view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]))
     scal!(16,s,f.sample,1)
     # for j=1:4,i=1:4
     #     f.sample[i,j] = f.field[pidx[1]-2+i,pidx[2]-2+j]
@@ -60,7 +60,7 @@ end
 end
 
 @inbounds function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::ScalarField{T,3},pidx::Vector{Int64},s::K)
-    copy!(f.sample,sub(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4],pidx[5]:pidx[6]))
+    copy!(f.sample,view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4],pidx[5]:pidx[6]))
     scal!(64,s,f.sample,1)
 end
 #2D vector sample
@@ -85,7 +85,7 @@ end
 @inbounds function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::VectorField{T,2},pidx::Vector{Int64},s::K)
 #    blascopy!(48,f.field[:,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2],1,f.sample,1)
     #    f.sample[:,:,:] = sub(f.field,:,pidx[1]-1:pidx[1]+2,pidx[2]-1:pidx[2]+2)
-    copy!(f.sample,sub(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4]))
+    copy!(f.sample,view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4]))
     # for j=1:4,i=1:4,k=1:3
     #     f.sample[k,i,j] = f.field[k,pidx[1]-2+i,pidx[2]-2+j]
     # end
@@ -110,7 +110,7 @@ end
 end
 
 @inbounds function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::VectorField{T,3},pidx::Vector{Int64},s::K)
-    copy!(f.sample,sub(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4],pidx[5]:pidx[6]))
+    copy!(f.sample,view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4],pidx[5]:pidx[6]))
     scal!(192,s,f.sample,1)
 end
 #2D Vector Field Node
