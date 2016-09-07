@@ -2,7 +2,7 @@ module TrajSolver
 using Sundials
 using Fields
 using Lumberjack
-using Optim
+#using Optim
 using ProgressMeter
 
 include("../constant.jl")
