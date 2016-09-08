@@ -19,13 +19,17 @@ function init_parallel!(sfn::ScalarFieldNode)
     Lumberjack.info("initializing Fields module...")
     @sync begin
         for p = 1:nprocs()     #initialize Fields module on each processe
-        @async remotecall_fetch(p,init!,sfn)
+            #set all scaling to t->0.0
+            clean_scaling!(sfn)
+            @async remotecall_fetch(init!,p,sfn)
         end
     end
+    eval_scaling!(sfn)
 end
 
 function init!(sfn::ScalarFieldNode)
     global fields
+    Lumberjack.debug("in init!")
     fields = 0
     gc()
     fields = copyfield(sfn)

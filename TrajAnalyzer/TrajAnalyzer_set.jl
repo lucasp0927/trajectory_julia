@@ -4,9 +4,13 @@ function init_parallel!(result::Dict,probe_sfn::ScalarFieldNode,ForceFields_sfn:
     delete!(result_wo_traj,"traj")
     @sync begin
         for p = 1:nprocs()
+            Fields.clean_scaling!(probe_sfn)
+            Fields.clean_scaling!(ForceFields_sfn)
             @async remotecall_wait(p,init!,result_wo_traj,traj_s,probe_sfn,ForceFields_sfn,config)
         end
     end
+    Fields.eval_scaling!(probe_sfn)
+    Fields.eval_scaling!(ForceFields_sfn)
 end
 
 function init!(result::Dict,traj_s::SharedArray{Float64},probe_sfn::ScalarFieldNode,ForceFields_sfn::ScalarFieldNode,config::Dict)

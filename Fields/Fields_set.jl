@@ -25,5 +25,47 @@ function setfield!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},A::SharedArray{T},po
 end
 
 function setscaling!(f::Field,scaling::Function)
+    Base.warn("scaling_expr not changed.")
     f.scaling = scaling
+end
+
+function setscaling!(f::Field,scaling_expr::Expr)
+    f.scaling_expr = scaling_expr
+    f.scaling = eval(scaling_expr)
+end
+
+function clean_scaling!{T<:ComplexOrFloat,N}(f::ScalarField{T,N})
+    f.scaling = t->0.0
+end
+
+function clean_scaling!{T<:ComplexOrFloat,N}(f::VectorField{T,N})
+    f.scaling = t->0.0
+end
+
+function clean_scaling!{N}(f::ScalarFieldNode{N})
+    f.scaling=t->0.0
+    map(clean_scaling!,f.fields)
+end
+
+function clean_scaling!{N}(f::VectorFieldNode{N})
+    f.scaling=t->0.0
+    map(clean_scaling!,f.fields)
+end
+
+function eval_scaling!{T<:ComplexOrFloat,N}(f::ScalarField{T,N})
+    f.scaling = eval(f.scaling_expr)
+end
+
+function eval_scaling!{T<:ComplexOrFloat,N}(f::VectorField{T,N})
+    f.scaling = eval(f.scaling_expr)
+end
+
+function eval_scaling!{N}(f::ScalarFieldNode{N})
+    f.scaling=eval(f.scaling_expr)
+    map(clean_scaling!,f.fields)
+end
+
+function eval_scaling!{N}(f::VectorFieldNode{N})
+    f.scaling=eval(f.scaling_expr)
+    map(clean_scaling!,f.fields)
 end

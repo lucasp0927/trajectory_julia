@@ -40,7 +40,7 @@ function init!(config::Dict)
     axial_temperature = float(config["atom-config"]["axial-temperature"])::Float64
     init_speed = float(config["atom-config"]["init-speed"])::Float64
     #    init_range = convert(Vector{Float64},config["atom-config"]["init-range"])
-    init_range = convert(Dict{ASCIIString,Vector{Float64}},config["atom-config"]["init-range"])
+    init_range = convert(Dict{String,Vector{Float64}},config["atom-config"]["init-range"])
     #boundary
     in_boundaries = map(values(config["in-boundary"]))do x
         return Polygon([promote(x...)...])
@@ -75,9 +75,11 @@ function prepare_U_prob()
     sfns = [promote(sfns...)...]
     @sync begin
         for p = 1:nprocs()
+            map(Fields.clean_scaling!,sfns)
             @async remotecall_fetch(p,init_U_prob!,sfns)
         end
     end
+    map(Fields.eval_scaling!,sfns)
 end
 
 function init_U_prob!(sfns::Vector{ScalarFieldNode{2}})

@@ -6,7 +6,7 @@ function spectrum(filename)
                     "output"=>output,
                     "output_matrix"=>output_matrix
                          )
-    average_spectrum = squeeze(mean(abs2(output),3),3)
+    average_spectrum = mean(abs2(output),3)
     h5_filename = filename*"_avg_spectrum_tm.h5"
     if isfile(h5_filename) == true
         rm(h5_filename)
@@ -105,7 +105,7 @@ end
     x_point_k::Float64 = pi/lattice_unit::Float64
     k::Float64 = x_point_k*k_ratio::Float64
     #generate waveguide transfer matrix
-    ldiff::Vector{Float64} = diff(squeeze(atom_arr[2,:],1))*lattice_unit::Float64
+    ldiff::Vector{Float64} = diff(atom_arr[2,:])*lattice_unit::Float64
 #    println(size(ldiff))
 #    M_wg::Array{Complex{Float64},3} = reduce((x,y)->cat(3,x,y),map(x->wg_transfer_matrix(k,x),ldiff))
 #    println(size(M_wg))

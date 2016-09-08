@@ -13,16 +13,17 @@ type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     size::Vector{Float64}
     res::Vector{Float64}
     scaling::Function
+    scaling_expr::Expr
     dim::Integer
     sample::Array{T,N}
     rel_pos::Vector{Float64}
     pidx::Vector{Int64}
     s::Float64
     name::String
-    function ScalarField(f::SharedArray{T,N},pos::Vector{Float64},sz::Vector{Float64};scaling::Function =  t->1.0, name::String = "ScalarField")
+    function ScalarField(f::SharedArray{T,N},pos::Vector{Float64},sz::Vector{Float64};scaling_expr::Expr = parse("t->1.0"), name::String = "ScalarField")
         res = sz./(collect(size(f))[1:N]-1)
         @assert all(x->x!=0,res) "zero resolution!"
-        length(pos)==length(sz)==N==ndims(f)?new(f,pos,sz,res,scaling,N,zeros(T,repmat([4],N)...),repmat([0.0],N),repmat([0],N*2),zero(Float64),ascii(name)):Lumberhack.error("dimension error!")
+        length(pos)==length(sz)==N==ndims(f)?new(f,pos,sz,res,eval(scaling_expr),scaling_expr,N,zeros(T,repmat([4],N)...),repmat([0.0],N),repmat([0],N*2),zero(Float64),ascii(name)):Lumberhack.error("dimension error!")
     end
 end
 
@@ -32,6 +33,7 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     size::Vector{Float64}
     res::Vector{Float64}
     scaling::Function
+    scaling_expr::Expr
     dim::Integer
 #    sample::Array{T,N+1}
     sample::Array{T}
@@ -39,16 +41,17 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     pidx::Vector{Int64}
     s::Complex{Float64}
     name::String
-    function VectorField(f::SharedArray{T},pos::Vector{Float64},sz::Vector{Float64};scaling::Function =  t->1.0, name::String = "VectorField")
+    function VectorField(f::SharedArray{T},pos::Vector{Float64},sz::Vector{Float64};scaling_expr::Expr =  parse("t->1.0"), name::String = "VectorField")
         res = sz./(collect(size(f))[2:N+1]-1)
         @assert all(x->x!=0,res) "zero resolution!"
-        length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,res,scaling,N,zeros(T,[3,repmat([4],N)...]...),repmat([0.0],N),repmat([0],N*2),zero(Complex{Float64}),ascii(name)):Lumberjack.error("dimension error!")
+        length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,res,eval(scaling_expr),scaling_expr,N,zeros(T,[3,repmat([4],N)...]...),repmat([0.0],N),repmat([0],N*2),zero(Complex{Float64}),ascii(name)):Lumberjack.error("dimension error!")
     end
 end
 
 type VectorFieldNode{N} <: AbstractVectorField
     fields::Vector{AbstractVectorField}
     scaling::Function
+    scaling_expr::Expr
     dim::Integer
     position::Vector{Float64}
     size::Vector{Float64}
@@ -58,15 +61,16 @@ type VectorFieldNode{N} <: AbstractVectorField
     sample::Array{Complex{Float64}}
     s::Complex{Float64}
     name::String
-    function VectorFieldNode{T<:AbstractVectorField}(f::Vector{T};scaling::Function  =  t->1.0+0.0im,name::String="VectorFieldNode")
+    function VectorFieldNode{T<:AbstractVectorField}(f::Vector{T};scaling_expr::Expr  = parse("t->1.0+0.0im"),name::String="VectorFieldNode")
         @assert all(x->x.dim==N,f) "dimension error!"
-        new(f,scaling,N,[],[],[],Complex{Float64},zeros(Complex{Float64},[3,repmat([4],N)...]...),zero(Complex{Float64}),ascii(name))
+        new(f,eval(scaling_expr),scaling_expr,N,[],[],[],Complex{Float64},zeros(Complex{Float64},[3,repmat([4],N)...]...),zero(Complex{Float64}),ascii(name))
     end
 end
 
 type ScalarFieldNode{N} <: AbstractScalarField
     fields::Vector{Field}
     scaling::Function
+    scaling_expr::Expr
     dim::Integer
     position::Vector{Float64}
     size::Vector{Float64}
@@ -78,10 +82,10 @@ type ScalarFieldNode{N} <: AbstractScalarField
     s::Float64
     one_vf_flag::Bool
     name::String
-    function ScalarFieldNode{T<:Field}(f::Vector{T};scaling::Function =  t->1.0, name::String="ScalarFieldNode")
+    function ScalarFieldNode{T<:Field}(f::Vector{T};scaling_expr::Expr = parse("t->1.0"), name::String="ScalarFieldNode")
         @assert all(x->x.dim==N,f) "dimension error!"
         flag = (length(f) == 1) && typeof(f[1])<:AbstractVectorField
-        new(f,scaling,N,[],[],[],Complex{Float64},zeros(Float64,repmat([4],N)...),zeros(Complex{Float64},[3,repmat([4],N)...]...),zero(Float64),flag, ascii(name))
+        new(f,eval(scaling_expr),scaling_expr,N,[],[],[],Complex{Float64},zeros(Float64,repmat([4],N)...),zeros(Complex{Float64},[3,repmat([4],N)...]...),zero(Float64),flag, ascii(name))
     end
 end
 

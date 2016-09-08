@@ -9,7 +9,7 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
     for i = 1:range
         s = replace(scaling,"@i",float(i))
         Lumberjack.info("change scaling of field $field_name to ",s)
-        s_exp = eval(parse(s))
+        s_exp = parse(s)
         Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
         Fields.init_parallel!(sfn)
         # build probe beam
