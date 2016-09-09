@@ -47,6 +47,28 @@ function calculate_traj(i::Int64)
     i = 1
     pm = Progress(trajnum, 1)
     nextidx() = (next!(pm);idx=i; i+=1; idx)
+    Profile.init(delay=0.01)
+    while true
+        idx = nextidx()
+        if idx>trajnum
+            break
+        end
+        traj[:,:,idx] = solve_traj_one_shot()
+    end
+    Profile.clear()
+    i = 1
+    pm = Progress(trajnum, 1)
+    @profile begin
+        while true
+            idx = nextidx()
+            if idx>trajnum
+                break
+            end
+            traj[:,:,idx] = solve_traj_one_shot()
+        end
+    end
+    Profile.print()
+    #=
     @time @sync begin
         for p = 2:nprocs()
             @async begin
@@ -60,6 +82,7 @@ function calculate_traj(i::Int64)
             end
         end
     end
+    =#
     result = Dict(
                   "traj"=>traj,
                   "tspan"=>tspan,
