@@ -24,10 +24,13 @@ import Base.getindex
     t_div = tr.t_div::Float64
     r = (t-tr.tspan[t_idx])/t_div
     result = Array(Float64,size(tr.traj,1))
-    @simd for i = 1:size(tr.traj,1)
+    result[:] = tr.traj[:,t_idx,traj_id].*(1.0-r).+tr.traj[:,t_idx+1,traj_id].*r
+    #=
+    for i = 1:size(tr.traj,1)
         result[i] = tr.traj[i,t_idx,traj_id]*(1.0-r)
         result[i] += tr.traj[i,t_idx+1,traj_id]*r
     end
+    =#
     return result
 end
 
