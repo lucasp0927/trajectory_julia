@@ -6,7 +6,8 @@ function spectrum(filename)
                     "output"=>output,
                     "output_matrix"=>output_matrix
                          )
-    average_spectrum = mean(abs2(output),3)
+    average_spectrum = squeeze(mean(abs2(output),3),3)
+
     h5_filename = filename*"_avg_spectrum_tm.h5"
     if isfile(h5_filename) == true
         rm(h5_filename)
