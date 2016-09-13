@@ -7,8 +7,10 @@ function parse_commandline()
         "--config", "-C"
         help = "Configuration file."
         required = true
+        "--infile", "-I"
+        help = "input file prefix"
         "--outfile", "-O"
-        help = "output file."
+        help = "output file prefix."
         required = true
         "--trajectory", "-T"
         help = "calculate trajectories"
@@ -20,10 +22,19 @@ function parse_commandline()
         help = "render movies"
         action = :store_true
         "--procs", "-P"
+        arg_type = Int
         required = true
         help = "processes number."
     end
-    return parse_args(s)
+    parsed_args = parse_args(s)
+    if parsed_args["trajectory"] == false && parsed_args["infile"] == nothing
+        Base.error("please provide input file prefix.")
+    end
+    println("Parsed args:")
+    for (key,val) in parsed_args
+        println("  $key  =>  $(repr(val))")
+    end
+    return parsed_args
 end
 
 function parse_config(filename)

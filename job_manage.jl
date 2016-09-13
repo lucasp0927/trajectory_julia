@@ -1,7 +1,7 @@
 using PyCall
 #include("output.jl")
 include("flux.jl")
-function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,output_file,calc_traj_flag::Bool,spectrum_flag::Bool,movie_flag::Bool)
+function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,input_file,output_file,calc_traj_flag::Bool,spectrum_flag::Bool,movie_flag::Bool)
     range = config["range"]
     field_name = config["field"]
     scaling = config["scaling"]
@@ -21,7 +21,7 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
             tspan = result["tspan"]
         else
             Lumberjack.info("read results...")
-            result = matread(output_file*string(i)*".mat")
+            result = matread(input_file*string(i)*".mat")
             traj = result["traj"]
             tspan = result["tspan"]
         end
@@ -39,33 +39,8 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
             Lumberjack.info("Calculating Spectrum...")
             TrajAnalyzer.spectrum(output_file*string(i)*"_te")
         end
-        #score and flux
-        # for (k,v) in config["score"]
-        #     Lumberjack.info("calculating score for area $k...")
-        #     @time (score[ascii(k)])[i] = TrajAnalyzer.calc_score(v)
-        # end
-        #@time flux = calc_flux(traj,tspan,config["flux"],output_file*string(i)*"_flux.mat")
-        #output intial range potential
-        init_range = get_large_init_range(values(trajsolver_config["atom-config"]["init-range"]))
-        t0 = trajsolver_config["simulation-config"]["tstart"]
-	# TrajAnalyzer.output_image_gp(t0,init_range,output_file*string(i)*"_init_range.png",save_data = true, data_filename=output_file*string(i)*"_init_range.h5")
-        # println("output 0")
-        # TrajAnalyzer.output_image_gp(0.0,[10000.0-750.0,10750.0,25000.0-750.0,25000.0+750.0],output_file*string(i)*"_phase_potential_0.png",save_data = true, data_filename=output_file*string(i)*"_phase_potential_0.h5")
-#        TrajAnalyzer.output_image_gp_traj(t0,init_range,10.0,10.0,output_file*string(i)*"_init_range_traj.png")
-#        TrajAnalyzer.output_image_gp(0.0,movie_range,output_file*string(i)*"_probe.png",TrajAnalyzer.Probe)
-            # output individual frames
-            # config = config["movie-output"]
-            # frame_range = [promote(config["range"]...)...]
-            # res = config["res"]
-            # res_x = res[1]
-            # res_y = res[2]
-            # TrajAnalyzer.output_image_gp_traj(171.5,frame_range,res_x,res_y,output_file*"frame_1.png")
-            # TrajAnalyzer.output_image_gp_traj(172.4,frame_range,res_x,res_y,output_file*"frame_2.png")
-            # TrajAnalyzer.output_image_gp_traj(173.1,frame_range,res_x,res_y,output_file*"frame_3.png")
-            # TrajAnalyzer.output_image_gp_traj(173.9,frame_range,res_x,res_y,output_file*"frame_4.png")
-            # TrajAnalyzer.output_image_gp_traj(174.3,frame_range,res_x,res_y,output_file*"frame_5.png")
+#        init_range = get_large_init_range(values(trajsolver_config["atom-config"]["init-range"]))
     end
- #   matwrite(output_file*"score.mat",score)
 end
 
 function get_large_init_range(init_range)
