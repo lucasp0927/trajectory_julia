@@ -19,6 +19,9 @@ function parse_commandline()
         "--movie", "-M"
         help = "render movies"
         action = :store_true
+        "--procs", "-P"
+        required = true
+        help = "processes number."
     end
     return parse_args(s)
 end
