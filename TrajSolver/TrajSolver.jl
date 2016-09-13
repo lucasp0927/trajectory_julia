@@ -4,7 +4,7 @@ using Fields
 using Lumberjack
 #using Optim
 using ProgressMeter
-
+using ProfileView
 include("../constant.jl")
 include("../fileio.jl")
 include("polygon.jl")
@@ -47,7 +47,9 @@ function calculate_traj(i::Int64)
     i = 1
     pm = Progress(trajnum, 1)
     nextidx() = (next!(pm);idx=i; i+=1; idx)
+
     Profile.init(delay=0.01)
+    println("Star profiling")
     while true
         idx = nextidx()
         if idx>trajnum
@@ -68,6 +70,8 @@ function calculate_traj(i::Int64)
         end
     end
     Profile.print()
+    ProfileView.view()
+    sleep(10000)
     #=
     @time @sync begin
         for p = 2:nprocs()
