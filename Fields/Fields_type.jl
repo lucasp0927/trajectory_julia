@@ -15,7 +15,7 @@ type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     scaling::Function
     scaling_expr::Expr
     dim::Integer
-    sample::SubArray{T,N}
+    sample::Array{T,N}
     rel_pos::Vector{Float64}
     pidx::Vector{Int64}
     s::Float64
@@ -23,7 +23,7 @@ type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     function ScalarField(f::SharedArray{T,N},pos::Vector{Float64},sz::Vector{Float64};scaling_expr::Expr = parse("t->1.0"), name::String = "ScalarField")
         res = sz./(collect(size(f))[1:N]-1)
         @assert all(x->x!=0,res) "zero resolution!"
-        length(pos)==length(sz)==N==ndims(f)?new(f,pos,sz,res,eval(scaling_expr),scaling_expr,N,view(zeros(T,repmat([4],N)...),repmat([:],N)...),repmat([0.0],N),repmat([0],N*2),zero(Float64),ascii(name)):Lumberhack.error("dimension error!")
+        length(pos)==length(sz)==N==ndims(f)?new(f,pos,sz,res,eval(scaling_expr),scaling_expr,N,zeros(T,repmat([4],N)...),repmat([0.0],N),repmat([0],N*2),zero(Float64),ascii(name)):Lumberhack.error("dimension error!")
     end
 end
 
@@ -36,7 +36,7 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     scaling_expr::Expr
     dim::Integer
 #    sample::Array{T,N+1}
-    sample::SubArray{T}
+    sample::Array{T}
     rel_pos::Vector{Float64}
     pidx::Vector{Int64}
     s::Complex{Float64}
@@ -44,7 +44,7 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     function VectorField(f::SharedArray{T},pos::Vector{Float64},sz::Vector{Float64};scaling_expr::Expr =  parse("t->1.0"), name::String = "VectorField")
         res = sz./(collect(size(f))[2:N+1]-1)
         @assert all(x->x!=0,res) "zero resolution!"
-        length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,res,eval(scaling_expr),scaling_expr,N,view(zeros(T,[3,repmat([4],N)...]...),repmat([:],N+1)...),repmat([0.0],N),repmat([0],N*2),zero(Complex{Float64}),ascii(name)):Lumberjack.error("dimension error!")
+        length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,res,eval(scaling_expr),scaling_expr,N,zeros(T,[3,repmat([4],N)...]...),repmat([0.0],N),repmat([0],N*2),zero(Complex{Float64}),ascii(name)):Lumberjack.error("dimension error!")
     end
 end
 

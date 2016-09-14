@@ -49,7 +49,6 @@ function calculate_traj(i::Int64)
     nextidx() = (next!(pm);idx=i; i+=1; idx)
 #=
     Profile.init(delay=0.01)
-    println("Star profiling")
     while true
         idx = nextidx()
         if idx>trajnum

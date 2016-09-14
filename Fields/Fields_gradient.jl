@@ -30,13 +30,14 @@ end
     # pidx[1] = round(Int64,cld(rel_pos[1],f.res[1]::Float64))
     # pidx[2] = round(Int64,cld(rel_pos[2],f.res[2]::Float64))
     f.s::Float64 = (f.scaling::Function)(t)::Float64
-#    sample_field(f)
+    sample_field(f,f.pidx,f.s)
 end
 
-function sample_field{T<:ComplexOrFloat}(f::ScalarField{T,2})
-    return view(f.field,f.pidx[1]:f.pidx[2],f.pidx[3]:f.pidx[4])
-#    copy!(f.sample,view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]))
-#    scale!(f.sample,s)
+@inbounds function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::ScalarField{T,2},pidx::Vector{Int64},s::K)
+    #f.sample[:,:] = view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]).*s
+    copy!(f.sample,view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]))
+    scale!(f.sample,s)
+#    scal!(16,s,f.sample,1)
 end
 
 #3D scalar sample
@@ -72,18 +73,18 @@ end
     # pidx[1] = round(Int64,cld(rel_pos[1],f.res[1]::Float64))
     # pidx[2] = round(Int64,cld(rel_pos[2],f.res[2]::Float64))
 #    s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))
-#    f.s::Complex{Float64} = convert(Complex{Float64},(f.scaling::Function)(t))
-    f.s::Complex{Float64} = (f.scaling::Function)(t)
+    f.s::Complex{Float64} = convert(Complex{Float64},(f.scaling::Function)(t))
 #    s = f.scaling(t)
-#    sample_field(f)
+    sample_field(f,f.pidx,f.s)
 end
 
-function sample_field{T<:ComplexOrFloat}(f::VectorField{T,2})
-    return view(f.field,:,f.pidx[1]:f.pidx[2],f.pidx[3]:f.pidx[4])
-#    copy!(f.sample,view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4]))
-#    scale!(f.sample,s)
+@inbounds function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::VectorField{T,2},pidx::Vector{Int64},s::K)
+    copy!(f.sample,view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4]))
+#    copy!(f.sample,f.field[:,pidx[1]:pidx[2],pidx[3]:pidx[4]])
+    scale!(f.sample,s)
+    #scal!(48,s,f.sample,1)
+    #f.sample[:,:,:] = view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4]).*s
 end
-
 #3D vector sample
 @fastmath @inbounds function sample2!{T<:ComplexOrFloat}(f::VectorField{T,3},pos::Vector{Float64},t::Real)
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
@@ -109,38 +110,20 @@ function sample2!(f::VectorFieldNode{2},pos::Vector{Float64},t::Real)
     for ff in f.fields
         if in_field(ff,pos)
             sample2!(ff,pos,t)
-            add_sample!(f.sample,sample_field(ff),ff.s)
+            add_sample!(f.sample,ff.sample)
         end
     end
 #    s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))
     f.s::Complex{Float64} = (f.scaling::Function)(t)::Complex{Float64}
-#    scale!(f.sample,f.s)
+    scale!(f.sample,f.s)
 #    scal!(48,f.s,f.sample,1)
 #    scale_sample!(f.sample,s)
 end
 
-function sample_field(f::VectorFieldNode{2})
-    return f.sample
-end
-
-@fastmath function add_sample!{T<:ComplexOrFloat}(sample1::Array{T,3},sample2::Array{T,3},s::Complex{Float64})
-    @inbounds for i=1:3, j= 1:4, k=1:4
-        sample1[i,j,k] += sample2[i,j,k]*s
+@fastmath @inbounds function add_sample!{T<:ComplexOrFloat}(sample1::Array{T,3},sample2::Array{T,3})
+    for i in eachindex(sample1)
+        sample1[i] += sample2[i]
     end
-#    sample1[:] += sample2[:]*s
-    # for i in eachindex(sample1)
-    #     sample1[i] += sample2[i]*s
-    # end
-end
-
-@fastmath function add_sample!{T<:ComplexOrFloat}(sample1::Array{T,3},sample2::SubArray{T,3},s::Complex{Float64})
-    @inbounds for i=1:3, j= 1:4, k=1:4
-        sample1[i,j,k] += sample2[i,j,k]*s
-    end
-    #sample1[:] += sample2[:]*s
-    # for i in eachindex(sample1)
-    #     sample1[i] += sample2[i]*s
-    # end
 end
 #3D Vector Field Node
 function sample2!(f::VectorFieldNode{3},pos::Vector{Float64},t::Real)
@@ -165,7 +148,7 @@ end
     fill!((f.sample)::Array{Float64,2},zero(Float64))
      if f.one_vf_flag
          sample2!(f.fields[1],pos,t)
-         add_vector_field!(f.sample,sample_field(f.fields[1]),f.fields[1].s)
+         add_vector_field!(f.sample,f.fields[1].sample)
      else
         fill!((f.vf_sample)::Array{Complex{Float64},3},zero(Complex{Float64}))
         for ff in f.fields
@@ -174,79 +157,38 @@ end
                 add_fields!(ff,f.sample,f.vf_sample)
             end
         end
-        add_vector_field!(f.sample,f.vf_sample,one(Complex{Float64}))
+        add_vector_field!(f.sample,f.vf_sample)
      end
     f.s = (f.scaling::Function)(t)::Float64
-#    scale!(f.sample,f.s)
+    scale!(f.sample,f.s)
 #        scal!(16,f.s,f.sample,1)
 #    scale_sample!(f.sample,s)
 end
 
-function sample_field(f::ScalarFieldNode{2})
-    return f.sample
-end
-
-
-@fastmath @inbounds function add_vector_field!{T<:ComplexOrFloat}(sample::Array{Float64,2},vf_sample::Array{T,3},s::Complex{Float64})
+@fastmath @inbounds function add_vector_field!{T<:ComplexOrFloat}(sample::Array{Float64,2},vf_sample::Array{T,3})
     for j = 1:4, i = 1:4
 #        sample[i,j] += sumabs2(vf_sample[:,i,j])
         @simd        for k = 1:3
-            sample[i,j] += abs2(vf_sample[k,i,j]*s)
+            sample[i,j] += abs2(vf_sample[k,i,j])
         end
     end
     #    f.sample[:,:] .+= squeeze(sumabs2(f.vf_sample,1),1)[:,:]
 end
 
 @fastmath @inbounds function add_fields!{T<:AbstractVectorField}(f::T,sample::Array{Float64,2},vf_sample::Array{Complex{Float64},3})
-    #unstable type?!
-    fs = sample_field(f)
-    @inbounds for i=1:3, j= 1:4, k=1:4
-        vf_sample[i,j,k] += fs[i,j,k]*f.s
+
+    @simd for i in eachindex(vf_sample)
+        vf_sample[i] += f.sample[i]
     end
-#    vf_sample[:] += (sample_field(f))[:]*f.s
-    # @simd for i in eachindex(vf_sample)
-    #     vf_sample[i] += (sample_field(f))[i]*f.s
-    # end
 #    vf_sample[:] .+= f.sample[:]
 end
 
 @fastmath @inbounds function add_fields!{T<:AbstractScalarField}(f::T,sample::Array{Float64,2},vf_sample::Array{Complex{Float64},3})
-    fs = sample_field(f)
-    @inbounds for j= 1:4, k=1:4
-        sample[j,k] += fs[j,k]*f.s
-    end
-#    sample[:] += (sample_field(f))[:]*f.s
-    # @simd for i in eachindex(sample)
-    #     sample[i] += (sample_field(f))[i]*f.s
-    # end
-#    sample[:] .+= f.sample[:]
-end
-
-@fastmath @inbounds function add_vector_field!{T<:ComplexOrFloat}(sample::Array{Float64,2},vf_sample::SubArray{T,3},s::Complex{Float64})
-    for j = 1:4, i = 1:4
-#        sample[i,j] += sumabs2(vf_sample[:,i,j])
-        @simd        for k = 1:3
-            sample[i,j] += abs2(vf_sample[k,i,j]*s)
-        end
-    end
-    #    f.sample[:,:] .+= squeeze(sumabs2(f.vf_sample,1),1)[:,:]
-end
-
-@fastmath @inbounds function add_fields!{T<:AbstractVectorField}(f::T,sample::Array{Float64,2},vf_sample::SubArray{Complex{Float64},3},s::Complex{Float64})
-
-    @simd for i in eachindex(vf_sample)
-        vf_sample[i] += f.sample[i]*s
-    end
-#    vf_sample[:] .+= f.sample[:]
-end
-
-@fastmath @inbounds function add_fields!{T<:AbstractScalarField}(f::T,sample::Array{Float64,2},vf_sample::SubArray{Complex{Float64},3},s::Float64)
     @simd for i in eachindex(sample)
-        sample[i] += f.sample[i]*s
+        sample[i] += f.sample[i]
     end
 #    sample[:] .+= f.sample[:]
 end
-
 #3D Scalar Field Node
 @inbounds function sample2!(f::ScalarFieldNode{3},pos::Vector{Float64},t::Real)
     fill!((f.sample)::Array{Float64,3},zero(Float64))
@@ -330,7 +272,7 @@ end
         res[:] = (sfn::ScalarFieldNode).res
         sample2!(sfn::ScalarFieldNode,pos,t)
         @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
-        return bicubicInterpolate(sfn.sample*sfn.s,x)
+        return bicubicInterpolate((sfn::ScalarFieldNode).sample,x)
     end
 end
 
@@ -360,7 +302,7 @@ end
         sample2!(sfn::ScalarFieldNode,pos,t)
         grad[1] = posvel[3]
         grad[2] = posvel[4]
-        grad[3:4] = -1.0*itp_bicubic_grad(sfn.sample*sfn.s,x,res)*KB/M_CS
+        grad[3:4] = -1.0*itp_bicubic_grad((sfn::ScalarFieldNode).sample,x,res)*KB/M_CS
     end
 end
 
@@ -443,7 +385,6 @@ function test_gradient()
     ######################
     #Test 3D value
     ######################
-    #=
     Lumberjack.info("testing 3D value")
     #prepare interpolation
     f1_s = SharedArray(Float64, (1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->func1_3d(ind2sub(S,x)...),Base.localindexes(S)))
@@ -487,7 +428,6 @@ function test_gradient()
     err = sum_err/test_num
     Lumberjack.info("err: ",string(err))
     @test err<3e-2
-    =#
     ######################
     #Test 2D gradient
     ######################
@@ -507,7 +447,6 @@ function test_gradient()
     ######################
     #Test 3D gradient
     ######################
-    #=
     grad = zeros(Float64,6)
     sum_err = 0.0
     @time    for i = 1:test_num
@@ -522,5 +461,4 @@ function test_gradient()
     err = sum_err/test_num
     Lumberjack.info("err: ",string(err))
     @test err<3e-2
-    =#
 end
