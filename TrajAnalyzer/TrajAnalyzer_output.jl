@@ -15,9 +15,10 @@ function output_movie_traj_flux(config,filename,result,tspan,flux)
 end
 
 function output_movie(mov_tspan,range,res,filename;traj=false)
-    output_0 = Fields.composite(range,0.0)
-    v_min = minimum(output_0)
-    v_max = maximum(output_0)
+    #pre render potential to find v_min and v_max
+    output_pre = map(t->Fields.composite(range,t),mov_tspan)
+    v_min = minimum(map(minimum,output_pre))
+    v_max = maximum(map(maximum,output_pre))
     hash_key = string(hash(rand()))
     current_folder = pwd()
     movie_folder = "/tmp/movie"*hash_key
