@@ -36,6 +36,12 @@ function main()
     println("initialize fields")
     Fields.init_parallel!(sfn)
     println("Start calculating trajectories...")
-    single_scan_scaling(trajsolver_config,job_config,sfn,input_file,output_file,calc_traj_flag,spectrum_flag,movie_flag)
+    if job_config["type"] == "single-scan-scaling"
+        println("single-scan-scaling")
+        single_scan_scaling(trajsolver_config,job_config,sfn,input_file,output_file,calc_traj_flag,spectrum_flag,movie_flag)
+    elseif job_config["type"] == "double-scan-scaling"
+        println("double-scan-scaling")
+        double_scan_scaling(trajsolver_config,job_config,sfn,input_file,output_file,calc_traj_flag,spectrum_flag,movie_flag)
+    end
 end
 main()
