@@ -30,9 +30,15 @@ function main()
 #    @everywhere Lumberjack.add_truck(LumberjackTruck("trajectory_logfile.log","debug"))
     #preparation
     sfn,input_file,output_file,job_config,calc_traj_flag,spectrum_flag,movie_flag,trajsolver_config = prepare()
-    println("Start calculating trajectories...")
     println("initialize fields")
     Fields.init_parallel!(sfn)
-    single_scan_scaling(trajsolver_config,job_config,sfn,input_file,output_file,calc_traj_flag,spectrum_flag,movie_flag)
+    println("Start calculating trajectories...")
+    if job_config["type"] == "single-scan-scaling"
+        println("single-scan-scaling")
+        single_scan_scaling(trajsolver_config,job_config,sfn,input_file,output_file,calc_traj_flag,spectrum_flag,movie_flag)
+    elseif job_config["type"] == "double-scan-scaling"
+        println("double-scan-scaling")
+        double_scan_scaling(trajsolver_config,job_config,sfn,input_file,output_file,calc_traj_flag,spectrum_flag,movie_flag)
+    end
 end
 main()
