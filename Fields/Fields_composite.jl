@@ -1,8 +1,8 @@
 #####composition: for FieldNode object return composite field at time t, replace scaling with x->1.0
 function composite(range::Vector{Float64},t::Float64)
     res = (fields::ScalarFieldNode).res
-    @assert range[2]-range[1] > res[1] "range too small"
-    @assert range[4]-range[3] > res[2] "range too small"
+    @assert range[2]-range[1] > res[1] "composition range too small"
+    @assert range[4]-range[3] > res[2] "composition range too small"
     xx = range[1]:res[1]:range[2]
     yy = range[3]:res[2]:range[4]
     output = zeros(Float64,(length(xx),length(yy)))
@@ -13,8 +13,8 @@ function composite(range::Vector{Float64},t::Float64)
 end
 
 function composite_with_position(range::Vector{Float64},t::Float64,res::Vector{Float64})
-    @assert range[2]-range[1] > res[1] "range too small"
-    @assert range[4]-range[3] > res[2] "range too small"
+    @assert range[2]-range[1] > res[1] "composition range too small"
+    @assert range[4]-range[3] > res[2] "composition range too small"
     xx = range[1]:res[1]:range[2]
     yy = range[3]:res[2]:range[4]
     output = zeros(Float64,(3,length(xx),length(yy)))
@@ -27,8 +27,8 @@ function composite_with_position(range::Vector{Float64},t::Float64,res::Vector{F
 end
 
 function composite_with_position(range::Vector{Float64},t::Float64,res::Vector{Float64},sfn::ScalarFieldNode)
-    @assert range[2]-range[1] > res[1] "range too small"
-    @assert range[4]-range[3] > res[2] "range too small"
+    @assert range[2]-range[1] > res[1] "composition range too small"
+    @assert range[4]-range[3] > res[2] "composition range too small"
     xx = range[1]:res[1]:range[2]
     yy = range[3]:res[2]:range[4]
     output = zeros(Float64,(3,length(xx),length(yy)))

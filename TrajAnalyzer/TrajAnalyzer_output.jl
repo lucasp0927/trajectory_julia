@@ -16,7 +16,7 @@ end
 
 function output_movie(mov_tspan,range,res,filename;traj=false)
     #pre render potential to find v_min and v_max
-    output_pre = pmap(t->Fields.composite(range,t),mov_tspan)
+    output_pre = map(t->Fields.composite(range,t),mov_tspan)
     v_min = minimum(map(minimum,output_pre))
     v_max = maximum(map(maximum,output_pre))
     current_folder = pwd()
