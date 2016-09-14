@@ -16,13 +16,11 @@ end
 
 function output_movie(mov_tspan,range,res,filename;traj=false)
     #pre render potential to find v_min and v_max
-    output_pre = map(t->Fields.composite(range,t),mov_tspan)
+    output_pre = pmap(t->Fields.composite(range,t),mov_tspan)
     v_min = minimum(map(minimum,output_pre))
     v_max = maximum(map(maximum,output_pre))
-    hash_key = string(hash(rand()))
     current_folder = pwd()
-    movie_folder = "/tmp/movie"*hash_key
-    mkdir(movie_folder)
+    movie_folder = mktempdir(tempdir())
     if traj==false
         @sync @parallel for t in collect(enumerate(mov_tspan))
             output_image_gp(t[2],range,movie_folder*"/img"*@sprintf("%04d",t[1])*".png",v_min=v_min,v_max=v_max)
@@ -51,9 +49,7 @@ function output_image_gp(t,range,filename,sfn;v_min=0.0,v_max=0.0,xres=1300,yres
     output_data = Fields.composite_with_position(range,t,[10.0,10.0],sfn)
     current_folder = pwd()
     Lumberjack.debug("current_folder: $current_folder")
-    hash_key = string(hash(rand()))
-    image_folder = "/tmp/image"*hash_key
-    mkdir(image_folder)
+    image_folder = mktempdir(tempdir())
     cd(image_folder)
     h5write(image_folder*"/data.h5", "output", output_data)
     run(`h5totxt -o data.txt data.h5`)
