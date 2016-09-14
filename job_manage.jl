@@ -44,10 +44,12 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
 end
 
 function double_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,input_file,output_file,calc_traj_flag::Bool,spectrum_flag::Bool,movie_flag::Bool)
-    range_i = config["range_i"]
-    range_j = config["range_j"]
+    range_i_start = config["range_i_start"]
+    range_j_start = config["range_j_start"]
+    range_i_end = config["range_i_end"]
+    range_j_end = config["range_j_end"]
     jobs = config["jobs"]
-    for i = 1:range_i, j = 1:range_j
+    for i = range_i_start:range_i_end, j = range_j_start:range_j_end
         for job in values(jobs)
             field_name = job["field"]
             scaling = job["scaling"]
