@@ -56,7 +56,7 @@ function double_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
             s = replace(scaling,"@i",float(i))
             s = replace(s,"@j",float(j))
             Lumberjack.info("change scaling of field $field_name to ",s)
-            s_exp = eval(parse(s))
+            s_exp = parse(s)
             Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
         end
         Fields.init_parallel!(sfn)

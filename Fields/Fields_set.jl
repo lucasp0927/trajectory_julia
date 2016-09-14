@@ -25,7 +25,7 @@ function setfield!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},A::SharedArray{T},po
 end
 
 function setscaling!(f::Field,scaling::Function)
-    Base.warn("scaling_expr not changed.")
+    Base.error("scaling_expr not changed.")
     f.scaling = scaling
 end
 
