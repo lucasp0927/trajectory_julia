@@ -14,7 +14,16 @@ function output_movie_traj_flux(config,filename,result,tspan,flux)
     output_movie(mov_tspan,mov_range,mov_res,filename,traj=true,result=result,tspan=tspan)
 end
 
+function output_movie_data(config,filename)
+    @assert contains(filename,".mat")
+    mov_tspan = collect(config["tstart"]:config["tdiv"]:config["tend"])
+    mov_range = [promote(config["range"]...)...]
+    potential = cat(3,pmap(t->Fields.composite(mov_range,t),mov_tspan)...)
+    matwrite(filename,Dict("potential"=>potential))
+end
+
 function output_movie(mov_tspan,range,res,filename;traj=false)
+    @assert contains(filename,".mp4")
     #pre render potential to find v_min and v_max
     output_pre = pmap(t->Fields.composite(range,t),mov_tspan)
     v_min = minimum(map(minimum,output_pre))

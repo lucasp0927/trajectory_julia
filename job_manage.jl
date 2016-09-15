@@ -19,7 +19,7 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
             matwrite(output_file*string(i)*".mat",result)
             traj = result["traj"]
             tspan = result["tspan"]
-        else
+        elseif flags["spectrum_flag"] || flags["movie_flag"]
             Lumberjack.info("read results...")
             result = matread(input_file*string(i)*".mat")
             traj = result["traj"]
@@ -37,7 +37,11 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         end
         if flags["spectrum_flag"]
             Lumberjack.info("Calculating Spectrum...")
-            TrajAnalyzer.spectrum(output_file*string(i)*"_te")
+            TrajAnalyzer.spectrum(output_file*string(i))
+        end
+        if flags["movie_data_flag"]
+            Lumberjack.info("Calculating movie potentials...")
+            TrajAnalyzer.output_movie_data(config["movie-output"],output_file*string(i)*"_moviedata.mat")
         end
 #        init_range = get_large_init_range(values(trajsolver_config["atom-config"]["init-range"]))
     end
@@ -67,7 +71,7 @@ function double_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
             matwrite(output_file*string(i)*"_"*string(j)*".mat",result)
             traj = result["traj"]
             tspan = result["tspan"]
-        else
+        elseif flags["spectrum_flag"] || flags["movie_flag"]
             Lumberjack.info("read results...")
             result = matread(input_file*string(i)*"_"*string(j)*".mat")
             traj = result["traj"]
@@ -86,6 +90,10 @@ function double_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         if flags["spectrum_flag"]
             Lumberjack.info("Calculating Spectrum...")
             TrajAnalyzer.spectrum(output_file*string(i)*"_"*string(j))
+        end
+        if flags["movie_data_flag"]
+            Lumberjack.info("Calculating movie potentials...")
+            TrajAnalyzer.output_movie_data(config["movie-output"],output_file*string(i)*"_"*string(j)*"_moviedata.mat")
         end
 #        init_range = get_large_init_range(values(trajsolver_config["atom-config"]["init-range"]))
     end
