@@ -1,7 +1,7 @@
 using PyCall
 #include("output.jl")
 include("flux.jl")
-function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,input_file,output_file,calc_traj_flag::Bool,spectrum_flag::Bool,movie_flag::Bool)
+function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,input_file,output_file,flags)
     range = config["range"]
     field_name = config["field"]
     scaling = config["scaling"]
@@ -13,7 +13,7 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
         Fields.init_parallel!(sfn)
         # build probe beam
-        if calc_traj_flag
+        if flags["calc_traj_flag"]
             result = calculate_traj(i)
             Lumberjack.info("save results...")
             matwrite(output_file*string(i)*".mat",result)
@@ -25,17 +25,17 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
             traj = result["traj"]
             tspan = result["tspan"]
         end
-        if spectrum_flag || movie_flag
+        if flags["spectrum_flag"] || flags["movie_flag"]
             Lumberjack.info("Initialize TrajAnalyzer...")
             probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
             TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
         end
-        if movie_flag
+        if flags["movie_flag"]
             Lumberjack.info("Outputing Movie...")
             movie_range = [promote(config["movie-output"]["range"]...)...]
             TrajAnalyzer.output_movie_traj(config["movie-output"],output_file*string(i)*"_traj.mp4")
         end
-        if spectrum_flag
+        if flags["spectrum_flag"]
             Lumberjack.info("Calculating Spectrum...")
             TrajAnalyzer.spectrum(output_file*string(i)*"_te")
         end
@@ -43,7 +43,7 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
     end
 end
 
-function double_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,input_file,output_file,calc_traj_flag::Bool,spectrum_flag::Bool,movie_flag::Bool)
+function double_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,input_file,output_file,flags)
     range_i_start = config["range_i_start"]
     range_j_start = config["range_j_start"]
     range_i_end = config["range_i_end"]
@@ -61,7 +61,7 @@ function double_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         end
         Fields.init_parallel!(sfn)
         # build probe beam
-        if calc_traj_flag
+        if flags["calc_traj_flag"]
             result = calculate_traj(i)
             Lumberjack.info("save results...")
             matwrite(output_file*string(i)*"_"*string(j)*".mat",result)
@@ -73,17 +73,17 @@ function double_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
             traj = result["traj"]
             tspan = result["tspan"]
         end
-        if spectrum_flag || movie_flag
+        if flags["spectrum_flag"] || flags["movie_flag"]
             Lumberjack.info("Initialize TrajAnalyzer...")
             probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
             TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
         end
-        if movie_flag
+        if flags["movie_flag"]
             Lumberjack.info("Outputing Movie...")
             movie_range = [promote(config["movie-output"]["range"]...)...]
             TrajAnalyzer.output_movie_traj(config["movie-output"],output_file*string(i)*"_"*string(j)*"_traj.mp4")
         end
-        if spectrum_flag
+        if flags["spectrum_flag"]
             Lumberjack.info("Calculating Spectrum...")
             TrajAnalyzer.spectrum(output_file*string(i)*"_"*string(j))
         end

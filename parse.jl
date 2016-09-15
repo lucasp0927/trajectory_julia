@@ -13,13 +13,16 @@ function parse_commandline()
         help = "output file prefix."
         required = true
         "--trajectory", "-T"
-        help = "calculate trajectories"
+        help = "calculate trajectories."
         action = :store_true
         "--spectrum", "-S"
-        help = "calculate spectrum"
+        help = "calculate spectrum."
         action = :store_true
         "--movie", "-M"
-        help = "render movies"
+        help = "render movies."
+        action = :store_true
+        "--moviedata"
+        help = "output movies potential data in a 3D array."
         action = :store_true
         "--procs", "-P"
         arg_type = Int

@@ -21,8 +21,9 @@ function prepare()
     TrajSolver.init_parallel(trajsolver_config)
     @assert length(keys(fields_config)) == 1 "more than 1 top level fieldnode!"
     println("building field ",[k for k in keys(fields_config)][1],"...")
-    sfn = Fields.buildAndAlign(fields_config["field"],0,name=[k for k in keys(fields_config)][1])
-    return sfn,input_file,output_file,job_config,parsed_args["trajectory"],parsed_args["spectrum"],parsed_args["movie"],trajsolver_config
+    sfn = Fields.buildAndAlign(fields_config["field"],0,name=ascii([k for k in keys(fields_config)][1]))
+    flags = Dict("calc_traj_flag" => parsed_args["trajectory"], "spectrum_flag" => parsed_args["spectrum"], "movie_flag" => parsed_args["movie"], "movie_data_flag" => parsed_args["moviedata"])
+    return sfn,input_file,output_file,job_config,flags,trajsolver_config
 end
 
 function main()
@@ -32,16 +33,16 @@ function main()
 #    Lumberjack.add_truck(LumberjackTruck(STDOUT, "debug"))
     @everywhere Lumberjack.add_truck(LumberjackTruck("trajectory_logfile.log","debug"))
     #preparation
-    sfn,input_file,output_file,job_config,calc_traj_flag,spectrum_flag,movie_flag,trajsolver_config = prepare()
+    sfn,input_file,output_file,job_config,flags,trajsolver_config = prepare()
     println("initialize fields")
     Fields.init_parallel!(sfn)
     println("Start calculating trajectories...")
     if job_config["type"] == "single-scan-scaling"
         println("single-scan-scaling")
-        single_scan_scaling(trajsolver_config,job_config,sfn,input_file,output_file,calc_traj_flag,spectrum_flag,movie_flag)
+        single_scan_scaling(trajsolver_config,job_config,sfn,input_file,output_file,flags)
     elseif job_config["type"] == "double-scan-scaling"
         println("double-scan-scaling")
-        double_scan_scaling(trajsolver_config,job_config,sfn,input_file,output_file,calc_traj_flag,spectrum_flag,movie_flag)
+        double_scan_scaling(trajsolver_config,job_config,sfn,input_file,output_file,flags)
     end
 end
 main()
