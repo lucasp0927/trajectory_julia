@@ -1,7 +1,7 @@
 include("parse.jl")
 parsed_args = parse_commandline()
 println("Starting ",parsed_args["procs"]," processes.")
-addprocs(parsed_args["procs"], exeflags="--depwarn=no")
+addprocs(parsed_args["procs"], exeflags=`--depwarn=no --compilecache=no`)
 
 push!(LOAD_PATH, "./Fields")
 push!(LOAD_PATH, "./TrajSolver")
