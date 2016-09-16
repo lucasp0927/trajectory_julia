@@ -1,4 +1,3 @@
-using PyCall
 #include("output.jl")
 include("flux.jl")
 function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,input_file,output_file,flags)
