@@ -1,5 +1,38 @@
-#include("output.jl")
 include("flux.jl")
+function job_inner_loop(config,sfn,input_prefix,output_prefix,flags)
+    if flags["calc_traj_flag"]
+        result = calculate_traj(i)
+        Lumberjack.info("save results...")
+        matwrite(output_prefix*".mat",result)
+        traj = result["traj"]
+        tspan = result["tspan"]
+    elseif flags["spectrum_flag"] || flags["movie_flag"]
+        Lumberjack.info("read results...")
+        result = matread(input_prefix*".mat")
+        traj = result["traj"]
+        tspan = result["tspan"]
+    end
+    if flags["spectrum_flag"] || flags["movie_flag"]
+        #these function use trajectories data, so TrajAnalyzer needs to be initialized.
+        Lumberjack.info("Initialize TrajAnalyzer...")
+        probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
+        TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
+    end
+    if flags["movie_flag"]
+        Lumberjack.info("Outputing Movie...")
+        movie_range = [promote(config["movie-output"]["range"]...)...]
+        TrajAnalyzer.output_movie_traj(config["movie-output"],output_prefix*"_traj.mp4")
+    end
+    if flags["spectrum_flag"]
+        Lumberjack.info("Calculating Spectrum...")
+        TrajAnalyzer.spectrum(output_prefix)
+    end
+    if flags["movie_data_flag"]
+        Lumberjack.info("Calculating movie potentials...")
+        TrajAnalyzer.output_movie_data(config["movie-output"],output_prefix*"_moviedata.mat")
+    end
+end
+
 function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,input_file,output_file,flags)
     range = config["range"]
     field_name = config["field"]
@@ -11,38 +44,7 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         s_exp = parse(s)
         Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
         Fields.init_parallel!(sfn)
-        # build probe beam
-        if flags["calc_traj_flag"]
-            result = calculate_traj(i)
-            Lumberjack.info("save results...")
-            matwrite(output_file*string(i)*".mat",result)
-            traj = result["traj"]
-            tspan = result["tspan"]
-        elseif flags["spectrum_flag"] || flags["movie_flag"]
-            Lumberjack.info("read results...")
-            result = matread(input_file*string(i)*".mat")
-            traj = result["traj"]
-            tspan = result["tspan"]
-        end
-        if flags["spectrum_flag"] || flags["movie_flag"]
-            Lumberjack.info("Initialize TrajAnalyzer...")
-            probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
-            TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
-        end
-        if flags["movie_flag"]
-            Lumberjack.info("Outputing Movie...")
-            movie_range = [promote(config["movie-output"]["range"]...)...]
-            TrajAnalyzer.output_movie_traj(config["movie-output"],output_file*string(i)*"_traj.mp4")
-        end
-        if flags["spectrum_flag"]
-            Lumberjack.info("Calculating Spectrum...")
-            TrajAnalyzer.spectrum(output_file*string(i))
-        end
-        if flags["movie_data_flag"]
-            Lumberjack.info("Calculating movie potentials...")
-            TrajAnalyzer.output_movie_data(config["movie-output"],output_file*string(i)*"_moviedata.mat")
-        end
-#        init_range = get_large_init_range(values(trajsolver_config["atom-config"]["init-range"]))
+        job_inner_loop(config,sfn,input_file*string(i),output_file*string(i),flags)
     end
 end
 
@@ -63,40 +65,10 @@ function double_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
             Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
         end
         Fields.init_parallel!(sfn)
-        # build probe beam
-        if flags["calc_traj_flag"]
-            result = calculate_traj(i)
-            Lumberjack.info("save results...")
-            matwrite(output_file*string(i)*"_"*string(j)*".mat",result)
-            traj = result["traj"]
-            tspan = result["tspan"]
-        elseif flags["spectrum_flag"] || flags["movie_flag"]
-            Lumberjack.info("read results...")
-            result = matread(input_file*string(i)*"_"*string(j)*".mat")
-            traj = result["traj"]
-            tspan = result["tspan"]
-        end
-        if flags["spectrum_flag"] || flags["movie_flag"]
-            Lumberjack.info("Initialize TrajAnalyzer...")
-            probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
-            TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
-        end
-        if flags["movie_flag"]
-            Lumberjack.info("Outputing Movie...")
-            movie_range = [promote(config["movie-output"]["range"]...)...]
-            TrajAnalyzer.output_movie_traj(config["movie-output"],output_file*string(i)*"_"*string(j)*"_traj.mp4")
-        end
-        if flags["spectrum_flag"]
-            Lumberjack.info("Calculating Spectrum...")
-            TrajAnalyzer.spectrum(output_file*string(i)*"_"*string(j))
-        end
-        if flags["movie_data_flag"]
-            Lumberjack.info("Calculating movie potentials...")
-            TrajAnalyzer.output_movie_data(config["movie-output"],output_file*string(i)*"_"*string(j)*"_moviedata.mat")
-        end
-#        init_range = get_large_init_range(values(trajsolver_config["atom-config"]["init-range"]))
+        input_prefix = input_file*string(i)*"_"*string(j)
+        output_prefix = output_file*string(i)*"_"*string(j)
+        job_inner_loop(config,sfn,input_prefix,output_prefix,flags)
     end
-
 end
 
 function get_large_init_range(init_range)
