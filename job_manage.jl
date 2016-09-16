@@ -57,8 +57,8 @@ function double_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
     for i = range_i_start:range_i_end, j = range_j_start:range_j_end
         for job in values(jobs)
             field_name = job["field"]
-            scaling = job["scaling"]
-            s = replace(scaling,"@i",float(i))
+            s = job["scaling"]
+            s = replace(s,"@i",float(i))
             s = replace(s,"@j",float(j))
             Lumberjack.info("change scaling of field $field_name to ",s)
             s_exp = eval(parse(s))

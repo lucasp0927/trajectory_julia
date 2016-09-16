@@ -16,13 +16,15 @@ include("job_manage.jl")
 function prepare()
 #    parsed_args = parse_commandline()
     config_file,input_file,output_file = parsed_args["config"],parsed_args["infile"],parsed_args["outfile"]
+    flags = Dict("calc_traj_flag" => parsed_args["trajectory"],
+                 "spectrum_flag" => parsed_args["spectrum"],
+                 "movie_flag" => parsed_args["movie"],
+                 "movie_data_flag" => parsed_args["moviedata"])
     fields_config,trajsolver_config,job_config = parse_config(config_file)
     TrajSolver.init_parallel(trajsolver_config)
-    @assert length(keys(fields_config)) == 1 "more than 1 top level fieldnode!"
     println("building field ",[k for k in keys(fields_config)][1],"...")
     sfn = Fields.buildAndAlign(fields_config["field"],0,name=ascii([k for k in keys(fields_config)][1]))
-    flags = Dict("calc_traj_flag" => parsed_args["trajectory"], "spectrum_flag" => parsed_args["spectrum"], "movie_flag" => parsed_args["movie"], "movie_data_flag" => parsed_args["moviedata"])
-    return sfn,input_file,output_file,job_config,flags,trajsolver_config
+    return sfn,input_file,output_file,job_config,trajsolver_config,flags
 end
 
 function main()
@@ -30,7 +32,7 @@ function main()
     @everywhere Lumberjack.add_truck(LumberjackTruck(STDOUT, "info"))
 #    @everywhere Lumberjack.add_truck(LumberjackTruck("trajectory_logfile.log","debug"))
     #preparation
-    sfn,input_file,output_file,job_config,flags,trajsolver_config = prepare()
+    sfn,input_file,output_file,job_config,trajsolver_config,flags = prepare()
     println("initialize fields")
     Fields.init_parallel!(sfn)
     println("Start calculating trajectories...")

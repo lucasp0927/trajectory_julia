@@ -44,6 +44,7 @@ function parse_config(filename)
     config = YAML.load(open(filename))
     simu_type = config["simulation-type"]
     fields_config = config["fields-config"]
+    @assert length(keys(fields_config)) == 1 "more than 1 top level fieldnode!"
     trajsolver_config = config["trajsolver-config"]
     job_config = config["job-config"]
     Lumberjack.debug("fields config:",convert(Dict{Any,Any},copy(fields_config)))
