@@ -25,6 +25,8 @@ function init!(config::Dict)
     global radial_temperature, axial_temperature, init_speed, init_range
     global in_boundaries, out_boundaries
     global result
+    global trajsolver_config
+    trajsolver_config = config
     #simulation-config
     trajnum = round(Int64,config["simulation-config"]["traj_num"])::Int64
     tstart = float(config["simulation-config"]["tstart"])::Float64

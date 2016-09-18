@@ -1,7 +1,7 @@
 include("flux.jl")
 function job_inner_loop(config,sfn,input_prefix,output_prefix,flags)
     if flags["calc_traj_flag"]
-        result = calculate_traj(i)
+        result = calculate_traj()
         Lumberjack.info("save results...")
         matwrite(output_prefix*".mat",result)
         traj = result["traj"]

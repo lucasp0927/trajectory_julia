@@ -15,6 +15,7 @@ type Trajectories
         new(traj,atom_num,tspan,t_div,pos,siz)
     end
 end
+
 import Base.getindex
 @inbounds function getindex(tr::Trajectories,t::Float64,traj_id::Int64)
     #Linear interpolation
