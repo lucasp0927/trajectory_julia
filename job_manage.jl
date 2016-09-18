@@ -55,6 +55,7 @@ function double_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
     range_j_end = config["range_j_end"]
     jobs = config["jobs"]
     for i = range_i_start:range_i_end, j = range_j_start:range_j_end
+        Lumberjack.info("i = "*string(i)*", j = "*string(j))
         for job in values(jobs)
             field_name = job["field"]
             s = job["scaling"]
