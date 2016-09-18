@@ -4,16 +4,8 @@ using Fields
 using Lumberjack
 #using Optim
 using ProgressMeter
-#using ProfileView
-include("../constant.jl")
-include("../fileio.jl")
-include("polygon.jl")
-include("TrajSolver_init.jl")
-include("TrajSolver_get.jl")
-include("../TrajAnalyzer/TrajAnalyzer_output.jl")
-include("fit_trap.jl")
+
 export calculate_traj
-global iter
 global my_trajnum
 global solver, reltol, abstol
 global trajnum, tspan, tdiv
@@ -22,26 +14,22 @@ global in_boundaries
 global out_boundaries
 global result
 global U_prob #probability for atom distribution
+global trajsolver_config
 
-function parallel_set_iter(i::Int64)
-    @sync begin
-        for p = 1:nprocs()
-            @async remotecall_fetch(p,set_iter,i)
-        end
-    end
-end
+include("../constant.jl")
+include("../fileio.jl")
+include("polygon.jl")
+include("TrajSolver_init.jl")
+include("TrajSolver_get.jl")
+include("../TrajAnalyzer/TrajAnalyzer_output.jl")
+include("fit_trap.jl")
 
-function set_iter(i::Int64)
-    global iter
-    iter = i
-end
-
-function calculate_traj(i::Int64)
+function calculate_traj()
+    global tspan
     Lumberjack.info("calculate trajectories...")
-    parallel_set_iter(i)
+#    parallel_set_iter(i)
     prepare_U_prob()
     traj = Array(Float64,4,length(tspan),trajnum)
-
     # function to produce the next work item from the queue.
     # in this case it's just an index.
     i = 1
@@ -86,7 +74,15 @@ function calculate_traj(i::Int64)
             end
         end
     end
-
+    #truncate save time range
+    t_idx_start = searchsortedlast(tspan,trajsolver_config["save-range"]["tstart"])
+    t_idx_end = searchsortedfirst(tspan,trajsolver_config["save-range"]["tend"])
+    traj = traj[:,t_idx_start:t_idx_end,:]
+    tspan = tspan[t_idx_start:t_idx_end]
+    # println("t_idx_start = ",t_idx_start)
+    # println("t_idx_end = ",t_idx_end)
+    # println("tspan[t_idx_start] = ", tspan[t_idx_start])
+    # println("tspan[t_idx_end] = ", tspan[t_idx_end])
     result = Dict(
                   "traj"=>traj,
                   "tspan"=>tspan,
@@ -102,9 +98,9 @@ function calculate_traj(i::Int64)
     return result
 end
 
-function calculate_traj_unbalanced(i::Int64)
+function calculate_traj_unbalanced()
     Lumberjack.info("calculate trajectories...")
-    parallel_set_iter(i)
+#    parallel_set_iter(i)
     prepare_U_prob()
     @time @sync begin
         for p = 2:nprocs()

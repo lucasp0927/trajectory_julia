@@ -9,6 +9,7 @@ function parse_commandline()
         required = true
         "--infile", "-I"
         help = "input file prefix"
+        default = ""
         "--outfile", "-O"
         help = "output file prefix."
         required = true
@@ -38,7 +39,7 @@ function parse_commandline()
         arg_type = Int
     end
     parsed_args = parse_args(s)
-    if parsed_args["trajectory"] == false && parsed_args["infile"] == nothing
+    if parsed_args["trajectory"] == false && parsed_args["infile"] == ""
         Base.error("please provide input file prefix.")
     end
     println("Parsed args:")

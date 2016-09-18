@@ -22,7 +22,6 @@ function prepare()
                  "movie_flag" => parsed_args["movie"],
                  "movie_data_flag" => parsed_args["moviedata"])
     fields_config,trajsolver_config,job_config = parse_config(config_file,parsed_args)
-    TrajSolver.init_parallel(trajsolver_config)
     println("building field ",[k for k in keys(fields_config)][1],"...")
     sfn = Fields.buildAndAlign(fields_config["field"],0,name=ascii([k for k in keys(fields_config)][1]))
     return sfn,input_file,output_file,job_config,trajsolver_config,flags
@@ -36,6 +35,7 @@ function main()
     @everywhere Lumberjack.add_truck(LumberjackTruck("trajectory_logfile.log","debug"))
     #preparation
     sfn,input_file,output_file,job_config,trajsolver_config,flags = prepare()
+    TrajSolver.init_parallel(trajsolver_config)
     println("initialize fields")
     Fields.init_parallel!(sfn)
     println("Start calculating trajectories...")
