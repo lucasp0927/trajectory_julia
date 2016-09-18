@@ -28,6 +28,14 @@ function parse_commandline()
         arg_type = Int
         required = true
         help = "processes number."
+        "--irange"
+        help = "override i range in config file."
+        nargs = 2
+        arg_type = Int
+        "--jrange"
+        help = "override j range in config file."
+        nargs = 2
+        arg_type = Int
     end
     parsed_args = parse_args(s)
     if parsed_args["trajectory"] == false && parsed_args["infile"] == nothing
@@ -40,7 +48,7 @@ function parse_commandline()
     return parsed_args
 end
 
-function parse_config(filename)
+function parse_config(filename,parsed_args)
     config = YAML.load(open(filename))
     simu_type = config["simulation-type"]
     fields_config = config["fields-config"]
@@ -50,6 +58,14 @@ function parse_config(filename)
     Lumberjack.debug("fields config:",convert(Dict{Any,Any},copy(fields_config)))
     Lumberjack.debug("trajsolver config:",convert(Dict{Any,Any},copy(trajsolver_config)))
     Lumberjack.debug("job config:",convert(Dict{Any,Any},copy(job_config)))
+    if length(parsed_args["irange"]) != 0
+        job_config["range_i_start"] = parsed_args["irange"][1]
+        job_config["range_i_end"] = parsed_args["irange"][2]
+    end
+    if length(parsed_args["jrange"]) != 0
+        job_config["range_j_start"] = parsed_args["jrange"][1]
+        job_config["range_j_end"] = parsed_args["jrange"][2]
+    end
     ##TODO: check config format
     return fields_config, trajsolver_config, job_config
 end

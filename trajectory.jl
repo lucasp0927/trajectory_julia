@@ -21,7 +21,7 @@ function prepare()
                  "spectrum_flag" => parsed_args["spectrum"],
                  "movie_flag" => parsed_args["movie"],
                  "movie_data_flag" => parsed_args["moviedata"])
-    fields_config,trajsolver_config,job_config = parse_config(config_file)
+    fields_config,trajsolver_config,job_config = parse_config(config_file,parsed_args)
     TrajSolver.init_parallel(trajsolver_config)
     println("building field ",[k for k in keys(fields_config)][1],"...")
     sfn = Fields.buildAndAlign(fields_config["field"],0,name=ascii([k for k in keys(fields_config)][1]))
