@@ -25,6 +25,9 @@ function parse_commandline()
         "--moviedata"
         help = "output movies potential data in a 3D array."
         action = :store_true
+        "--benchmark"
+        help = "benchmark Fields module."
+        action = :store_true
         "--procs", "-P"
         arg_type = Int
         required = true

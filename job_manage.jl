@@ -1,5 +1,9 @@
 include("flux.jl")
+include("benchmark.jl")
 function job_inner_loop(config,sfn,input_prefix,output_prefix,flags)
+    if flags["benchmark_flag"]
+        benchmark_value(1000000,sfn)
+    end
     if flags["calc_traj_flag"]
         result = calculate_traj()
         Lumberjack.info("save results...")
