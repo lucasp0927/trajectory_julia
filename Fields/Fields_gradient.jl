@@ -113,8 +113,8 @@ function sample2!(f::VectorFieldNode{2},pos::Vector{Float64},t::Real)
             add_sample!(f.sample,ff.sample)
         end
     end
-#    s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))
-    f.s::Complex{Float64} = (f.scaling::Function)(t)::Complex{Float64}
+    #    f.s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))
+    f.s::Complex{Float64} = ((f.scaling::Function)(t))::Complex{Float64}
     scale!(f.sample,f.s)
 #    scal!(48,f.s,f.sample,1)
 #    scale_sample!(f.sample,s)

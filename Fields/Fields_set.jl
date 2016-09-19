@@ -62,10 +62,10 @@ end
 
 function eval_scaling!{N}(f::ScalarFieldNode{N})
     f.scaling=eval(f.scaling_expr)
-    map(clean_scaling!,f.fields)
+    map(eval_scaling!,f.fields)
 end
 
 function eval_scaling!{N}(f::VectorFieldNode{N})
     f.scaling=eval(f.scaling_expr)
-    map(clean_scaling!,f.fields)
+    map(eval_scaling!,f.fields)
 end
