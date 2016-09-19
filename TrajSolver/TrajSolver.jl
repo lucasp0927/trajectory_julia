@@ -25,7 +25,6 @@ include("../TrajAnalyzer/TrajAnalyzer_output.jl")
 include("fit_trap.jl")
 
 function calculate_traj()
-    global tspan
     Lumberjack.info("calculate trajectories...")
 #    parallel_set_iter(i)
     prepare_U_prob()
@@ -51,16 +50,16 @@ function calculate_traj()
     #truncate save time range
     t_idx_start = searchsortedlast(tspan,trajsolver_config["save-range"]["tstart"])
     t_idx_end = searchsortedfirst(tspan,trajsolver_config["save-range"]["tend"])
-    traj = traj[:,t_idx_start:t_idx_end,:]
-    tspan = tspan[t_idx_start:t_idx_end]
+    traj_save = traj[:,t_idx_start:t_idx_end,:]
+    tspan_save = tspan[t_idx_start:t_idx_end]
     # println("t_idx_start = ",t_idx_start)
     # println("t_idx_end = ",t_idx_end)
     # println("tspan[t_idx_start] = ", tspan[t_idx_start])
     # println("tspan[t_idx_end] = ", tspan[t_idx_end])
     #
     result = Dict(
-                  "traj"=>traj,
-                  "tspan"=>tspan,
+                  "traj"=>traj_save,
+                  "tspan"=>tspan_save,
                   "pos"=>Fields.fields.position,
                   "siz"=>Fields.fields.size,
                   "radial_temperature"=>radial_temperature,
