@@ -262,7 +262,7 @@ end
 =#
 
 function value(pos::Vector{Float64},t::Real)
-    value(pos,t,fields)
+    value(pos,t,fields::ScalarFieldNode)
 end
 
 @generated function value(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode{2})
