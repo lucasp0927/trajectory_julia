@@ -38,17 +38,23 @@ function job_inner_loop(config,sfn,input_prefix,output_prefix,flags)
 end
 
 function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,input_file,output_file,flags)
-    range = config["range"]
-    field_name = config["field"]
-    scaling = config["scaling"]
-    score = [ascii(k)=>zeros(Int64,range) for k in keys(config["score"])]
-    for i = 1:range
-        s = replace(scaling,"@i",float(i))
-        info("change scaling of field $field_name to ",s)
-        s_exp = parse(s)
-        Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
+    range_i_start = config["range_i_start"]
+    range_i_end = config["range_i_end"]
+    jobs = config["jobs"]
+    for i = range_i_start:range_i_end
+        info("i = "*string(i))
+        for job in values(jobs)
+            field_name = job["field"]
+            s = job["scaling"]
+            s = replace(s,"@i",float(i))
+            info("change scaling of field $field_name to ",s)
+            s_exp = parse(s)
+            Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
+        end
         Fields.init_parallel!(sfn)
-        job_inner_loop(config,sfn,input_file*string(i),output_file*string(i),flags)
+        input_prefix = input_file*string(i)
+        output_prefix = output_file*string(i)
+        job_inner_loop(config,sfn,input_prefix,output_prefix,flags)
     end
 end
 
