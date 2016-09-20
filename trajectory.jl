@@ -24,7 +24,8 @@ function prepare()
                  "movie_data_flag" => parsed_args["moviedata"],
                  "benchmark_flag" => parsed_args["benchmark"])
     fields_config,trajsolver_config,job_config = parse_config(config_file,parsed_args)
-    println("building field ",[k for k in keys(fields_config)][1],"...")
+#    println("building field ",[k for k in keys(fields_config)][1],"...")
+    info("building field $([k for k in keys(fields_config)][1])...")
     sfn = Fields.buildAndAlign(fields_config["field"],0,name=ascii([k for k in keys(fields_config)][1]))
     return sfn,input_file,output_file,job_config,trajsolver_config,flags
 end
