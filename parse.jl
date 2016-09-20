@@ -27,6 +27,9 @@ function parse_commandline()
         "--benchmark"
         help = "benchmark Fields module."
         action = :store_true
+        "--ngamma1d"
+        help = "Calculate N*Gamma1D, and output a range_i by range_j matrix."
+        action = :store_true
         "--procs", "-P"
         arg_type = Int
         required = true
@@ -48,7 +51,13 @@ function parse_commandline()
     for (key,val) in parsed_args
         debug("  $key  =>  $(repr(val))")
     end
-    return parsed_args
+    flags = Dict("calc_traj_flag" => parsed_args["trajectory"],
+                 "spectrum_flag" => parsed_args["spectrum"],
+                 "movie_flag" => parsed_args["movie"],
+                 "movie_data_flag" => parsed_args["moviedata"],
+                 "benchmark_flag" => parsed_args["benchmark"],
+                 "ngamma1d_flag" => parsed_args["ngamma1d"])
+    return parsed_args, flags
 end
 
 function parse_config(filename,parsed_args)
