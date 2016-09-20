@@ -73,7 +73,7 @@ end
     # pidx[1] = round(Int64,cld(rel_pos[1],f.res[1]::Float64))
     # pidx[2] = round(Int64,cld(rel_pos[2],f.res[2]::Float64))
 #    s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))
-    f.s::Complex{Float64} = convert(Complex{Float64},(f.scaling::Function)(t))
+    f.s::Complex{Float64} = ((f.scaling::Function)(t))::Complex{Float64}
 #    s = f.scaling(t)
     sample_field(f,f.pidx,f.s)
 end
