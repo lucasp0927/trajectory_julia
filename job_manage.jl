@@ -20,7 +20,7 @@ function job_inner_loop(config,sfn,input_prefix,output_prefix,flags)
         #these function use trajectories data, so TrajAnalyzer needs to be initialized.
         info("Initialize TrajAnalyzer...")
         probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
-        TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
+        @time TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
     end
     if flags["movie_flag"]
         info("Outputing Movie...")
@@ -38,8 +38,9 @@ function job_inner_loop(config,sfn,input_prefix,output_prefix,flags)
 end
 
 function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,input_file,output_file,flags)
-    range_i_start = config["range_i_start"]
-    range_i_end = config["range_i_end"]
+    @assert config["type"] == "single-scan-scaling"
+    range_i_start = config["range_i_start"]::Int
+    range_i_end = config["range_i_end"]::Int
     jobs = config["jobs"]
     for i = range_i_start:range_i_end
         info("i = "*string(i))
@@ -59,10 +60,11 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
 end
 
 function double_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,input_file,output_file,flags)
-    range_i_start = config["range_i_start"]
-    range_j_start = config["range_j_start"]
-    range_i_end = config["range_i_end"]
-    range_j_end = config["range_j_end"]
+    @assert config["type"] == "double-scan-scaling"
+    range_i_start = config["range_i_start"]::Int
+    range_j_start = config["range_j_start"]::Int
+    range_i_end = config["range_i_end"]::Int
+    range_j_end = config["range_j_end"]::Int
     jobs = config["jobs"]
     for i = range_i_start:range_i_end, j = range_j_start:range_j_end
         info("i = "*string(i)*", j = "*string(j))
