@@ -355,7 +355,7 @@ function test_gradient()
     ######################
     #Test 2D value
     ######################
-    Lumberjack.info("testing 2D value")
+    info("testing 2D value")
     #prepare interpolation
     f1 = convert(Array{Float64},[func1_2d(x,y) for x = 1:1000, y = 1:1000])
     f2 = convert(Array{Float64},[func2_2d(x,y) for x = 1:1000, y = 1:1000])
@@ -380,12 +380,12 @@ function test_gradient()
         sum_err += abs(ref-result)/abs(ref)
     end
     err = sum_err/test_num
-    Lumberjack.info("err: ",string(err))
+    info("err: ",string(err))
     @test err<3e-2
     ######################
     #Test 3D value
     ######################
-    Lumberjack.info("testing 3D value")
+    info("testing 3D value")
     #prepare interpolation
     f1_s = SharedArray(Float64, (1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->func1_3d(ind2sub(S,x)...),Base.localindexes(S)))
     f2_s = SharedArray(Float64, (1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->func2_3d(ind2sub(S,x)...),Base.localindexes(S)))
@@ -426,7 +426,7 @@ function test_gradient()
         sum_err += abs(ref-result)/abs(ref)
     end
     err = sum_err/test_num
-    Lumberjack.info("err: ",string(err))
+    info("err: ",string(err))
     @test err<3e-2
     ######################
     #Test 2D gradient
@@ -442,7 +442,7 @@ function test_gradient()
         sum_err += norm(ref-result)/norm(ref)
     end
     err = sum_err/test_num
-    Lumberjack.info("err: ",string(err))
+    info("err: ",string(err))
     @test err<3e-2
     ######################
     #Test 3D gradient
@@ -459,6 +459,6 @@ function test_gradient()
         sum_err += norm(ref-result)/norm(ref)
     end
     err = sum_err/test_num
-    Lumberjack.info("err: ",string(err))
+    info("err: ",string(err))
     @test err<3e-2
 end
