@@ -44,7 +44,8 @@ function parse_commandline()
         arg_type = Int
     end
     parsed_args = parse_args(s)
-    if parsed_args["trajectory"] == false && parsed_args["infile"] == ""
+    need_traj_flag = parsed_args["spectrum"] || parsed_args["movie"] || parsed_args["ngamma1d"]
+    if need_traj_flag && (parsed_args["trajectory"] == false && parsed_args["infile"] == "")
         err("please provide input file prefix.")
     end
     debug("Parsed args:")
@@ -56,7 +57,8 @@ function parse_commandline()
                  "movie_flag" => parsed_args["movie"],
                  "movie_data_flag" => parsed_args["moviedata"],
                  "benchmark_flag" => parsed_args["benchmark"],
-                 "ngamma1d_flag" => parsed_args["ngamma1d"])
+                 "ngamma1d_flag" => parsed_args["ngamma1d"],
+                 "need_traj_flag" => need_traj_flag)
     return parsed_args, flags
 end
 

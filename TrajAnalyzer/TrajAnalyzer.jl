@@ -11,6 +11,7 @@ include("../TrajSolver/polygon.jl")
 include("TrajAnalyzer_set.jl")
 include("TrajAnalyzer_output.jl")
 include("TrajAnalyzer_spectrum.jl")
+include("TrajAnalyzer_ngamma1d.jl")
 
 global Trajs, Probe, ForceFields, TA_Config
 global avg_atom_num,lattice_width,lattice_unit,k_ratio,gamma_1d,gamma_prime
