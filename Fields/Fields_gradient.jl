@@ -79,9 +79,9 @@ end
 end
 
 @inbounds function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::VectorField{T,2},pidx::Vector{Int64},s::K)
-@inbounds copy!(f.sample::Array{T,3},view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4]))
+    copy!(f.sample::Array{T,3},view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4]))
 #    copy!(f.sample,f.field[:,pidx[1]:pidx[2],pidx[3]:pidx[4]])
-@inbounds scale!(f.sample::Array{T,3},s)
+    scale!(f.sample::Array{T,3},s)
     #scal!(48,s,f.sample,1)
     #f.sample[:,:,:] = view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4]).*s
 end
