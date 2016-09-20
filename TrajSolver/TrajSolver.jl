@@ -108,7 +108,7 @@ function calculate_traj_unbalanced()
     end
     temp = cell(nworkers())
     for p = 2:nprocs()
-        temp[p-1] = remotecall_fetch(p,get_result)
+        temp[p-1] = remotecall_fetch(get_result,p)
     end
     traj = cat(3,temp...)
     result = Dict(

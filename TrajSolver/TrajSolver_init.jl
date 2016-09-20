@@ -78,7 +78,7 @@ function prepare_U_prob()
     @sync begin
         for p = 1:nprocs()
             map(Fields.clean_scaling!,sfns)
-            @async remotecall_fetch(p,init_U_prob!,sfns)
+            @async remotecall_fetch(init_U_prob!,p,sfns)
         end
     end
     map(Fields.eval_scaling!,sfns)
