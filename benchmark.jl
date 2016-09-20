@@ -1,6 +1,6 @@
 function benchmark_value(iter::Integer,sfn::ScalarFieldNode{2})
     #TODO add time.
-    println("Benchmarking Fields.value()...")
+    info("Benchmarking Fields.value()...")
     srand()
     x_start::Float64 = sfn.position[1]
     y_start::Float64 = sfn.position[2]

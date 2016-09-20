@@ -48,11 +48,11 @@ end
     output = SharedArray(Complex{Float64},(length(freq_range),length(time_range),iter))
     output_matrix = SharedArray(Complex{Float64},(2,2,length(freq_range),length(time_range),iter))
     for i in 1:iter
-        Lumberjack.info("iteration: $i")
+        info("iteration: $i")
         lattice_scale::Float64 = lattice_width/lattice_unit
         #TODO: other distribution of atom_num
         atom_num = avg_atom_num::Int64
-        Lumberjack.info("atom number: $atom_num")
+        info("atom number: $atom_num")
         atom_arr::Array{Int64,2} = generate_atom_array(atom_num,Trajs.atom_num,lattice_scale)
         #pmap implementation
         #TODO: put for tidx into remotecall_fetch

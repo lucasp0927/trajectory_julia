@@ -1,6 +1,5 @@
 using ArgParse
 using YAML
-using Lumberjack
 function parse_commandline()
     s = ArgParseSettings()
     @add_arg_table s begin
@@ -43,11 +42,11 @@ function parse_commandline()
     end
     parsed_args = parse_args(s)
     if parsed_args["trajectory"] == false && parsed_args["infile"] == ""
-        Base.error("please provide input file prefix.")
+        err("please provide input file prefix.")
     end
-    println("Parsed args:")
+    debug("Parsed args:")
     for (key,val) in parsed_args
-        println("  $key  =>  $(repr(val))")
+        debug("  $key  =>  $(repr(val))")
     end
     return parsed_args
 end
@@ -59,9 +58,9 @@ function parse_config(filename,parsed_args)
     @assert length(keys(fields_config)) == 1 "more than 1 top level fieldnode!"
     trajsolver_config = config["trajsolver-config"]
     job_config = config["job-config"]
-    Lumberjack.debug("fields config:",convert(Dict{Any,Any},copy(fields_config)))
-    Lumberjack.debug("trajsolver config:",convert(Dict{Any,Any},copy(trajsolver_config)))
-    Lumberjack.debug("job config:",convert(Dict{Any,Any},copy(job_config)))
+    debug("fields config:",convert(Dict{Any,Any},copy(fields_config)))
+    debug("trajsolver config:",convert(Dict{Any,Any},copy(trajsolver_config)))
+    debug("job config:",convert(Dict{Any,Any},copy(job_config)))
     if length(parsed_args["irange"]) != 0
         job_config["range_i_start"] = parsed_args["irange"][1]
         job_config["range_i_end"] = parsed_args["irange"][2]

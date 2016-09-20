@@ -22,7 +22,7 @@ type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     function ScalarField(f::SharedArray{T,N},pos::Vector{Float64},sz::Vector{Float64};scaling::Function =  t->1.0, name::ASCIIString = "ScalarField")
         res = sz./(collect(size(f))[1:N]-1)
         @assert all(x->x!=0,res) "zero resolution!"
-        length(pos)==length(sz)==N==ndims(f)?new(f,pos,sz,res,scaling,N,zeros(T,repmat([4],N)...),repmat([0.0],N),repmat([0],N*2),zero(Float64),ascii(name)):Lumberhack.error("dimension error!")
+        length(pos)==length(sz)==N==ndims(f)?new(f,pos,sz,res,scaling,N,zeros(T,repmat([4],N)...),repmat([0.0],N),repmat([0],N*2),zero(Float64),ascii(name)):err("dimension error!")
     end
 end
 
@@ -42,7 +42,7 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     function VectorField(f::SharedArray{T},pos::Vector{Float64},sz::Vector{Float64};scaling::Function =  t->1.0, name::ASCIIString = "VectorField")
         res = sz./(collect(size(f))[2:N+1]-1)
         @assert all(x->x!=0,res) "zero resolution!"
-        length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,res,scaling,N,zeros(T,[3,repmat([4],N)...]...),repmat([0.0],N),repmat([0],N*2),zero(Complex{Float64}),ascii(name)):Lumberjack.error("dimension error!")
+        length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,res,scaling,N,zeros(T,[3,repmat([4],N)...]...),repmat([0.0],N),repmat([0],N*2),zero(Complex{Float64}),ascii(name)):err("dimension error!")
     end
 end
 

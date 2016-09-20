@@ -3,7 +3,7 @@ using Interpolations
 using Devectorize
 using Base.Cartesian
 using Base.Test
-using Lumberjack
+using Logging
 #using FastAnonymous
 #TODO: align use Flat() boundary condition, add more
 #TODO: getindex overload for fields.
@@ -16,7 +16,7 @@ include("Fields_function.jl")
 # variables
 
 function init_parallel!(sfn::ScalarFieldNode)
-    Lumberjack.info("initializing Fields module...")
+    info("initializing Fields module...")
     @sync begin
         for p = 1:nprocs()     #initialize Fields module on each processe
         @async remotecall_fetch(p,init!,sfn)
@@ -39,25 +39,21 @@ function reset!()
 end
 
 function test()
-    #    @everywhere using Lumberjack
-    Lumberjack.remove_truck("console")
-    Lumberjack.add_truck(LumberjackTruck(STDOUT, "info"))
-
-    Lumberjack.info("testing zero_field")
+    info("testing zero_field")
     test_zero_field()
-    Lumberjack.info("testing typeof")
+    info("testing typeof")
     test_typeof()
-    Lumberjack.info("testing find")
+    info("testing find")
     test_find()
-    Lumberjack.info("testing geometry")
+    info("testing geometry")
     test_geometry()
-    Lumberjack.info("testing align")
+    info("testing align")
     test_align()
-#    Lumberjack.info("testing build")
+#    info("testing build")
 #    test_build()
-    Lumberjack.info("testing interpolate")
+    info("testing interpolate")
     test_interpolate()
-    Lumberjack.info("testing gradient")
+    info("testing gradient")
     test_gradient()
 end
 

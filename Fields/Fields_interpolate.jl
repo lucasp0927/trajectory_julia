@@ -89,7 +89,7 @@ end
 end
 
 function test_interpolate()
-    Lumberjack.info("2D interpolation test")
+    info("2D interpolation test")
     x_grid = linspace(0.0,1.0,11)
     y_grid = linspace(0.0,1.0,11)
     # sample = [1.0 1.1 1.2 1.3;
@@ -105,7 +105,7 @@ function test_interpolate()
         sum_err += abs(sample_itp[2.0+x,2.0+y]-my_itp)/my_itp
     end
     err = sum_err/(length(x_grid)*length(y_grid))
-    Lumberjack.info("err: ",string(err))
+    info("err: ",string(err))
     @test err < 3e-2
     #test gradient
     sum_err = 0.0
@@ -114,10 +114,10 @@ function test_interpolate()
         sum_err += norm(gradient(sample_itp,2.0+x,2.0+y)-my_itp)/norm(my_itp)
     end
     err = sum_err/(length(x_grid)*length(y_grid))
-    Lumberjack.info("err: ",string(err))
+    info("err: ",string(err))
     @test err < 3e-2
 
-    Lumberjack.info("3D interpolation test")
+    info("3D interpolation test")
     x_grid = linspace(0.0,1.0,11)
     y_grid = linspace(0.0,1.0,11)
     z_grid = linspace(0.0,1.0,11)
@@ -129,7 +129,7 @@ function test_interpolate()
         sum_err += abs(sample_itp[2.0+x,2.0+y,2.0+z]-my_itp)/my_itp
     end
     err = sum_err/(length(x_grid)*length(y_grid)*length(z_grid))
-    Lumberjack.info("err: ",string(err))
+    info("err: ",string(err))
     @test err < 3e-2
 
     sum_err = 0.0
@@ -138,6 +138,6 @@ function test_interpolate()
         sum_err += norm(gradient(sample_itp,2.0+x,2.0+y,2.0+z)-my_itp)/norm(my_itp)
     end
     err = sum_err/(length(x_grid)*length(y_grid)*length(z_grid))
-    Lumberjack.info("err: ",string(err))
+    info("err: ",string(err))
     @test err < 3e-2
 end

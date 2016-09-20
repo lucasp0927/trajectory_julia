@@ -1,6 +1,6 @@
 module TrajAnalyzer
 using Fields
-using Lumberjack
+using Logging
 using HDF5
 using PyCall
 using ProgressMeter
@@ -16,12 +16,12 @@ global Trajs, Probe, ForceFields, TA_Config
 global avg_atom_num,lattice_width,lattice_unit,k_ratio,gamma_1d,gamma_prime
 @pyimport platform
 function calc_score(area)
-    Lumberjack.debug("In TrajAnalyzer.calc_score()")
+    debug("In TrajAnalyzer.calc_score()")
     pp = Polygon([promote(area...)...])
     score = @parallel (+) for i = 1:size(Trajs.traj,3)
         sum(map(j->pointInPolygon(pp,Trajs.traj[1:2,j,i])?1:0,1:size(Trajs.traj,2)))
     end
-    Lumberjack.debug("score: $score")
+    debug("score: $score")
     return score
 end
 

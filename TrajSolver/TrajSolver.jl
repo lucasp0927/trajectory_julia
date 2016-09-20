@@ -1,7 +1,7 @@
 module TrajSolver
 using Sundials
 using Fields
-using Lumberjack
+using Logging
 #using Optim
 using ProgressMeter
 
@@ -25,7 +25,7 @@ include("../TrajAnalyzer/TrajAnalyzer_output.jl")
 include("fit_trap.jl")
 
 function calculate_traj()
-    Lumberjack.info("calculate trajectories...")
+    info("calculate trajectories...")
 #    parallel_set_iter(i)
     prepare_U_prob()
     traj = Array(Float64,4,length(tspan),trajnum)
@@ -73,7 +73,7 @@ function calculate_traj()
 end
 
 function calculate_traj_unbalanced()
-    Lumberjack.info("calculate trajectories...")
+    info("calculate trajectories...")
 #    parallel_set_iter(i)
     prepare_U_prob()
     @time @sync begin
@@ -120,13 +120,13 @@ function solve_traj()
     init_xv = distribute_atoms()
     #initialize sundials
     if solver == "ADAMS"
-        Lumberjack.debug("Using solver ADAMS")
+        debug("Using solver ADAMS")
         mem = convert(Sundials.CVODE_ptr,Sundials.CVodeHandle(Sundials.CV_ADAMS, Sundials.CV_FUNCTIONAL))
     elseif solver == "BDF"
-        Lumberjack.debug("Using solver BDF")
+        debug("Using solver BDF")
         mem = convert(Sundials.CVODE_ptr,Sundials.CVodeHandle(Sundials.CV_BDF, Sundials.CV_NEWTON))
     else
-        Lumberjack.error("Unknown ODE solver $solver.")
+        err("Unknown ODE solver $solver.")
     end
     init = zeros(Float64,4)
     for i = 1:my_trajnum::Int64
@@ -166,7 +166,7 @@ end
         mem = Sundials.CVodeCreate(Sundials.CV_ADAMS, Sundials.CV_FUNCTIONAL)
     end
     if mem == C_NULL
-        Lumberjack.error("Failed to allocate CVODE solver object")
+        err("Failed to allocate CVODE solver object")
     end
 
     try

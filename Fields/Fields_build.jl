@@ -1,7 +1,7 @@
 function buildAndAlign(field_config::Dict,level::Integer;name::ASCIIString = "field")
     sfn = build_field(field_config,level,name=name)
     set_typeof!(sfn)
-    Lumberjack.info("aligning fields...")
+    info("aligning fields...")
     align_field_tree!(sfn)
     return sfn
 end
@@ -18,13 +18,13 @@ function build_field_file(field_config::Dict,level::Integer;name::ASCIIString="f
     pos = convert(Vector{Float64},field_config["pos"])
     sz = convert(Vector{Float64},field_config["size"])
     scaling = eval(parse(field_config["scaling"]))
-    Lumberjack.info(padding(level),"building ",field_config["field-type"]," ",name," from file")
-    Lumberjack.info(padding(level),"    datatype: $dt")
-    Lumberjack.info(padding(level),"    dimension: $dim")
-    Lumberjack.info(padding(level),"    position: $pos")
-    Lumberjack.info(padding(level),"    size: $sz")
-    Lumberjack.info(padding(level),"    scaling: ",field_config["scaling"])
-    Lumberjack.info(padding(level),"    reading ",var," from ",filename,"...")
+    info(padding(level),"building ",field_config["field-type"]," ",name," from file")
+    info(padding(level),"    datatype: $dt")
+    info(padding(level),"    dimension: $dim")
+    info(padding(level),"    position: $pos")
+    info(padding(level),"    size: $sz")
+    info(padding(level),"    scaling: ",field_config["scaling"])
+    info(padding(level),"    reading ",var," from ",filename,"...")
     field_s = mat2sharedarray(filename,var)
     if ft == ScalarField
         @assert ndims(field_s) == dim
@@ -45,13 +45,13 @@ function build_field_zero(field_config::Dict,level::Integer;name::ASCIIString="f
     pos = convert(Vector{Float64},field_config["pos"])
     sz = convert(Vector{Float64},field_config["size"])
     scaling = eval(parse(field_config["scaling"]))
-    Lumberjack.info(padding(level),"building ",field_config["field-type"]," ",name," type: zero")
-    Lumberjack.info(padding(level),"    datatype: $dt")
-    Lumberjack.info(padding(level),"    dimension: $dim")
-    Lumberjack.info(padding(level),"    resolution: $res")
-    Lumberjack.info(padding(level),"    position: $pos")
-    Lumberjack.info(padding(level),"    size: $sz")
-    Lumberjack.info(padding(level),"    scaling: ",field_config["scaling"])
+    info(padding(level),"building ",field_config["field-type"]," ",name," type: zero")
+    info(padding(level),"    datatype: $dt")
+    info(padding(level),"    dimension: $dim")
+    info(padding(level),"    resolution: $res")
+    info(padding(level),"    position: $pos")
+    info(padding(level),"    size: $sz")
+    info(padding(level),"    scaling: ",field_config["scaling"])
     return Fields.zero_field(ft{dt,dim},res,pos,sz,scaling=scaling,name=name)
 end
 
@@ -66,14 +66,14 @@ function build_field_func(field_config::Dict,level::Integer;name::ASCIIString="f
     sz = convert(Vector{Float64},field_config["size"])
     func = eval(parse(field_config["func"]))
     scaling = eval(parse(field_config["scaling"]))
-    Lumberjack.info(padding(level),"building ",field_config["field-type"]," ",name," type: func")
-    Lumberjack.info(padding(level),"    datatype: $dt")
-    Lumberjack.info(padding(level),"    dimension: $dim")
-    Lumberjack.info(padding(level),"    function: ",field_config["func"])
-    Lumberjack.info(padding(level),"    resolution: $res")
-    Lumberjack.info(padding(level),"    position: $pos")
-    Lumberjack.info(padding(level),"    size: $sz")
-    Lumberjack.info(padding(level),"    scaling: ",field_config["scaling"])
+    info(padding(level),"building ",field_config["field-type"]," ",name," type: func")
+    info(padding(level),"    datatype: $dt")
+    info(padding(level),"    dimension: $dim")
+    info(padding(level),"    function: ",field_config["func"])
+    info(padding(level),"    resolution: $res")
+    info(padding(level),"    position: $pos")
+    info(padding(level),"    size: $sz")
+    info(padding(level),"    scaling: ",field_config["scaling"])
 
     return Fields.func2field(ft{dt,dim},func,res,pos,sz,scaling=scaling,name=name)
 end
@@ -82,8 +82,8 @@ function build_field(field_config::Dict,level::Integer;name::ASCIIString = "fiel
     #TODO: if cant find scaling, use default.
     #TODO: use polymorphism to reduce use of "if"
     if field_config["field-type"] == "ScalarFieldNode"
-        Lumberjack.info(padding(level),"building ScalarFieldNode ", name)
-        Lumberjack.info(padding(level),"scaling:", field_config["scaling"])
+        info(padding(level),"building ScalarFieldNode ", name)
+        info(padding(level),"scaling:", field_config["scaling"])
         f_arr = map(field_config["fields"])do x
             build_field(x[2],level+1,name=ascii(x[1]))
         end
@@ -92,8 +92,8 @@ function build_field(field_config::Dict,level::Integer;name::ASCIIString = "fiel
         scaling = eval(parse(field_config["scaling"]))
         return ScalarFieldNode{dim}(f_arr,scaling=scaling,name=name)
     elseif field_config["field-type"] == "VectorFieldNode"
-        Lumberjack.info(padding(level),"building VectorFieldNode ",name)
-        Lumberjack.info(padding(level),"scaling:", field_config["scaling"])
+        info(padding(level),"building VectorFieldNode ",name)
+        info(padding(level),"scaling:", field_config["scaling"])
         f_arr = map(field_config["fields"])do x
             build_field(x[2],level+1,name=ascii(x[1]))
         end
@@ -109,10 +109,10 @@ function build_field(field_config::Dict,level::Integer;name::ASCIIString = "fiel
         elseif field_config["init-type"] == "func"
             return build_field_func(field_config,level,name=name)
         else
-            Lumberjack.error("Unrecognized init-type")
+            err("Unrecognized init-type")
         end
     else
-        Lumberjack.error("Unrecognized field-type")
+        err("Unrecognized field-type")
     end
 end
 
