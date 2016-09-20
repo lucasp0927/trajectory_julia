@@ -10,13 +10,13 @@ function job_inner_loop(config,sfn,input_prefix,output_prefix,flags)
         matwrite(output_prefix*".mat",result)
         traj = result["traj"]
         tspan = result["tspan"]
-    elseif flags["spectrum_flag"] || flags["movie_flag"]
-        info("read results...")
+    elseif flags["need_traj_flag"]
+        info("read results from "*input_prefix*".mat...")
         result = matread(input_prefix*".mat")
         traj = result["traj"]
         tspan = result["tspan"]
     end
-    if flags["spectrum_flag"] || flags["movie_flag"]
+    if flags["need_traj_flag"]
         #these function use trajectories data, so TrajAnalyzer needs to be initialized.
         info("Initialize TrajAnalyzer...")
         probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
@@ -34,6 +34,10 @@ function job_inner_loop(config,sfn,input_prefix,output_prefix,flags)
     if flags["movie_data_flag"]
         info("Calculating movie potentials...")
         TrajAnalyzer.output_movie_data(config["movie-output"],output_prefix*"_moviedata.mat")
+    end
+    if flags["ngamma1d_flag"]
+        info("Calculating N Gamma1D.")
+        TrajAnalyzer.ngamma1d()
     end
 end
 
