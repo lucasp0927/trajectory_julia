@@ -63,7 +63,7 @@ end
 
 #TODO optimize this
 @inbounds function calc_flux2(traj,tspan,config,filename)
-    flux = Dict{Any,Any}([ascii(k)=>[] for k in keys(config)])
+    flux = Dict{Any,Any}(ascii(k)=>[] for k in keys(config))
     tmp = zeros(Float64,4)
     traj_s = copy_to_sharedarray!(traj)
     for (k,v) in config
@@ -86,7 +86,7 @@ end
 end
 
 @inbounds function calc_flux(traj,tspan,config,filename)
-    flux = Dict{Any,Any}([ascii(k)=>[] for k in keys(config)])
+    flux = Dict{Any,Any}(ascii(k)=>[] for k in keys(config))
     tmp = zeros(Float64,4)
     traj_s = copy_to_sharedarray!(traj)
     tspan_s = copy_to_sharedarray!(tspan)

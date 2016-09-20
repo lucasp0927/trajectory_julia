@@ -1,7 +1,7 @@
 using HDF5
-try
-    using MATLAB
-end
+# try
+#     using MATLAB
+# end
 
 function fit_trap(data,axial_t,radial_t)
     if axial_t == radial_t
@@ -9,7 +9,8 @@ function fit_trap(data,axial_t,radial_t)
 #        prob,xstart,xend,ystart,yend = mxcall(:fit_trap,5,data,axial_t,radial_t)
         prob,xstart,xend,ystart,yend = iso_temp_prob_dist(data,axial_t)
     else
-        prob,xstart,xend,ystart,yend = mxcall(:fit_trap,5,data,axial_t,radial_t)
+        err("please enable MATLAB.jl")
+        #prob,xstart,xend,ystart,yend = mxcall(:fit_trap,5,data,axial_t,radial_t)
     end
     return prob,xstart,xend,ystart,yend
 end

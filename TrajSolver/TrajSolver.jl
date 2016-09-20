@@ -68,7 +68,7 @@ function calculate_traj()
                     if idx>trajnum
                         break
                     end
-                    traj[:,:,idx] = remotecall_fetch(p,solve_traj_one_shot)
+                    traj[:,:,idx] = remotecall_fetch(solve_traj_one_shot,p)
                 end
             end
         end
@@ -103,7 +103,7 @@ function calculate_traj_unbalanced()
     prepare_U_prob()
     @time @sync begin
         for p = 2:nprocs()
-            @async remotecall_wait(p,solve_traj)
+            @async remotecall_wait(solve_traj,p)
         end
     end
     temp = cell(nworkers())

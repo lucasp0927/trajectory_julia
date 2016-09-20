@@ -6,7 +6,7 @@ function init_parallel!(result::Dict,probe_sfn::ScalarFieldNode,ForceFields_sfn:
         for p = 1:nprocs()
             Fields.clean_scaling!(probe_sfn)
             Fields.clean_scaling!(ForceFields_sfn)
-            @async remotecall_wait(p,init!,result_wo_traj,traj_s,probe_sfn,ForceFields_sfn,config)
+            @async remotecall_wait(init!,p,result_wo_traj,traj_s,probe_sfn,ForceFields_sfn,config)
         end
     end
     Fields.eval_scaling!(probe_sfn)

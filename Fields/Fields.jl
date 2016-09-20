@@ -1,6 +1,6 @@
 module Fields
 using Interpolations
-using Devectorize
+#using Devectorize
 using Base.Cartesian
 using Base.Test
 using Logging
@@ -29,7 +29,6 @@ end
 
 function init!(sfn::ScalarFieldNode)
     global fields
-    Lumberjack.debug("in init!")
     fields = 0
     gc()
     fields = copyfield(sfn)

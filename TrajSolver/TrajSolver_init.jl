@@ -11,7 +11,7 @@ function init_parallel(config::Dict)
 #    println("start initialization TrajSolver module...")
     @sync begin
         for p = 1:nprocs()
-            @async remotecall_wait(p,init!,config)
+            @async remotecall_wait(init!,p,config)
         end
     end
 end

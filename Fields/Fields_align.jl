@@ -97,11 +97,14 @@ end
 @inbounds function transform_coordinate(apos::Vector{Float64},ares::Vector{Float64},uapos::Vector{Float64},uares::Vector{Float64},index::Vector{Int64})
     #2D
     #position at current index
-    @devec    idx_pos = apos.+ ares.*(index-1)
+    #@devec    idx_pos = apos.+ ares.*(index-1)
+    idx_pos = apos.+ ares.*(index-1)
     #calculate the old field index
-    @devec    old_idx = ((idx_pos.-uapos)./uares)+1
+    #@devec    old_idx = ((idx_pos.-uapos)./uares)+1
+    old_idx = ((idx_pos.-uapos)./uares)+1
     #test
-    @devec    un_idx_pos = uapos.+ uares.*(old_idx-1)
+    #@devec    un_idx_pos = uapos.+ uares.*(old_idx-1)
+    un_idx_pos = uapos.+ uares.*(old_idx-1)
     @assert   un_idx_pos ≈ idx_pos "coordinate transform check"
     return old_idx
 end
