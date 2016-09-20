@@ -1,5 +1,5 @@
 using Logging
-Logging.configure(level=Logging.DEBUG)
+Logging.configure(level=Logging.INFO)
 include("parse.jl")
 parsed_args = parse_commandline()
 info("Starting ",parsed_args["procs"]," processes.")
