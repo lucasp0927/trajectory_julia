@@ -15,10 +15,10 @@ function calc_ngamma1d()
     for t in Trajs.tspan
         traj_snapshot = Trajs[171.0,:]
         traj_snapshot = traj_snapshot[1:2,:]
-        for i in 1:Trajs.atom_num
-            ng1d += calc_gamma1d(traj_snapshot[:,i],t)
+        tmp = @parallel (+) for i in 1:Trajs.atom_num
+            calc_gamma1d(traj_snapshot[:,i],t)
         end
+        ng1d += tmp
     end
-    println(ng1d)
     ng1d = ng1d/length(Trajs.tspan)
 end
