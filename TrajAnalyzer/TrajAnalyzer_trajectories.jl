@@ -22,12 +22,19 @@ import Base.getindex
     #TODO: higher order interpolation
 #    @assert t>=tr.tspan[1] && t<=tr.tspan[end]
     t_idx = searchsortedlast(tr.tspan,t)
+    @assert t_idx >=1 && t_idx <= length(tr.tspan)
     t_div = tr.t_div::Float64
-    r = (t-tr.tspan[t_idx])/t_div
     result = Array(Float64,size(tr.traj,1))
-    @simd for i = 1:size(tr.traj,1)
-        result[i] = tr.traj[i,t_idx,traj_id]*(1.0-r)
-        result[i] += tr.traj[i,t_idx+1,traj_id]*r
+    if t_idx != length(tr.tspan)
+        r = (t-tr.tspan[t_idx])/t_div
+        @simd for i = 1:size(tr.traj,1)
+            result[i] = tr.traj[i,t_idx,traj_id]*(1.0-r)
+            result[i] += tr.traj[i,t_idx+1,traj_id]*r
+        end
+    else
+        @simd for i = 1:size(tr.traj,1)
+            result[i] = tr.traj[i,t_idx,traj_id]
+        end
     end
     return result
 end
@@ -37,17 +44,24 @@ end
     #TODO: higher order interpolation
 #    @assert t>=tr.tspan[1] && t<=tr.tspan[end]
     t_idx = searchsortedlast(tr.tspan,t)
+    @assert t_idx >=1 && t_idx <= length(tr.tspan)
     t_div = tr.t_div::Float64
-    r = (t-tr.tspan[t_idx])/t_div
     result = Array(Float64,size(tr.traj,1),length(traj_id))
-    @simd for i = 1:size(tr.traj,1)
-        result[i,:] = squeeze(tr.traj[i,t_idx,traj_id],2).*(1.0-r)
-        result[i,:] += squeeze(tr.traj[i,t_idx+1,traj_id],2).*r
+    if t_idx != length(tr.tspan)
+        r = (t-tr.tspan[t_idx])/t_div
+        @simd for i = 1:size(tr.traj,1)
+            result[i,:] = squeeze(tr.traj[i,t_idx,traj_id],2).*(1.0-r)
+            result[i,:] += squeeze(tr.traj[i,t_idx+1,traj_id],2).*r
+        end
+    else
+        @simd for i = 1:size(tr.traj,1)
+            result[i,:] = squeeze(tr.traj[i,t_idx,traj_id],2)
+        end
     end
     return result
 end
 
-@inbounds function getindex{T<:Colon}(tr::Trajectories,t::Float64,traj_id::T)
+function getindex{T<:Colon}(tr::Trajectories,t::Float64,traj_id::T)
     getindex(tr,t,range(1,size(tr.traj,3)))
     #Linear interpolation
     #TODO: higher order interpolation
@@ -65,9 +79,21 @@ end
 =#
 end
 
-
 function getindex{T<:Range}(tr::Trajectories,t_range::T,traj_id)
     #Linear interpolation
     #TODO: higher order interpolation
     reduce((x,y)->cat(2,x,y),[tr[t,traj_id] for t in t_range])
+end
+
+function removenan(traj_snapshot::Array{Float64,2})
+    x1 = squeeze(traj_snapshot[1,:],1)
+    x2 = squeeze(traj_snapshot[2,:],1)
+    x3 = squeeze(traj_snapshot[3,:],1)
+    x4 = squeeze(traj_snapshot[4,:],1)
+    filter!(x->~isnan(x),x1)
+    filter!(x->~isnan(x),x2)
+    filter!(x->~isnan(x),x3)
+    filter!(x->~isnan(x),x4)
+    traj_snapshot = cat(1,x1',x2',x3',x4')
+    return traj_snapshot
 end

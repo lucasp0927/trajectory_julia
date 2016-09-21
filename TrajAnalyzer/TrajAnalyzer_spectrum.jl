@@ -102,12 +102,10 @@ end
 function calc_gamma1d(pos,t)
     ###TODO!!!!!!
     ###check NAN
+    @assert any(isnan(pos)) == false
     g1d = Float64(Fields.value(pos[1:2],t,Probe::ScalarFieldNode)*gamma_1d)
-    if isnan(g1d)
-        return 0.0
-    else
-        return g1d
-    end
+    @assert isnan(g1d) == false
+    return g1d
 end
 
 @inbounds function transmission(t::Float64,detune::Float64,atom_arr::Array{Int64,2})
