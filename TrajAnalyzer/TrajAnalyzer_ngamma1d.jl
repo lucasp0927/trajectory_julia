@@ -5,14 +5,16 @@ using Base.Test
             a = $(zeros(Float64,length(range_i)))
             idx_a = [searchsorted(range_i,idx[1])]
             a[idx_a...] = calc_avg_ngamma1d_parallel()
-            if idx_a[1] == range_i[end]
+            if idx[1] == range_i[end]
+                info("saving ngamma1d...")
                 matwrite(filename, Dict("ng1d" => a))
             end
         elseif length(idx) == 2
             a = $(zeros(Float64,length(range_i),length(range_j)))
             idx_a = [searchsorted(range_i,idx[1]),searchsorted(range_j,idx[2])]
             a[idx_a...] = calc_avg_ngamma1d_parallel()
-            if idx_a[1] == range_i[end] && idx_a[2] == range_j[end]
+            if idx[1] == range_i[end] && idx[2] == range_j[end]
+                info("saving ngamma1d...")
                 matwrite(filename, Dict("ng1d" => a))
             end
         end
