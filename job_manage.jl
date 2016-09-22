@@ -1,6 +1,11 @@
 include("flux.jl")
 include("benchmark.jl")
-function job_inner_loop(config,sfn,input_prefix,output_prefix,flags)
+function job_inner_loop(config,sfn,input_prefix,output_prefix,flags,idx::Vector)
+    if config["type"] == "single-scan-scaling"
+        @assert length(idx) == 1
+    elseif config["type"] == "double-scan-scaling"
+        @assert length(idx) == 2
+    end
     if flags["benchmark_flag"]
         benchmark_value(1000000,sfn)
     end
@@ -37,7 +42,7 @@ function job_inner_loop(config,sfn,input_prefix,output_prefix,flags)
     end
     if flags["ngamma1d_flag"]
         info("Calculating N Gamma1D.")
-        TrajAnalyzer.ngamma1d()
+        TrajAnalyzer.ngamma1d(idx,output_prefix*"_ngamma1d.mat")
     end
 end
 
@@ -59,7 +64,7 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         Fields.init_parallel!(sfn)
         input_prefix = input_file*string(i)
         output_prefix = output_file*string(i)
-        job_inner_loop(config,sfn,input_prefix,output_prefix,flags)
+        job_inner_loop(config,sfn,input_prefix,output_prefix,flags,[i])
     end
 end
 
@@ -84,7 +89,7 @@ function double_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         Fields.init_parallel!(sfn)
         input_prefix = input_file*string(i)*"_"*string(j)
         output_prefix = output_file*string(i)*"_"*string(j)
-        job_inner_loop(config,sfn,input_prefix,output_prefix,flags)
+        job_inner_loop(config,sfn,input_prefix,output_prefix,flags,[i,j])
     end
 end
 
