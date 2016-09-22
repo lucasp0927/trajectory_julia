@@ -6,7 +6,7 @@ using Base.Test
         elseif length(idx) == 2
             a = $(zeros(Float64,length(range_i),length(range_j)))
         end
-#        @test_approx_eq calc_avg_ngamma1d_parallel() calc_avg_ngamma1d()
+        #        @test_approx_eq calc_avg_ngamma1d_parallel() calc_avg_ngamma1d()
         a[idx...] = calc_avg_ngamma1d_parallel()
         matwrite(filename, Dict("ng1d" => a))
     end

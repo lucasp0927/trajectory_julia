@@ -25,7 +25,6 @@ import Base.getindex
     @assert t_idx >=1 && t_idx <= length(tr.tspan)
     t_div = tr.t_div::Float64
     result = Array(Float64,size(tr.traj,1))
-    <<<<<<< HEAD
     if t_idx != length(tr.tspan)
         r = (t-tr.tspan[t_idx])/t_div
         result[:] = tr.traj[:,t_idx,traj_id].*(1.0-r).+tr.traj[:,t_idx+1,traj_id].*r
@@ -45,14 +44,20 @@ end
     result = Array(Float64,size(tr.traj,1),length(traj_id))
     if t_idx != length(tr.tspan)
         r = (t-tr.tspan[t_idx])/t_div
-        @simd for i = 1:size(tr.traj,1)
-            result[i,:] = tr.traj[i,t_idx,traj_id].*(1.0-r)
-            result[i,:] += tr.traj[i,t_idx+1,traj_id].*r
-        end
+        result .= tr.traj[:,t_idx,traj_id].*(1.0-r)
+        result .+= tr.traj[:,t_idx+1,traj_id].*r
+#        result[:,:] = tr.traj[:,t_idx,traj_id].*(1.0-r)
+#        result[:,:] += tr.traj[:,t_idx+1,traj_id].*r
+        # @simd for i = 1:size(tr.traj,1)
+        #     result[i,:] = tr.traj[i,t_idx,traj_id].*(1.0-r)
+        #     result[i,:] += tr.traj[i,t_idx+1,traj_id].*r
+        # end
     else
-        @simd for i = 1:size(tr.traj,1)
-            result[i,:] = tr.traj[i,t_idx,traj_id]
-        end
+        #result[:,:] = tr.traj[:,t_idx,traj_id]
+        result .= tr.traj[:,t_idx,traj_id]
+        # @simd for i = 1:size(tr.traj,1)
+        #     result[i,:] = tr.traj[i,t_idx,traj_id]
+        # end
     end
     return result
 end
