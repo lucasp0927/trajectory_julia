@@ -99,6 +99,15 @@ function generate_atom_array(atom_num,total_atom_num,lattice_scale)
     return atom_array
 end
 
+function calc_gamma1d(pos,t)
+    ###TODO!!!!!!
+    ###check NAN
+    @assert any(isnan(pos)) == false
+    g1d = Float64(Fields.value(pos[1:2],t,Probe::ScalarFieldNode)*gamma_1d)
+    @assert isnan(g1d) == false
+    return g1d
+end
+
 @inbounds function transmission(t::Float64,detune::Float64,atom_arr::Array{Int64,2})
     # calculate transmission at time t and detuning detune.
     atom_num = size(atom_arr,2)
@@ -121,9 +130,9 @@ end
             M_atom[:,:,i] = wg_transfer_matrix(0.0,0.0)
         else
             f_0 = Fields.value(pos[1:2],t,ForceFields::ScalarFieldNode)*(-2e4) #*20.0/(-1e-3)
-            p_0 = Fields.value(pos[1:2],t,Probe::ScalarFieldNode)
+            g1d = calc_gamma1d(pos[1:2],t)
 #            @assert p_0 >= 0.0 "negative probe power!"
-            M_atom[:,:,i] = atom_transfer_matrix(detune,f_0,p_0*gamma_1d::Float64,gamma_prime::Float64)
+            M_atom[:,:,i] = atom_transfer_matrix(detune,f_0,g1d,gamma_prime::Float64)
         end
     end
     M_tot::Array{Complex{Float64},2} = M_atom[:,:,1];
