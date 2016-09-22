@@ -25,7 +25,7 @@ function job_inner_loop(config,sfn,input_prefix,output_prefix,flags,idx::Vector)
         #these function use trajectories data, so TrajAnalyzer needs to be initialized.
         info("Initialize TrajAnalyzer...")
         probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
-        @time TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
+        TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
     end
     if flags["movie_flag"]
         info("Outputing Movie...")
@@ -42,7 +42,7 @@ function job_inner_loop(config,sfn,input_prefix,output_prefix,flags,idx::Vector)
     end
     if flags["ngamma1d_flag"]
         info("Calculating N Gamma1D.")
-        TrajAnalyzer.ngamma1d(idx,output_prefix*"_ngamma1d.mat")
+        @time TrajAnalyzer.ngamma1d(idx,output_prefix*"_ngamma1d.mat")
     end
 end
 
