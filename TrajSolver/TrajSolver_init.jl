@@ -65,14 +65,15 @@ function range2sfn(range)
     prob_f = ScalarFieldNode{2}([ScalarField{Float64,2}(prob_s,[xstart,ystart],[xend-xstart,yend-ystart])])
     Fields.set_geometry!(prob_f)
     Fields.set_typeof!(prob_f)
-    try
-       output_image_gp(tspan[1],range,"init_prob_"*string(iter)*string(range)*".png",prob_f)
-    end
+#    try
+#       output_image_gp(tspan[1],range,"init_prob_"*string(iter)*string(range)*".png",prob_f)
+#    end
     return prob_f
 end
 
 function prepare_U_prob()
     #calculate probablility distrubution, and construct a scalar field object.
+    #calculate position probability
     sfns = map(range2sfn,values(init_range))
     sfns = [promote(sfns...)...]
     @sync begin
@@ -92,17 +93,24 @@ function init_U_prob!(sfns::Vector{ScalarFieldNode{2}})
     gc()
 end
 
+function distribute_atoms_one_shot()
+    pancake_id = rand(1:length(U_prob))
+    init_xv = squeeze(distribute_atoms_inner(U_prob[pancake_id],1),2)
+    return init_xv
+end
+
 function distribute_atoms()
     #distribute my_trajnum atoms among pancakes.
-    pancake_num = length(U_prob)
-    traj_num = zeros(Int64,pancake_num)
-    d,r = divrem(my_trajnum,pancake_num)
-    traj_num[:] = d
-    traj_num[end] += r
-    @assert sum(traj_num) == my_trajnum
-    init_xvs = map(i->distribute_atoms_inner(U_prob[i],traj_num[i]),1:pancake_num)
-    init_xv = cat(2,init_xvs...)
-    return init_xv
+    # pancake_num = length(U_prob)
+    # traj_num = zeros(Int64,pancake_num)
+    # d,r = divrem(my_trajnum,pancake_num)
+    # traj_num[:] = d
+    # traj_num[end] += r
+    # @assert sum(traj_num) == my_trajnum
+    cat(2,pmap(i->distribute_atoms_one_shot(),1:trajnum)...)
+#    init_xvs = map(i->distribute_atoms_inner(U_prob[i],traj_num[i]),1:pancake_num)
+#    init_xv = cat(2,init_xvs...)
+#    return init_xv
 end
 
 function distribute_atoms_inner(sfn::ScalarFieldNode{2},traj_num::Int64)

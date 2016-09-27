@@ -25,41 +25,18 @@ include("../TrajAnalyzer/TrajAnalyzer_output.jl")
 include("fit_trap.jl")
 
 function calculate_traj()
-    info("calculate trajectories...")
-#    parallel_set_iter(i)
+    info("distribute atoms...")
     prepare_U_prob()
+    #init trajnum initial xv pairs
+    init_xv = distribute_atoms()
+    #preallocate result
     traj = Array(Float64,4,length(tspan),trajnum)
     # function to produce the next work item from the queue.
     # in this case it's just an index.
     i = 1
     pm = Progress(trajnum, 1)
     nextidx() = (next!(pm);idx=i; i+=1; idx)
-#=
-    Profile.init(delay=0.01)
-    while true
-        idx = nextidx()
-        if idx>trajnum
-            break
-        end
-        traj[:,:,idx] = solve_traj_one_shot()
-    end
-    Profile.clear()
-    i = 1
-    pm = Progress(trajnum, 1)
-    @profile begin
-        while true
-            idx = nextidx()
-            if idx>trajnum
-                break
-            end
-            traj[:,:,idx] = solve_traj_one_shot()
-        end
-    end
-    Profile.print()
-    ProfileView.view()
-    sleep(10000)
-=#
-
+    info("calculate trajectories...")
     @time @sync begin
         for p = 2:nprocs()
             @async begin
@@ -68,7 +45,7 @@ function calculate_traj()
                     if idx>trajnum
                         break
                     end
-                    traj[:,:,idx] = remotecall_fetch(solve_traj_one_shot,p)
+                    traj[:,:,idx] = remotecall_fetch(solve_traj_one_shot,p,init_xv[:,idx])
                 end
             end
         end
@@ -78,10 +55,6 @@ function calculate_traj()
     t_idx_end = searchsortedfirst(tspan,trajsolver_config["save-range"]["tend"])
     traj_save = traj[:,t_idx_start:t_idx_end,:]
     tspan_save = tspan[t_idx_start:t_idx_end]
-    # println("t_idx_start = ",t_idx_start)
-    # println("t_idx_end = ",t_idx_end)
-    # println("tspan[t_idx_start] = ", tspan[t_idx_start])
-    # println("tspan[t_idx_end] = ", tspan[t_idx_end])
     result = Dict(
                   "traj"=>traj_save,
                   "tspan"=>tspan_save,
@@ -125,19 +98,13 @@ function calculate_traj_unbalanced()
     return result
 end
 
-function solve_traj_one_shot()
-    init_xv = distribute_atoms_one_shot()
+function solve_traj_one_shot(init_xv::Vector{Float64})
     yout = Array(Float64,4,length(tspan))
     fill!(yout,NaN)
     mycvode(Fields.gradient!,init_xv,tspan,yout;reltol=reltol, abstol=abstol)
     return yout
 end
 
-function distribute_atoms_one_shot()
-    pancake_id = rand(1:length(U_prob))
-    init_xv = squeeze(distribute_atoms_inner(U_prob[pancake_id],1),2)
-    return init_xv
-end
 
 #=
 function solve_traj()
