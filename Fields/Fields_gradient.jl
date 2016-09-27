@@ -15,7 +15,6 @@ end
     return (f.res[1]::Float64<(pos[1]-f.position[1]::Float64)<(f.size[1]::Float64-f.res[1]::Float64) && f.res[2]::Float64<(pos[2]-f.position[2]::Float64)<(f.size[2]::Float64-f.res[2]::Float64) && f.res[3]::Float64<(pos[3]-f.position[3]::Float64)<(f.size[3]::Float64-f.res[3]::Float64))
 end
 
-
 #2D Scalar sample
 @fastmath @inbounds function sample2!{T<:ComplexOrFloat}(f::ScalarField{T,2},pos::Vector{Float64},t::Real)
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
@@ -79,12 +78,24 @@ end
 end
 
 @inbounds function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::VectorField{T,2},pidx::Vector{Int64},s::K)
-    copy!(f.sample::Array{T,3},view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4]))
-#    copy!(f.sample,f.field[:,pidx[1]:pidx[2],pidx[3]:pidx[4]])
+#    src = view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4])
+#    copy_scale!(f.sample,src,s)
+    #    copy!(f.sample::Array{T,3},view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4]))
+
+    copy!(f.sample::Array{T,3},@view f.field[:,pidx[1]:pidx[2],pidx[3]:pidx[4]])
     scale!(f.sample::Array{T,3},s)
-    #scal!(48,s,f.sample,1)
-    #f.sample[:,:,:] = view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4]).*s
+    #blascopy!(48,view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4]),1,f.sample,1)
+    #scal!(48, s, f.sample, 1)
+    #scale!(f.sample::Array{T,3},s)
+#    copy_scale!(f.sample,f.field[:,pidx[1]:pidx[2],pidx[3]:pidx[4]],s)
 end
+
+#function copy_scale!{T<:ComplexOrFloat}(dest::AbstractArray,src::AbstractArray,s::T)
+#    @simd for i in eachindex(dest)
+#        @inbounds dest[i] = src[i]*s
+#    end
+#end
+
 #3D vector sample
 @fastmath @inbounds function sample2!{T<:ComplexOrFloat}(f::VectorField{T,3},pos::Vector{Float64},t::Real)
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
@@ -121,7 +132,7 @@ function sample2!(f::VectorFieldNode{2},pos::Vector{Float64},t::Real)
 end
 
 @fastmath @inbounds function add_sample!{T<:ComplexOrFloat}(sample1::Array{T,3},sample2::Array{T,3})
-    for i in eachindex(sample1)
+    @simd for i in eachindex(sample1)
         sample1[i] += sample2[i]
     end
 end
@@ -168,7 +179,7 @@ end
 @fastmath @inbounds function add_vector_field!{T<:ComplexOrFloat}(sample::Array{Float64,2},vf_sample::Array{T,3})
     for j = 1:4, i = 1:4
 #        sample[i,j] += sumabs2(vf_sample[:,i,j])
-        @simd        for k = 1:3
+        @simd for k = 1:3
             sample[i,j] += abs2(vf_sample[k,i,j])
         end
     end
@@ -269,7 +280,7 @@ end
     quote
         x = $(Array(Float64,2))
         res = $(Array(Float64,2))
-        res[:] = (sfn::ScalarFieldNode).res
+        res .= (sfn::ScalarFieldNode).res
         sample2!(sfn::ScalarFieldNode,pos,t)
         @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
         return bicubicInterpolate((sfn::ScalarFieldNode).sample,x)
