@@ -1,4 +1,5 @@
 module TrajSolver
+#using TrajAnalyzer
 using Sundials
 using Fields
 using Logging
@@ -21,14 +22,28 @@ include("../fileio.jl")
 include("polygon.jl")
 include("TrajSolver_init.jl")
 include("TrajSolver_get.jl")
-include("../TrajAnalyzer/TrajAnalyzer_output.jl")
 include("fit_trap.jl")
+include("../TrajAnalyzer/TrajAnalyzer_output.jl")
+include("../TrajAnalyzer/TrajAnalyzer_trajectories.jl")
 
 function calculate_traj()
     info("distribute atoms...")
-    prepare_U_prob()
     #init trajnum initial xv pairs
-    init_xv = distribute_atoms()
+    if trajsolver_config["atom-config"]["init-type"] == "fit-trap"
+        info("fitting trap...")
+        prepare_U_prob()
+        init_xv = distribute_atoms()
+    elseif trajsolver_config["atom-config"]["init-type"] == "from-file"
+        info("reading initial condition from "*trajsolver_config["atom-config"]["filename"]*"...")
+        result = matread(trajsolver_config["atom-config"]["filename"])
+        traj_s = copy_to_sharedarray!(result["traj"])
+        trajectories = Trajectories(result,traj_s)
+        t = float(trajsolver_config["atom-config"]["time"])
+        @assert t==tspan[1]
+        init_xv = trajectories[t,:]
+    else
+        err("Unknown init-type in atom-config.")
+    end
     #preallocate result
     traj = Array(Float64,4,length(tspan),trajnum)
     # function to produce the next work item from the queue.
@@ -60,9 +75,9 @@ function calculate_traj()
                   "tspan"=>tspan_save,
                   "pos"=>Fields.fields.position,
                   "siz"=>Fields.fields.size,
-                  "radial_temperature"=>radial_temperature,
-                  "axial_temperature"=>axial_temperature,
-                  "init_speed"=>init_speed,
+#                  "radial_temperature"=>radial_temperature,
+#                  "axial_temperature"=>axial_temperature,
+#                  "init_speed"=>init_speed,
                   "reltol"=>reltol,
                   "abstol"=>abstol
                   )
@@ -101,7 +116,9 @@ end
 function solve_traj_one_shot(init_xv::Vector{Float64})
     yout = Array(Float64,4,length(tspan))
     fill!(yout,NaN)
-    mycvode(Fields.gradient!,init_xv,tspan,yout;reltol=reltol, abstol=abstol)
+    if any(isnan(init_xv)) == false
+        mycvode(Fields.gradient!,init_xv,tspan,yout;reltol=reltol, abstol=abstol)
+    end
     return yout
 end
 

@@ -38,11 +38,12 @@ function init!(config::Dict)
     reltol = float(config["solver-config"]["reltol"])::Float64
     abstol = float(config["solver-config"]["abstol"])::Float64
     #atom-config
-    radial_temperature = float(config["atom-config"]["radial-temperature"])::Float64
-    axial_temperature = float(config["atom-config"]["axial-temperature"])::Float64
-    init_speed = float(config["atom-config"]["init-speed"])::Float64
-    #    init_range = convert(Vector{Float64},config["atom-config"]["init-range"])
-    init_range = convert(Dict{String,Vector{Float64}},config["atom-config"]["init-range"])
+    if trajsolver_config["atom-config"]["init-type"] == "fit-trap"
+        radial_temperature = float(config["atom-config"]["radial-temperature"])::Float64
+        axial_temperature = float(config["atom-config"]["axial-temperature"])::Float64
+        init_speed = float(config["atom-config"]["init-speed"])::Float64
+        init_range = convert(Dict{String,Vector{Float64}},config["atom-config"]["init-range"])
+    end
     #boundary
     in_boundaries = map(values(config["in-boundary"]))do x
         return Polygon([promote(x...)...])
