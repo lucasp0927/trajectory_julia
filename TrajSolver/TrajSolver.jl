@@ -189,7 +189,7 @@ end
 #        flag = Sundials.CVodeSetUserData(mem, f)
 #        flag = Sundials.CVodeSStolerances(mem, reltol, abstol)
 #        flag = Sundials.CVDense(mem, length(y0))
-#        flag = Sundials.CVodeSetMaxNumSteps(mem,mxstep)
+        flag = Sundials.CVodeSetMaxNumSteps(mem,1e7)
         yout[1:2,1] = y0[1:2]
         #yout[3,1] = Fields.value(y0[1:2],t[1])
         yout[3:4,1] = y0[3:4]
