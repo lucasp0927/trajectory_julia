@@ -184,12 +184,12 @@ end
         #flag = Sundials.CVodeInit(mem, cfunction(Sundials.cvodefun, Int32, (Sundials.realtype, Sundials.N_Vector, Sundials.N_Vector, Ref{Function})), t[1], Sundials.nvector(y0).ptr[1])
         flag = Sundials.CVodeInit(mem, cfunction(Sundials.cvodefun, Cint, (Sundials.realtype, Sundials.N_Vector, Sundials.N_Vector, Ref{typeof(userfun)})), t[1], convert(Sundials.N_Vector, y0nv))
         flag = Sundials.CVodeSetUserData(mem, userfun)
+        flag = Sundials.CVodeSetMaxNumSteps(mem,1e7)
         flag = Sundials.CVodeSStolerances(mem, reltol, abstol)
         flag = Sundials.CVDense(mem, length(y0))
 #        flag = Sundials.CVodeSetUserData(mem, f)
 #        flag = Sundials.CVodeSStolerances(mem, reltol, abstol)
 #        flag = Sundials.CVDense(mem, length(y0))
-        flag = Sundials.CVodeSetMaxNumSteps(mem,1e7)
         yout[1:2,1] = y0[1:2]
         #yout[3,1] = Fields.value(y0[1:2],t[1])
         yout[3:4,1] = y0[3:4]
