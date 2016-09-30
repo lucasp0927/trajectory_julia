@@ -51,11 +51,22 @@ function filter_traj(result::Dict,config::Dict)
         start_idx = searchsortedlast(result["tspan"],config["tstart"])
         end_idx = searchsortedlast(result["tspan"],config["tend"])
         traj = result["traj"]
+        pp = Polygon([promote(config["gap"]...)...])
         selected = filter(i->any(isnan(traj[:,start_idx:end_idx,i])),1:size(traj,3))
-        info("select $(length(selected)) trajectories from $(size(traj,3)) trajectories.")
+        selected = filter(i->anyPointInPolygon(pp,traj[1:2,start_idx:end_idx,i])==false,selected)
+        info("selected $(length(selected)) trajectories from $(size(traj,3)) trajectories.")
         result["traj"] = cat(3,map(i->traj[:,:,i],selected)...)
     elseif config["type"] == "gap"
         info("Select trajectories pass through the gap.")
+        start_idx = searchsortedlast(result["tspan"],config["tstart"])
+        end_idx = searchsortedlast(result["tspan"],config["tend"])
+        traj = result["traj"]
         pp = Polygon([promote(config["gap"]...)...])
+        #first remove crashed atom
+        selected = filter(i->any(isnan(traj[:,start_idx:end_idx,i]))==false,1:size(traj,3))
+        #select trajectories pass through the gap
+        selected = filter(i->anyPointInPolygon(pp,traj[1:2,start_idx:end_idx,i]),selected)
+        info("selected $(length(selected)) trajectories from $(size(traj,3)) trajectories.")
+        result["traj"] = cat(3,map(i->traj[:,:,i],selected)...)
     end
 end

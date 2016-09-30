@@ -41,3 +41,12 @@ end
     end
     return oddNodes
 end
+
+function anyPointInPolygon(p::Polygon,pos::Array{Float64,2})
+    @assert size(pos,1) == 2
+    result = false
+    for i = 1:size(pos,2)
+        result = result || pointInPolygon(p,pos[:,i])
+    end
+    return result
+end

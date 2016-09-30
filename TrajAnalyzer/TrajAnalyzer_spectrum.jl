@@ -55,32 +55,6 @@ end
         atom_num = avg_atom_num::Int64
         info("atom number: $atom_num")
         atom_arr::Array{Int64,2} = generate_atom_array(atom_num,Trajs.atom_num,lattice_scale)
-        #pmap implementation
-        #TODO: put for tidx into remotecall_fetch
-        # function to produce the next work item from the queue.
-        # in this case it's just an index.
-        #=
-        freq_range_len = length(freq_range)
-        j = 1
-        pm = Progress(freq_range_len, 1)
-        nextidx() = (next!(pm);idx=j; j+=1; idx)
-        @time @sync begin
-            for p = 2:nprocs()
-                @async begin
-                    while true
-                        fidx = nextidx()
-                        if fidx>freq_range_len
-                            break
-                        end
-                        for tidx in eachindex(time_range)
-                            output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = remotecall_fetch(p,transmission,time_range[tidx],freq_range[fidx],atom_arr)
-                        end
-                    end
-                end
-            end
-        end
-        =#
-        #parallel for implementation
         @time @sync @parallel for fidx in collect(eachindex(freq_range))
             for tidx in eachindex(time_range)
                 output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission(time_range[tidx],freq_range[fidx],atom_arr)
