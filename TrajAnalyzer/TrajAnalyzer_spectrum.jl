@@ -52,7 +52,7 @@ end
         info("iteration: $i")
         lattice_scale::Float64 = lattice_width/lattice_unit
         #TODO: other distribution of atom_num
-        atom_num = avg_atom_num::Int64
+        atom_num = avg_atom_num::Int64*(Trajs.atom_num/TA_Config["spectrum"]["total-atom-number"])
         info("atom number: $atom_num")
         atom_arr::Array{Int64,2} = generate_atom_array(atom_num,Trajs.atom_num,lattice_scale)
         @time @sync @parallel for fidx in collect(eachindex(freq_range))
@@ -74,8 +74,6 @@ function generate_atom_array(atom_num,total_atom_num,lattice_scale)
 end
 
 function calc_gamma1d(pos,t)
-    ###TODO!!!!!!
-    ###check NAN
     @assert any(isnan(pos)) == false
     g1d = Float64(Fields.value(pos[1:2],t,Probe::ScalarFieldNode)*gamma_1d)
     @assert isnan(g1d) == false
