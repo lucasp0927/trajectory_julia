@@ -52,7 +52,8 @@ end
         info("iteration: $i")
         lattice_scale::Float64 = lattice_width/lattice_unit
         #TODO: other distribution of atom_num
-        atom_num = avg_atom_num::Int64*(Trajs.atom_num/TA_Config["spectrum"]["total-atom-number"])
+        atom_num = round(Int,avg_atom_num*(Trajs.atom_num/TA_Config["spectrum"]["total-atom-number"]))
+        @assert atom_num <= Trajs.atom_num
         info("atom number: $atom_num")
         atom_arr::Array{Int64,2} = generate_atom_array(atom_num,Trajs.atom_num,lattice_scale)
         @time @sync @parallel for fidx in collect(eachindex(freq_range))
