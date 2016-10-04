@@ -22,12 +22,11 @@ function job_inner_loop(config,sfn,input_prefix,output_prefix,flags,idx::Vector)
         tspan = result["tspan"]
     end
     if flags["need_traj_flag"]
-        #these function use trajectories data, so TrajAnalyzer needs to be initialized.
         info("Initialize TrajAnalyzer...")
         probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
         TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
-        crashed_num = TrajAnalyzer.traj_iscrashed()
-        gap_num = TrajAnalyzer.traj_ingap(false)
+        @time crashed_num = length(TrajAnalyzer.traj_iscrashed())
+        @time gap_num = length(TrajAnalyzer.traj_ingap(false))
         info("$crashed_num trajectories crashed.")
         info("$gap_num trajectories in gap.")
     end
