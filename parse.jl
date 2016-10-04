@@ -15,6 +15,9 @@ function parse_commandline()
         "--trajectory", "-T"
         help = "calculate trajectories."
         action = :store_true
+        "--trajinit"
+        help = "just initialized TrajAnalyzer"
+        action = :store_true
         "--spectrum", "-S"
         help = "calculate spectrum."
         action = :store_true
@@ -44,7 +47,7 @@ function parse_commandline()
         arg_type = Int
     end
     parsed_args = parse_args(s)
-    need_traj_flag = parsed_args["spectrum"] || parsed_args["movie"] || parsed_args["ngamma1d"]
+    need_traj_flag = parsed_args["spectrum"] || parsed_args["movie"] || parsed_args["ngamma1d"] || parsed_args["trajinit"]
     if need_traj_flag && (parsed_args["trajectory"] == false && parsed_args["infile"] == "")
         err("please provide input file prefix.")
     end
@@ -58,6 +61,7 @@ function parse_commandline()
                  "movie_data_flag" => parsed_args["moviedata"],
                  "benchmark_flag" => parsed_args["benchmark"],
                  "ngamma1d_flag" => parsed_args["ngamma1d"],
+                 "trajinit_flag" => parsed_args["trajinit"],
                  "need_traj_flag" => need_traj_flag)
     return parsed_args, flags
 end

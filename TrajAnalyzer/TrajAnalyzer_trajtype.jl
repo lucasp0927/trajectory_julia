@@ -2,24 +2,30 @@ function traj_iscrashed()
     config = TA_Config["filter"]
     start_idx = searchsortedlast(Trajs.tspan,config["tstart"])
     end_idx = searchsortedlast(Trajs.tspan,config["tend"])
-    pp = Polygon([promote(config["gap"]...)...])
+    gap_p = Polygon([promote(config["gap"]...)...])
+    roi_p = Polygon([promote(config["roi"]...)...])
     # crashed (may pass through the gap)
-    crashed = filter(i->any(isnan(Trajs.traj[:,start_idx:end_idx,i])),1:size(Trajs.traj,3))
-    crashed_not_in_gap = filter(i->anyPointInPolygon(pp,Trajs.traj[1:2,start_idx:end_idx,i])==false,crashed)
-    return length(crashed_not_in_gap)
+    selected = collect(1:size(Trajs.traj,3))
+    selected = filter(i->anyPointInPolygon(roi_p,Trajs.traj[1:2,start_idx:end_idx,i]),selected)
+    selected = filter(i->any(isnan(Trajs.traj[:,start_idx:end_idx,i])),selected)
+    selected = filter(i->all(isnan(Trajs.traj[:,start_idx:end_idx,i]))==false,selected)
+    selected = filter(i->anyPointInPolygon(gap_p,Trajs.traj[1:2,start_idx:end_idx,i])==false,selected)
+    return length(selected)
 end
 
 function traj_ingap(exclude_crashed::Bool)
     config = TA_Config["filter"]
     start_idx = searchsortedlast(Trajs.tspan,config["tstart"])
     end_idx = searchsortedlast(Trajs.tspan,config["tend"])
-    pp = Polygon([promote(config["gap"]...)...])
+    gap_p = Polygon([promote(config["gap"]...)...])
+    roi_p = Polygon([promote(config["roi"]...)...])
     # crashed (may pass through the gap)
     selected = collect(1:size(Trajs.traj,3))
+    selected = filter(i->anyPointInPolygon(roi_p,Trajs.traj[1:2,start_idx:end_idx,i]),selected)
     if exclude_crashed
         selected = filter(i->any(isnan(Trajs.traj[:,start_idx:end_idx,i]))==false,selected)
     end
-    selected = filter(i->anyPointInPolygon(pp,traj[1:2,start_idx:end_idx,i]), selected)
+    selected = filter(i->anyPointInPolygon(gap_p,Trajs.traj[1:2,start_idx:end_idx,i]), selected)
     return length(selected)
 end
 
