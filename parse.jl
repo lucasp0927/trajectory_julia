@@ -33,6 +33,9 @@ function parse_commandline()
         "--ngamma1d"
         help = "Calculate N*Gamma1D, and output a range_i by range_j matrix."
         action = :store_true
+        "--optim"
+        help = "Optimize"
+        action = :store_true
         "--procs", "-P"
         arg_type = Int
         required = true
@@ -47,7 +50,7 @@ function parse_commandline()
         arg_type = Int
     end
     parsed_args = parse_args(s)
-    need_traj_flag = parsed_args["spectrum"] || parsed_args["movie"] || parsed_args["ngamma1d"] || parsed_args["trajinit"]
+    need_traj_flag = parsed_args["spectrum"] || parsed_args["movie"] || parsed_args["ngamma1d"] || parsed_args["trajinit"]||parsed_args["optim"]
     if need_traj_flag && (parsed_args["trajectory"] == false && parsed_args["infile"] == "")
         err("please provide input file prefix.")
     end
@@ -62,6 +65,7 @@ function parse_commandline()
                  "benchmark_flag" => parsed_args["benchmark"],
                  "ngamma1d_flag" => parsed_args["ngamma1d"],
                  "trajinit_flag" => parsed_args["trajinit"],
+                 "optim_flag" => parsed_args["optim"],
                  "need_traj_flag" => need_traj_flag)
     return parsed_args, flags
 end
