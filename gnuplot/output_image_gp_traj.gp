@@ -11,5 +11,6 @@ set parametric
 set xlabel "x (nm)"
 set ylabel "y (nm)"
 set cblabel "U (K)"
+set palette model CMY rgbformulae 7,5,15
 set label sprintf("t = %4.4f us",time) at (xstart+(xend-xstart)/10),(ystart+(yend-ystart)/10) front
 splot "data.txt" u 1:2:3 w pm3d,"dots.txt" u 1:2:3:($3>0.5?1:2) w points pointtype 7 pointsize 1 lc variable

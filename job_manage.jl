@@ -1,5 +1,8 @@
 include("flux.jl")
 include("benchmark.jl")
+using Optim
+using PyCall
+@pyimport scipy.optimize as opt
 function job_inner_loop(config,sfn,input_prefix,output_prefix,flags,idx::Vector)
     if config["type"] == "single-scan-scaling"
         @assert length(idx) == 1
@@ -94,6 +97,34 @@ function double_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         output_prefix = output_file*string(i)*"_"*string(j)
         job_inner_loop(config,sfn,input_prefix,output_prefix,flags,[i,j])
     end
+end
+
+function optimize_ngamma1d_func(x,knobs,config::Dict,sfn::ScalarFieldNode)
+    debug("in optimize_ngamma1d_func()")
+    debug("update scaling factor...")
+    for (i,k) in enumerate(knobs)
+        s = "t->$(x[i])"
+        info("change scaling of field $k to ",s)
+        s_exp = parse(s)
+        Fields.setscaling!(Fields.find_field(x->x.name==ascii(k),sfn),s_exp)
+    end
+    Fields.init_parallel!(sfn)
+    debug("calculate trajectories....")
+    result = calculate_traj()
+    probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
+    TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
+    ngamma1d = TrajAnalyzer.calc_avg_ngamma1d_parallel()*-1.0
+    info(ngamma1d)
+    return ngamma1d
+end
+
+function optimize_ngamma1d(config::Dict,sfn::ScalarFieldNode)
+#    result = optimize(f,[0.5,0.5],store_trace = true,extended_trace = true)
+    knobs = config["knobs"]
+#    result = optimize(x->optimize_ngamma1d_func(x,knobs,config,sfn),zeros(length(knobs)), NelderMead(),OptimizationOptions(store_trace = true,extended_trace = true))
+    result = opt.basinhopping(x->optimize_ngamma1d_func(x,knobs,config,sfn),zeros(length(knobs)),niter=5,stepsize=1,minimizer_kwargs=Dict("method"=>"Powell"));
+    println(result)
+    #result = optimize(x->optimize_ngamma1d_func(x,knobs,config,sfn),[1.0,-1.0,5.0], NelderMead(),OptimizationOptions(store_trace = true,extended_trace = true))
 end
 
 function get_large_init_range(init_range)

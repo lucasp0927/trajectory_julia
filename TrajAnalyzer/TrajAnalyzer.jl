@@ -17,6 +17,7 @@ include("TrajAnalyzer_trajtype.jl")
 global Trajs, Probe, ForceFields, TA_Config
 global avg_atom_num,lattice_width,lattice_unit,k_ratio,gamma_1d,gamma_prime
 global range_i, range_j
+
 #for TrajAnalyzer_output to determin using ffmpeg or avconv.
 @pyimport platform
 function calc_score(area)
@@ -28,5 +29,4 @@ function calc_score(area)
     debug("score: $score")
     return score
 end
-
 end
