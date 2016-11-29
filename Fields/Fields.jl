@@ -42,6 +42,7 @@ function reset!()
 end
 
 function test()
+    Logging.configure(level=Logging.INFO)
     info("testing zero_field")
     test_zero_field()
     info("testing typeof")
@@ -52,8 +53,10 @@ function test()
     test_geometry()
     info("testing align")
     test_align()
+#####
 #    info("testing build")
 #    test_build()
+#####
     info("testing interpolate")
     test_interpolate()
     info("testing gradient")

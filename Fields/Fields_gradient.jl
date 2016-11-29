@@ -71,8 +71,7 @@ end
     # pidx = Array(Int64,2)
     # pidx[1] = round(Int64,cld(rel_pos[1],f.res[1]::Float64))
     # pidx[2] = round(Int64,cld(rel_pos[2],f.res[2]::Float64))
-#    s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))
-    f.s::Complex{Float64} = ((f.scaling::Function)(t))::Complex{Float64}
+    f.s::Complex{Float64} = convert(Complex{Float64},(f.scaling::Function)(t))
 #    s = f.scaling(t)
     sample_field(f,f.pidx,f.s)
 end
@@ -378,12 +377,12 @@ function test_gradient()
     float_sf1_2d = func2field(ScalarField{Float64,2},func1_2d,repmat([2500],2),repmat([1.0],2),repmat([999.0],2),name = "float_sf1")
     float_sf2_2d = func2field(ScalarField{Float64,2},func2_2d,repmat([2000],2),repmat([1.0],2),repmat([999.0],2),name = "float_sf2")
     float_sf3_2d = func2field(ScalarField{Float64,2},func3_2d,repmat([1001],2),repmat([1.0],2),repmat([999.0],2),name = "float_sf3")
-    float_vf1_2d = func2field(VectorField{Complex{Float64},2},func4_2d,repmat([1001],2),repmat([1.0],2),repmat([999.0],2),name = "float_vf1")
+    float_vf1_2d = func2field(VectorField{Complex{Float64},2},func4_2d,repmat([1001],2),repmat([1.0],2),repmat([999.0],2),name = "float_vf1",scaling_expr=parse("t->1.0+0.0im"))
     sfn1_2d = ScalarFieldNode{2}([float_sf1_2d,float_sf3_2d,float_sf2_2d],name = ascii("sfn1"))
     sfn2_2d = ScalarFieldNode{2}([float_vf1_2d,sfn1_2d],name = ascii("sfn2"))
     align_field_tree!(sfn2_2d)
     sum_err = 0.0
-    @time    for i = 1:test_num
+    @time for i = 1:test_num
         x = 996.0*rand()+2.0
         y = 996.0*rand()+2.0
         ref = f_itp_2d[x,y]
@@ -414,7 +413,6 @@ function test_gradient()
     f4_s[:,x,y,z] = func4_3d(x,y,z)
     end
     =#
-    println(5)
     f4norm2_s = SharedArray(Float64, (1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->norm(func4_3d(ind2sub(S,x)...))^2,Base.localindexes(S)))
     f3d = f1_s.+f2_s.+f3_s.+f4norm2_s
     f_itp_3d = interpolate(f3d, BSpline(Cubic(Line())), OnGrid())
