@@ -1,5 +1,5 @@
 include("flux.jl")
-include("benchmark.jl")
+#include("benchmark.jl")
 using Optim
 using PyCall
 @pyimport scipy.optimize as opt
@@ -9,9 +9,9 @@ function job_inner_loop(config,sfn,input_prefix,output_prefix,flags,idx::Vector)
     elseif config["type"] == "double-scan-scaling"
         @assert length(idx) == 2
     end
-    if flags["benchmark_flag"]
-        benchmark_value(1000000,sfn)
-    end
+    # if flags["benchmark_flag"]
+    #     benchmark_value(1000000,sfn)
+    # end
     if flags["calc_traj_flag"]
         result = calculate_traj()
         info("save results...")

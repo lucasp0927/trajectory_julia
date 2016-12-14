@@ -27,8 +27,8 @@ function parse_commandline()
         "--moviedata"
         help = "output movies potential data in a 3D array."
         action = :store_true
-        "--benchmark"
-        help = "benchmark Fields module."
+        # "--benchmark"
+        # help = "benchmark Fields module."
         action = :store_true
         "--ngamma1d"
         help = "Calculate N*Gamma1D, and output a range_i by range_j matrix."
@@ -62,7 +62,7 @@ function parse_commandline()
                  "spectrum_flag" => parsed_args["spectrum"],
                  "movie_flag" => parsed_args["movie"],
                  "movie_data_flag" => parsed_args["moviedata"],
-                 "benchmark_flag" => parsed_args["benchmark"],
+#                 "benchmark_flag" => parsed_args["benchmark"],
                  "ngamma1d_flag" => parsed_args["ngamma1d"],
                  "trajinit_flag" => parsed_args["trajinit"],
                  "need_traj_flag" => need_traj_flag)
