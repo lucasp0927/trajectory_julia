@@ -21,3 +21,4 @@ job/
 *.sh.o*
 *.sh.pe*
 *.sh.po*
+.nfs*
