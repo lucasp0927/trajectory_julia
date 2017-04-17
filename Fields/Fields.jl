@@ -12,8 +12,9 @@ global fields
 global value
 include("../fileio.jl")
 include("Fields_type.jl")
+
+# include all Fields files.
 include("Fields_function.jl")
-# variables
 
 function init_parallel!(sfn::ScalarFieldNode)
     info("initializing Fields module...")

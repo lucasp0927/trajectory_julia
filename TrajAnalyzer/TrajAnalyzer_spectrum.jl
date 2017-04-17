@@ -1,5 +1,7 @@
 include("TrajAnalyzer_transfermatrix.jl")
 using PyCall
+using StatsBase
+using Distributions
 function spectrum(filename)
     output,output_matrix = calculate_transmission()
     spectrum_data = Dict(
@@ -8,7 +10,7 @@ function spectrum(filename)
                          )
     average_spectrum = squeeze(mean(abs2(output),3),3)
 
-    h5_filename = filename*"_avg_spectrum_tm.h5"
+    h5_filename = filename*"_avg_spectrum.h5"
     if isfile(h5_filename) == true
         rm(h5_filename)
     end
@@ -69,8 +71,13 @@ function generate_atom_array(atom_num,total_atom_num,lattice_scale)
     #lattice_scale = lattice_width/lattice_unit
     #(traj id,lattice id)*atom_num
     atom_array = zeros(Int64,(2,atom_num))
-    atom_array[1,:] = shuffle(collect(1:total_atom_num))[1:atom_num] #atom id
-    atom_array[2,:] = sort(round(Int64,randn(atom_num)*lattice_scale)) #atom's position in unit of lattice width
+    atom_array[1,:] = sample(collect(1:total_atom_num),atom_num)
+    #    atom_array[1,:] = shuffle(collect(1:total_atom_num))[1:atom_num] #atom id
+    d = Truncated(Normal(lattice_scale/2, atom_beam_waist/lattice_unit), 0, lattice_scale)
+    atom_pos = round(Int64,rand(d,atom_num))
+    @assert all(lattice_scale .>= atom_pos .>= 0)
+    atom_array[2,:] = sort(atom_pos) #atom's position in unit of lattice width
+#    atom_array[2,:] = sort(round(Int64,randn(atom_num)*lattice_scale)) #atom's position in unit of lattice width
     return atom_array
 end
 
@@ -83,11 +90,16 @@ end
 
 @inbounds function transmission(t::Float64,detune::Float64,atom_arr::Array{Int64,2})
     # calculate transmission at time t and detuning detune.
+    # put wg from -2*Lattice_unit to first atom, and after last atom to lattice_width+2*lattice_unit
     atom_num = size(atom_arr,2)
     x_point_k::Float64 = pi/lattice_unit::Float64
     k::Float64 = x_point_k*k_ratio::Float64
     #generate waveguide transfer matrix
-    ldiff::Vector{Float64} = diff(atom_arr[2,:])*lattice_unit::Float64
+    d = Truncated(Normal(0, sqrt(pos_variance)), -1, 1)
+    atom_pos = (atom_arr[2,:] + rand(d,atom_num))*lattice_unit
+    @assert (lattice_width+2*lattice_unit .> atom_pos .> -2*lattice_unit)
+    ldiff::Vector{Float64} = diff(atom_pos)
+
 #    println(size(ldiff))
 #    M_wg::Array{Complex{Float64},3} = reduce((x,y)->cat(3,x,y),map(x->wg_transfer_matrix(k,x),ldiff))
 #    println(size(M_wg))
@@ -102,15 +114,19 @@ end
         if any(isnan(pos[1:2]))
             M_atom[:,:,i] = wg_transfer_matrix(0.0,0.0)
         else
-            f_0 = Fields.value(pos[1:2],t,ForceFields::ScalarFieldNode)*(-2e4) #*20.0/(-1e-3)
+            f_0 = Fields.value(pos[1:2],t,ForceFields::ScalarFieldNode)*(-2.08e4) #*20.8/(-1e-3)
             g1d = calc_gamma1d(pos[1:2],t)
 #            @assert p_0 >= 0.0 "negative probe power!"
             M_atom[:,:,i] = atom_transfer_matrix(detune,f_0,g1d,gamma_prime::Float64)
         end
     end
-    M_tot::Array{Complex{Float64},2} = M_atom[:,:,1];
+
+    first_wg = wg_transfer_matrix(k,atom_pos[1]-(-2lattice_unit))
+    last_wg = wg_transfer_matrix(k,lattice_width+2lattice_unit-atom_pos[end])
+    M_tot::Array{Complex{Float64},2} = first_wg*M_atom[:,:,1];
     @fastmath for i = 1:atom_num - 1
         M_tot *= M_atom[:,:,i+1]*M_wg[:,:,i]
     end
+    M_tot *= last_wg
     return M_tot,one(Complex{Float64})/M_tot[2,2]
 end
