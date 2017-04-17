@@ -2,7 +2,7 @@ include("TrajAnalyzer_transfermatrix.jl")
 using PyCall
 using StatsBase
 using Distributions
-using HDF5
+
 function spectrum(filename)
     output,output_matrix = calculate_transmission()
     spectrum_data = Dict(
@@ -15,12 +15,14 @@ function spectrum(filename)
     if isfile(h5_filename) == true
         rm(h5_filename)
     end
-    h5open(h5_filename,"w") do file
-        write(file,"avg_spectrum",average_spectrum)
-        write(file,"spectrum",output)
-        write(file,"transfer_matrix",output_matrix)
-    end
-    #h5write(h5_filename, "/spectrum", average_spectrum)
+    # h5open(h5_filename,"w") do file
+    #     write(file,"avg_spectrum",average_spectrum)
+    #     write(file,"spectrum",output)
+    #     write(file,"transfer_matrix",output_matrix)
+    # end
+    h5write(h5_filename, "/spectrum", output)
+    h5write(h5_filename, "/avg_spectrum", average_spectrum)
+    h5write(h5_filename, "/transfer_matrix",output_matrix)
     #plot using matplotlib
     freq_config = TA_Config["spectrum"]["frequency"]
     time_config = TA_Config["spectrum"]["time"]
