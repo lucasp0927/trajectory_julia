@@ -3,7 +3,7 @@ using Fields
 using Logging
 using PyCall
 using ProgressMeter
-using HDF5
+using MAT
 include("../fileio.jl")
 include("TrajAnalyzer_trajectories.jl")
 include("../TrajSolver/polygon.jl")

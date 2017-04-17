@@ -5,24 +5,25 @@ using Distributions
 
 function spectrum(filename)
     output,output_matrix = calculate_transmission()
-    spectrum_data = Dict(
-                    "output"=>output,
-                    "output_matrix"=>output_matrix
-                         )
     average_spectrum = squeeze(mean(abs2(output),3),3)
-
-    h5_filename = filename*"_avg_spectrum.h5"
-    if isfile(h5_filename) == true
-        rm(h5_filename)
-    end
+    spectrum_data = Dict(
+                         "spectrum"=>output,
+                         "avg_spectrum"=>average_spectrum,
+                         "transfer_matrix"=>output_matrix
+                         )
+    matwrite(filename*"_spectrum_data.mat",spectrum_data)
+    # h5_filename = filename*"_avg_spectrum.h5"
+    # if isfile(h5_filename) == true
+    #     rm(h5_filename)
+    # end
     # h5open(h5_filename,"w") do file
     #     write(file,"avg_spectrum",average_spectrum)
     #     write(file,"spectrum",output)
     #     write(file,"transfer_matrix",output_matrix)
     # end
-    h5write(h5_filename, "/spectrum", output)
-    h5write(h5_filename, "/avg_spectrum", average_spectrum)
-    h5write(h5_filename, "/transfer_matrix",output_matrix)
+    # h5write(h5_filename, "/spectrum", output)
+    # h5write(h5_filename, "/avg_spectrum", average_spectrum)
+    # h5write(h5_filename, "/transfer_matrix",output_matrix)
     #plot using matplotlib
     freq_config = TA_Config["spectrum"]["frequency"]
     time_config = TA_Config["spectrum"]["time"]
