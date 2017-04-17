@@ -2,6 +2,7 @@ include("TrajAnalyzer_transfermatrix.jl")
 using PyCall
 using StatsBase
 using Distributions
+using HDF5
 function spectrum(filename)
     output,output_matrix = calculate_transmission()
     spectrum_data = Dict(

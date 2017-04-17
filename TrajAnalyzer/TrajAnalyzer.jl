@@ -1,7 +1,6 @@
 module TrajAnalyzer
 using Fields
 using Logging
-using HDF5
 using PyCall
 using ProgressMeter
 
