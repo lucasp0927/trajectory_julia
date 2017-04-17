@@ -14,7 +14,12 @@ function spectrum(filename)
     if isfile(h5_filename) == true
         rm(h5_filename)
     end
-    h5write(h5_filename, "/spectrum", average_spectrum)
+    h5open(h5_filename,"w") do file
+        write(file,"avg_spectrum",average_spectrum)
+        write(file,"spectrum",output)
+        write(file,"transfer_matrix",output_matrix)
+    end
+    #h5write(h5_filename, "/spectrum", average_spectrum)
     #plot using matplotlib
     freq_config = TA_Config["spectrum"]["frequency"]
     time_config = TA_Config["spectrum"]["time"]
@@ -98,7 +103,7 @@ end
     d = Truncated(Normal(0, sqrt(pos_variance)), -1, 1)
     atom_pos_div = rand(d,atom_num)
     atom_pos = (atom_arr[2,:] + atom_pos_div)*lattice_unit
-    @assert (lattice_width+2*lattice_unit .> atom_pos .> -2*lattice_unit)
+    @assert all(lattice_width+2*lattice_unit .> atom_pos .> -2*lattice_unit)
     ldiff::Vector{Float64} = diff(atom_pos)
 
 #    println(size(ldiff))
