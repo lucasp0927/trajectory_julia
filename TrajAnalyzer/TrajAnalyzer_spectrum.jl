@@ -124,9 +124,13 @@ end
         if any(isnan(pos[1:2]))
             M_atom[:,:,i] = wg_transfer_matrix(0.0,0.0)
         else
+            #vector shift
+            mf = sample(-3:3)
+            gf = -0.25
             f_0 = Fields.value(pos[1:2],t,ForceFields::ScalarFieldNode)*(-2.08e4) #*20.8/(-1e-3)
-            ### vector shift?
-            g1d = calc_gamma1d(pos[1:2],t)*cospi(atom_pos_div[i])^2
+#            f_0 *= 1+gf*mf
+#            g1d = calc_gamma1d(pos[1:2],t)*cospi(atom_pos_div[i])^2
+            g1d = calc_gamma1d(pos[1:2],t)
 #            @assert p_0 >= 0.0 "negative probe power!"
             M_atom[:,:,i] = atom_transfer_matrix(detune,f_0,g1d,gamma_prime::Float64)
         end
