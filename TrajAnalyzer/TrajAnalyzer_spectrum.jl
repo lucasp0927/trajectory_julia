@@ -12,18 +12,6 @@ function spectrum(filename)
                          "transfer_matrix"=>output_matrix
                          )
     matwrite(filename*"_spectrum_data.mat",spectrum_data)
-    # h5_filename = filename*"_avg_spectrum.h5"
-    # if isfile(h5_filename) == true
-    #     rm(h5_filename)
-    # end
-    # h5open(h5_filename,"w") do file
-    #     write(file,"avg_spectrum",average_spectrum)
-    #     write(file,"spectrum",output)
-    #     write(file,"transfer_matrix",output_matrix)
-    # end
-    # h5write(h5_filename, "/spectrum", output)
-    # h5write(h5_filename, "/avg_spectrum", average_spectrum)
-    # h5write(h5_filename, "/transfer_matrix",output_matrix)
     #plot using matplotlib
     freq_config = TA_Config["spectrum"]["frequency"]
     time_config = TA_Config["spectrum"]["time"]
@@ -59,17 +47,26 @@ end
     iter = TA_Config["spectrum"]["iteration"]
     output = SharedArray(Complex{Float64},(length(freq_range),length(time_range),iter))
     output_matrix = SharedArray(Complex{Float64},(2,2,length(freq_range),length(time_range),iter))
+    if spectrum_mode == 1
+        d = Uniform(-1,1)
+    elseif spectrum_mode == 2
+        d = Truncated(Normal(0, sqrt(pos_variance)), -1, 1)
+    end
+   # @time @sync @parallel for i in 1:iter
     for i in 1:iter
         info("iteration: $i")
         lattice_scale::Float64 = lattice_width/lattice_unit
         #TODO: other distribution of atom_num
         atom_num = round(Int,avg_atom_num*(Trajs.atom_num/TA_Config["spectrum"]["total-atom-number"]))
         @assert atom_num <= Trajs.atom_num
-        info("atom number: $atom_num")
         atom_arr::Array{Int64,2} = generate_atom_array(atom_num,Trajs.atom_num,lattice_scale)
-        @time @sync @parallel for fidx in collect(eachindex(freq_range))
+        #@sync @parallel for fidx in collect(eachindex(freq_range))
+        #preallocate array
+        M_wg = Array{Complex{Float64}}(2,2,atom_num-1)
+        M_atom::Array{Complex{Float64},3} = Array{Complex{Float64}}(2,2,atom_num)
+        @time for fidx in collect(eachindex(freq_range))
             for tidx in eachindex(time_range)
-                output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission(time_range[tidx],freq_range[fidx],atom_arr)
+                output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission(time_range[tidx],freq_range[fidx],atom_arr,M_wg,M_atom,d)
             end
         end
     end
@@ -97,42 +94,41 @@ function calc_gamma1d(pos,t)
     return g1d
 end
 
-@inbounds function transmission(t::Float64,detune::Float64,atom_arr::Array{Int64,2})
+function transmission(t::Float64,detune::Float64,atom_arr::Array{Int64,2},M_wg::Array{Complex{Float64},3},M_atom::Array{Complex{Float64},3},d)
     # calculate transmission at time t and detuning detune.
     # put wg from -2*Lattice_unit to first atom, and after last atom to lattice_width+2*lattice_unit
-    atom_num = size(atom_arr,2)
+    atom_num::Int64 = size(atom_arr,2)
     x_point_k::Float64 = pi/lattice_unit::Float64
     k::Float64 = x_point_k*k_ratio::Float64
     #generate waveguide transfer matrix
-    d = Truncated(Normal(0, sqrt(pos_variance)), -1, 1)
+
     atom_pos_div = rand(d,atom_num)
     atom_pos = (atom_arr[2,:] + atom_pos_div)*lattice_unit
     @assert all(lattice_width+2*lattice_unit .> atom_pos .> -2*lattice_unit)
     ldiff::Vector{Float64} = diff(atom_pos)
 
-#    println(size(ldiff))
-#    M_wg::Array{Complex{Float64},3} = reduce((x,y)->cat(3,x,y),map(x->wg_transfer_matrix(k,x),ldiff))
-#    println(size(M_wg))
-    M_wg = zeros(Complex{Float64},2,2,length(ldiff))
     for i = 1:length(ldiff)
-        M_wg[:,:,i] = wg_transfer_matrix(k,ldiff[i])
+        wg_transfer_matrix(M_wg,i,k,ldiff[i])
+#        M_wg[:,:,i] = wg_transfer_matrix(k,ldiff[i])
     end
-    #generate atomic transfer matrix
-    M_atom::Array{Complex{Float64},3} = zeros(Complex{Float64},(2,2,atom_num))
     for i = 1:atom_num
         pos::Vector{Float64} = Trajs[t,atom_arr[1,i]]
         if any(isnan(pos[1:2]))
-            M_atom[:,:,i] = wg_transfer_matrix(0.0,0.0)
+            wg_transfer_matrix(M_atom,i,0.0,0.0)
         else
-            #vector shift
-            mf = sample(-3:3)
-            gf = -0.25
+            if spectrum_mode == 1
+                g1d = calc_gamma1d(pos[1:2],t)*cospi(atom_pos_div[i])^2
+            elseif spectrum_mode ==2
+                g1d = calc_gamma1d(pos[1:2],t)
+            end
             f_0 = Fields.value(pos[1:2],t,ForceFields::ScalarFieldNode)*(-2.08e4) #*20.8/(-1e-3)
-#            f_0 *= 1+gf*mf
-#            g1d = calc_gamma1d(pos[1:2],t)*cospi(atom_pos_div[i])^2
-            g1d = calc_gamma1d(pos[1:2],t)
-#            @assert p_0 >= 0.0 "negative probe power!"
-            M_atom[:,:,i] = atom_transfer_matrix(detune,f_0,g1d,gamma_prime::Float64)
+            #vector shift
+            if vector_shift == 1
+                mf = sample(-3:3)
+                gf = -0.25
+                f_0 *= 1+gf*mf
+            end
+            atom_transfer_matrix(M_atom,i,detune,f_0,g1d,gamma_prime::Float64)
         end
     end
 
@@ -140,7 +136,8 @@ end
     last_wg = wg_transfer_matrix(k,lattice_width+2lattice_unit-atom_pos[end])
     M_tot::Array{Complex{Float64},2} = first_wg*M_atom[:,:,1];
     @fastmath for i = 1:atom_num - 1
-        M_tot *= M_atom[:,:,i+1]*M_wg[:,:,i]
+        @inbounds M_tot *= @view M_atom[:,:,i+1]
+        @inbounds M_tot *= @view M_wg[:,:,i]
     end
     M_tot *= last_wg
     return M_tot,one(Complex{Float64})/M_tot[2,2]

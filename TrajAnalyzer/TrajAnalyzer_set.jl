@@ -16,6 +16,7 @@ function init_parallel!(result::Dict,probe_sfn::ScalarFieldNode,ForceFields_sfn:
 end
 
 function init!(result::Dict,traj_s::SharedArray{Float64},probe_sfn::ScalarFieldNode,ForceFields_sfn::ScalarFieldNode,config::Dict)
+    global spectrum_mode, vector_shift
     global Trajs, Probe, ForceFields, TA_Config
     global avg_atom_num,lattice_width,lattice_unit,k_ratio,gamma_1d,gamma_prime,pos_variance,atom_beam_waist
     global range_i, range_j
@@ -23,6 +24,8 @@ function init!(result::Dict,traj_s::SharedArray{Float64},probe_sfn::ScalarFieldN
     Probe = Fields.copyfield(probe_sfn)
     ForceFields = Fields.copyfield(ForceFields_sfn)
     TA_Config = config
+    spectrum_mode = Int64(TA_Config["spectrum"]["mode"])
+    vector_shift = Int64(TA_Config["spectrum"]["vector-shift"])
     avg_atom_num = Int64(TA_Config["spectrum"]["avg-atom-number"])
     lattice_width = Float64(TA_Config["spectrum"]["lattice-width"])
     lattice_unit =  Float64(TA_Config["spectrum"]["lattice-unit"])
