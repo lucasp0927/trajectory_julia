@@ -53,7 +53,7 @@ end
         d = Truncated(Normal(0, sqrt(pos_variance)), -1, 1)
     end
     @time @sync @parallel for i in 1:iter
-        info("iteration: $i")
+        #info("iteration: $i")
         lattice_scale::Float64 = lattice_width/lattice_unit
         #TODO: other distribution of atom_num
         atom_num = round(Int,avg_atom_num*(Trajs.atom_num/TA_Config["spectrum"]["total-atom-number"]))
@@ -63,7 +63,7 @@ end
         #preallocate array
         M_wg = Array{Complex{Float64}}(2,2,atom_num-1)
         M_atom::Array{Complex{Float64},3} = Array{Complex{Float64}}(2,2,atom_num)
-        @time for fidx in collect(eachindex(freq_range))
+        for fidx in collect(eachindex(freq_range))
             for tidx in eachindex(time_range)
                 output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission(time_range[tidx],freq_range[fidx],atom_arr,M_wg,M_atom,d)
             end
