@@ -52,8 +52,7 @@ end
     elseif spectrum_mode == 2
         d = Truncated(Normal(0, sqrt(pos_variance)), -1, 1)
     end
-   # @time @sync @parallel for i in 1:iter
-    for i in 1:iter
+    @time @sync @parallel for i in 1:iter
         info("iteration: $i")
         lattice_scale::Float64 = lattice_width/lattice_unit
         #TODO: other distribution of atom_num
