@@ -56,8 +56,9 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
     @assert config["type"] == "single-scan-scaling"
     range_i_start = config["range_i_start"]::Int
     range_i_end = config["range_i_end"]::Int
+    range_i_step = config["range_i_step"]::Int
     jobs = config["jobs"]
-    for i = range_i_start:range_i_end
+    for i = range_i_start:range_i_step:range_i_end
         info("i = "*string(i))
         for job in values(jobs)
             field_name = job["field"]
