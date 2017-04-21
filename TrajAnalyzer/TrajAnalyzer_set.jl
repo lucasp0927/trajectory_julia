@@ -18,7 +18,7 @@ end
 function init!(result::Dict,traj_s::SharedArray{Float64},probe_sfn::ScalarFieldNode,ForceFields_sfn::ScalarFieldNode,config::Dict)
     global spectrum_mode, vector_shift
     global Trajs, Probe, ForceFields, TA_Config
-    global avg_atom_num,lattice_width,lattice_unit,k_ratio,gamma_1d,gamma_prime,pos_variance,atom_beam_waist
+    global avg_atom_num,lattice_width,lattice_unit,k_ratio,gamma_1d,gamma_prime,pos_variance,atom_beam_waist, probe_contrast
     global range_i, range_j
     Trajs = Trajectories(result,traj_s)
     Probe = Fields.copyfield(probe_sfn)
@@ -34,6 +34,7 @@ function init!(result::Dict,traj_s::SharedArray{Float64},probe_sfn::ScalarFieldN
     gamma_prime = Float64(TA_Config["spectrum"]["gamma-prime"])
     pos_variance = Float64(TA_Config["spectrum"]["pos-variance"]) #position variance in lattice unit
     atom_beam_waist = Float64(TA_Config["spectrum"]["atom-beam-waist"])
+    probe_contrast = Float64(TA_Config["spectrum"]["probe-contrast"])
     if TA_Config["type"] == "single-scan-scaling"
         range_i = collect(Int(TA_Config["range_i_start"]):Int(TA_Config["range_i_end"]))
     elseif TA_Config["type"] == "double-scan-scaling"

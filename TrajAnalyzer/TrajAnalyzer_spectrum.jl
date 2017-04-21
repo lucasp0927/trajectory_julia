@@ -116,7 +116,7 @@ function transmission(t::Float64,detune::Float64,atom_arr::Array{Int64,2},M_wg::
             wg_transfer_matrix(M_atom,i,0.0,0.0)
         else
             if spectrum_mode == 1
-                g1d = calc_gamma1d(pos[1:2],t)*cospi(atom_pos_div[i])^2
+                g1d = calc_gamma1d(pos[1:2],t)*((1-probe_contrast)+probe_contrast*cospi(atom_pos_div[i])^2)
             elseif spectrum_mode ==2
                 g1d = calc_gamma1d(pos[1:2],t)
             end
