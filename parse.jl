@@ -16,7 +16,7 @@ function parse_commandline()
         help = "calculate trajectories."
         action = :store_true
         "--trajinit"
-        help = "just initialized TrajAnalyzer"
+        help = "just initialize TrajAnalyzer"
         action = :store_true
         "--spectrum", "-S"
         help = "calculate spectrum."
@@ -29,7 +29,7 @@ function parse_commandline()
         action = :store_true
         # "--benchmark"
         # help = "benchmark Fields module."
-        action = :store_true
+        #action = :store_true
         "--ngamma1d"
         help = "Calculate N*Gamma1D, and output a range_i by range_j matrix."
         action = :store_true

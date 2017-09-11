@@ -119,7 +119,6 @@ function distribute_atoms_inner(sfn::ScalarFieldNode{2},traj_num::Int64)
     x_range = [sfn.position[1],sfn.position[1]+sfn.size[1]]
     y_range = [sfn.position[2],sfn.position[2]+sfn.size[2]]
     debug("distrubute atoms at t=$t, t_axial=$axial_temperature, t_radial=$radial_temperature, x_range=$x_range, y_range=$y_range,  traj_num=$traj_num")
-
     init_xv = zeros(Float64,(4,traj_num))
     vp_a = sqrt(2.0*KB*axial_temperature/M_CS)
     vp_r = sqrt(2.0*KB*radial_temperature/M_CS)
@@ -128,9 +127,12 @@ function distribute_atoms_inner(sfn::ScalarFieldNode{2},traj_num::Int64)
             x = (x_range[2]-x_range[1])*rand()+x_range[1]
             y = (y_range[2]-y_range[1])*rand()+y_range[1]
             p_pos = Fields.value([x,y],t,sfn)
-            vx = -4.0*vp_a+8.0*vp_a*rand()
-            vy = -4.0*vp_r+8.0*vp_r*rand()
-            vz = -4.0*vp_r+8.0*vp_r*rand()
+            # vx = -4.0*vp_a+8.0*vp_a*rand()
+            # vy = -4.0*vp_r+8.0*vp_r*rand()
+            # vz = -4.0*vp_r+8.0*vp_r*rand()
+            vx = 0.0
+            vy = 0.0
+            vz = 0.0
             ek_a = 0.5*M_CS*(vx^2)/KB
             ek_r = 0.5*M_CS*(vy^2+vz^2)/KB
             p_vel = exp(-1.0*ek_a/axial_temperature)*exp(-1.0*ek_r/radial_temperature)

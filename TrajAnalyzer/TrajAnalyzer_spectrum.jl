@@ -125,7 +125,7 @@ function transmission(t::Float64,detune::Float64,atom_arr::Array{Int64,2},M_wg::
             if vector_shift == 1
                 mf = sample(-3:3)
                 gf = -0.25
-                f_0 *= 1+gf*mf
+                f_0 *= 1+0.5*gf*mf
             end
             atom_transfer_matrix(M_atom,i,detune,f_0,g1d,gamma_prime::Float64)
         end
