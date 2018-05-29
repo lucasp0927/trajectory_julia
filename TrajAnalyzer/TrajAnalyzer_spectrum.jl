@@ -3,7 +3,7 @@ using PyCall
 using StatsBase
 using Distributions
 
-function spectrum(filename)
+function spectrum(filename,gm_name)
     output,output_matrix = calculate_transmission()
     average_spectrum = squeeze(mean(abs2(output),3),3)
     spectrum_data = Dict(
@@ -11,7 +11,7 @@ function spectrum(filename)
                          "avg_spectrum"=>average_spectrum,
                          "transfer_matrix"=>output_matrix
                          )
-    matwrite(filename*"_spectrum_data.mat",spectrum_data)
+    matwrite(filename*"_spectrum_data_"*gm_name*".mat",spectrum_data)
     #plot using matplotlib
     freq_config = TA_Config["spectrum"]["frequency"]
     time_config = TA_Config["spectrum"]["time"]
@@ -29,7 +29,7 @@ function spectrum(filename)
     plt.colorbar()
     plt.xlabel("time(us)")
     plt.ylabel("detuning (MHz)")
-    plt.savefig(filename*"_spectrum.png")
+    plt.savefig(filename*"_spectrum_"*gm_name*".png")
     plt.clf()
 end
 

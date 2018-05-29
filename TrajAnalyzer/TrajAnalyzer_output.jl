@@ -127,6 +127,7 @@ function output_image_gp_traj(t,range,res_x,res_y,filename;v_min=0.0,v_max=0.1,t
     if v_min==0.0 && v_max==0.0
         # stupid hack to fix v_min and v_max
         v_min = minimum(output_data[3,:,:])
+#        v_min = max(-2e-3,v_min)
         v_max = maximum(output_data[3,:,:])
 #        run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);time=$t" output_image_gp_traj.gp`)
     end

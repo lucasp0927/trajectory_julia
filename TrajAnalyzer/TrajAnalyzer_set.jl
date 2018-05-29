@@ -1,3 +1,19 @@
+function init_probe_parallel!(probe_sfn::ScalarFieldNode)
+    @sync begin
+        for p = 1:nprocs()
+            Fields.clean_scaling!(probe_sfn)
+            @async remotecall_wait(init_probe!,p,probe_sfn)
+        end
+    end
+    Fields.eval_scaling!(probe_sfn)
+end
+
+function init_probe!(probe_sfn::ScalarFieldNode)
+    global Probe
+    Probe = Fields.copyfield(probe_sfn)
+end
+
+
 function init_parallel!(result::Dict,probe_sfn::ScalarFieldNode,ForceFields_sfn::ScalarFieldNode,config::Dict)
     #filter trajectories
     filter_traj(result,config["filter"])

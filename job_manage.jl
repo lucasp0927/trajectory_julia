@@ -9,21 +9,23 @@ function job_inner_loop(config,sfn,input_prefix,output_prefix,flags,idx::Vector)
     elseif config["type"] == "double-scan-scaling"
         @assert length(idx) == 2
     end
-    # if flags["benchmark_flag"]
-    #     benchmark_value(1000000,sfn)
-    # end
-    if flags["calc_traj_flag"]
-        result = calculate_traj()
-        info("save results...")
-        matwrite(output_prefix*".mat",result)
-        traj = result["traj"]
-        tspan = result["tspan"]
-    elseif flags["need_traj_flag"]
-        info("read results from "*input_prefix*".mat...")
-        result = matread(input_prefix*".mat")
-        traj = result["traj"]
-        tspan = result["tspan"]
+    function prepare_var()
+        if flags["calc_traj_flag"]
+            result = calculate_traj()
+            info("save results...")
+            matwrite(output_prefix*".mat",result)
+            traj = result["traj"]
+            tspan = result["tspan"]
+        elseif flags["need_traj_flag"]
+            info("read results from "*input_prefix*".mat...")
+            result = matread(input_prefix*".mat")
+            traj = result["traj"]
+            tspan = result["tspan"]
+        end
+        return result,traj,tspan
     end
+    result,traj,tspan = prepare_var();
+
     if flags["need_traj_flag"]
         info("Initialize TrajAnalyzer...")
         probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
@@ -39,17 +41,23 @@ function job_inner_loop(config,sfn,input_prefix,output_prefix,flags,idx::Vector)
         TrajAnalyzer.output_movie_traj(config["movie-output"],output_prefix*"_traj.mp4")
     end
     if flags["spectrum_flag"]
-        info("Calculating Spectrum...")
-        TrajAnalyzer.spectrum(output_prefix)
+        for gm_name in config["spectrum"]["name"]
+            probe_sfn = Fields.buildAndAlign(config["probe"]["field"]["fields"][gm_name],0,name=gm_name);
+            info("Initialize TrajAnalyzer...")
+            TrajAnalyzer.init_probe_parallel!(probe_sfn)
+            info("Calculating Spectrum "*gm_name*"...")
+            TrajAnalyzer.spectrum(output_prefix, gm_name)
+        end
     end
     if flags["movie_data_flag"]
         info("Calculating movie potentials...")
         TrajAnalyzer.output_movie_data(config["movie-output"],output_prefix*"_moviedata.mat")
     end
-    if flags["ngamma1d_flag"]
-        info("Calculating N Gamma1D.")
-        TrajAnalyzer.ngamma1d(idx,output_prefix*"_ngamma1d.mat")
-    end
+
+    # if flags["ngamma1d_flag"]
+    #     info("Calculating N Gamma1D.")
+    #     TrajAnalyzer.ngamma1d(idx,output_prefix*"_ngamma1d.mat")
+    # end
 end
 
 function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,input_file,output_file,flags)

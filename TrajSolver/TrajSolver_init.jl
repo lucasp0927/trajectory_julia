@@ -7,16 +7,18 @@ function allocate_jobs(totaljob)
     return start,stop
 end
 
-function init_parallel(config::Dict)
+function init_parallel(config::Dict,probe_sfn::ScalarFieldNode)
 #    println("start initialization TrajSolver module...")
     @sync begin
         for p = 1:nprocs()
-            @async remotecall_wait(init!,p,config)
+            Fields.clean_scaling!(probe_sfn)
+            @async remotecall_wait(init!,p,config,probe_sfn)
         end
     end
+    Fields.eval_scaling!(probe_sfn)
 end
 
-function init!(config::Dict)
+function init!(config::Dict,probe_sfn::ScalarFieldNode)
     srand()
 #    println("initialize TrajSolver module on process ", myid())
     global my_trajnum
@@ -26,6 +28,8 @@ function init!(config::Dict)
     global in_boundaries, out_boundaries
     global result
     global trajsolver_config
+    global Probe
+    Probe = Fields.copyfield(probe_sfn)
     trajsolver_config = config
     #simulation-config
     trajnum = round(Int64,config["simulation-config"]["traj_num"])::Int64
@@ -127,12 +131,11 @@ function distribute_atoms_inner(sfn::ScalarFieldNode{2},traj_num::Int64)
             x = (x_range[2]-x_range[1])*rand()+x_range[1]
             y = (y_range[2]-y_range[1])*rand()+y_range[1]
             p_pos = Fields.value([x,y],t,sfn)
-            # vx = -4.0*vp_a+8.0*vp_a*rand()
-            # vy = -4.0*vp_r+8.0*vp_r*rand()
-            # vz = -4.0*vp_r+8.0*vp_r*rand()
-            vx = 0.0
-            vy = 0.0
-            vz = 0.0
+
+            vx = -4.0*vp_a+8.0*vp_a*rand()
+            vy = -4.0*vp_r+8.0*vp_r*rand()
+            vz = -4.0*vp_r+8.0*vp_r*rand()
+
             ek_a = 0.5*M_CS*(vx^2)/KB
             ek_r = 0.5*M_CS*(vy^2+vz^2)/KB
             p_vel = exp(-1.0*ek_a/axial_temperature)*exp(-1.0*ek_r/radial_temperature)
