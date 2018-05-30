@@ -4,6 +4,7 @@ using StatsBase
 using Distributions
 
 function spectrum(filename,gm_name)
+    debug("spectrum test!")
     output,output_matrix = calculate_transmission()
     average_spectrum = squeeze(mean(abs2(output),3),3)
     spectrum_data = Dict(
@@ -45,15 +46,15 @@ end
     time_range = Float64(time_config["start"]):Float64(time_config["step"]):Float64(time_config["end"])
     @assert Trajs.tspan[1]<=time_range[1] && Trajs.tspan[end]>=time_range[end] "spectrum time range out of range!"
     iter = TA_Config["spectrum"]["iteration"]
-    output = SharedArray(Complex{Float64},(length(freq_range),length(time_range),iter))
-    output_matrix = SharedArray(Complex{Float64},(2,2,length(freq_range),length(time_range),iter))
+    output = SharedArray{Complex{Float64}}(length(freq_range),length(time_range),iter)
+    output_matrix = SharedArray{Complex{Float64}}((2,2,length(freq_range),length(time_range),iter))
     if spectrum_mode == 1
         d = Uniform(-1,1)
     elseif spectrum_mode == 2
         d = Truncated(Normal(0, sqrt(pos_variance)), -1, 1)
     end
     @time @sync @parallel for i in 1:iter
-        #info("iteration: $i")
+        info("iteration: $i")
         lattice_scale::Float64 = lattice_width/lattice_unit
         #TODO: other distribution of atom_num
         atom_num = round(Int,avg_atom_num*(Trajs.atom_num/TA_Config["spectrum"]["total-atom-number"]))

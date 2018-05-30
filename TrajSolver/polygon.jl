@@ -35,7 +35,7 @@ end
     oddNodes = false
     for i = 1:n
         if ((p.y[i] < pos[2] <= p.y[j] || p.y[j] < pos[2] <= p.y[i]))
-            oddNodes $= (pos[2]*p.multiple[i]+p.constant[i]<pos[1]);
+            oddNodes = xor(oddNodes,(pos[2]*p.multiple[i]+p.constant[i]<pos[1]));
         end
         j = i
     end

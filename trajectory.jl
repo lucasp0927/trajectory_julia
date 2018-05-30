@@ -1,5 +1,5 @@
 using Logging
-Logging.configure(level=Logging.INFO)
+Logging.configure(level=Logging.DEBUG)
 include("parse.jl")
 parsed_args, flags = parse_commandline()
 

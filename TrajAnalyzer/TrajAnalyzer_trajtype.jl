@@ -7,8 +7,8 @@ function traj_iscrashed()
     roi_p = Polygon([promote(config["roi"]...)...])
     selected = collect(1:size(Trajs.traj,3))
     selected = filter(i->anyPointInPolygon(roi_p,Trajs.traj[1:2,start_idx:end_idx,i]),selected)
-    selected = filter(i->any(isnan(Trajs.traj[:,start_idx:end_idx,i])),selected)
-    selected = filter(i->all(isnan(Trajs.traj[:,start_idx:end_idx,i]))==false,selected)
+    selected = filter(i->any(isnan.(Trajs.traj[:,start_idx:end_idx,i])),selected)
+    selected = filter(i->all(isnan.(Trajs.traj[:,start_idx:end_idx,i]))==false,selected)
     selected = filter(i->anyPointInPolygon(gap_p,Trajs.traj[1:2,start_idx:end_idx,i])==false,selected)
     return selected
 end
