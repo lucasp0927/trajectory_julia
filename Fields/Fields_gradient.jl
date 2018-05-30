@@ -301,6 +301,10 @@ function gradient!(t::Float64,posvel::Vector{Float64},grad::Vector{Float64})
     gradient!(t,posvel,grad,fields)
 end
 
+function gradient_odejl!(grad::Vector{Float64},posvel::Vector{Float64},p,t::Float64,)
+    gradient!(t,posvel,grad,fields)
+end
+
 @generated function gradient!(t::Float64,posvel::Vector{Float64},grad::Vector{Float64},sfn::ScalarFieldNode{2})
     quote
         x = $(Array(Float64,2))

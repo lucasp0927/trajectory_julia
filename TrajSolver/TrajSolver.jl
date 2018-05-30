@@ -1,6 +1,7 @@
 module TrajSolver
 #using TrajAnalyzer
-using Sundials
+#using Sundials
+using DifferentialEquations
 using Fields
 using Logging
 #using Optim
@@ -114,15 +115,24 @@ function calculate_traj_unbalanced()
 end
 
 function solve_traj_one_shot(init_xv::Vector{Float64})
-    yout = Array(Float64,4,length(tspan))
+    yout = Array{Float64}(4,length(tspan))
     fill!(yout,NaN)
     if any(isnan(init_xv)) == false
-        mycvode(Fields.gradient!,init_xv,tspan,yout;reltol=reltol, abstol=abstol)
+        #mycvode(Fields.gradient!,init_xv,tspan,yout;reltol=reltol, abstol=abstol)
+        solve_eq_of_motion(Fields.gradient_odejl!,init_xv,tspan,yout;reltol=reltol, abstol=abstol)        
     end
     return yout
 end
 
 
+function solve_eq_of_motion{T<:AbstractArray}(f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::T; reltol::Float64=1e-8, abstol::Float64=1e-7, mxstep::Int64=Integer(1e6))
+    prob = ODEProblem(f,y0,(t[1],t[end]))
+    sol=solve(prob,saveat=t)
+    @assert length(t)==length(sol.u)
+    for i = 1:length(sol.u)
+        yout[:,i] = sol.u[i]
+    end
+end
 #=
 function solve_traj()
     fill!(result,NaN)
