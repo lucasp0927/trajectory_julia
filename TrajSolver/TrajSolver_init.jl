@@ -60,7 +60,7 @@ function init!(config::Dict,probe_sfn::ScalarFieldNode)
     #calculate my_trajnum
     jobs = allocate_jobs(trajnum)
     my_trajnum = jobs[2]-jobs[1]+1
-    result = Array(Float64,4,length(tspan),my_trajnum)
+    result = Array{Float64}(4,length(tspan),my_trajnum)
 end
 
 function range2sfn(range)

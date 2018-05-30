@@ -41,7 +41,7 @@ end
     t_idx = searchsortedlast(tr.tspan,t)
     @assert t_idx >=1 && t_idx <= length(tr.tspan)
     t_div = tr.t_div::Float64
-    result = Array(Float64,size(tr.traj,1),length(traj_id))
+    result = Array{Float64}(size(tr.traj,1),length(traj_id))
     if t_idx != length(tr.tspan)
         r = (t-tr.tspan[t_idx])/t_div
         result .= tr.traj[:,t_idx,traj_id].*(1.0-r)

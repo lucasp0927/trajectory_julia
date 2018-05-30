@@ -15,7 +15,7 @@ function setfield!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},A::SharedArray{T},po
     res = sz./(collect(size(A))[1:N]-1)
     @assert all(x->x!=0,res) "zero resolution!"
     @assert length(pos)==length(sz)==N==ndims(A) "dimension error!"
-    f.field = Array(T,1)
+    f.field = Array{T}(1)
     f.field = A
     f.position = pos
     f.size = sz

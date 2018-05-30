@@ -12,8 +12,8 @@ type Polygon
         n = size(poly,2)
         x = poly[1,:]
         y = poly[2,:]
-        constant = Array(Float64,n)
-        multiple = Array(Float64,n)
+        constant = Array{Float64}(n)
+        multiple = Array{Float64}(n)
         j = n
         for i = 1:n
             if y[j]==y[i]

@@ -45,7 +45,7 @@ function calculate_traj()
         err("Unknown init-type in atom-config.")
     end
     #preallocate result
-    traj = Array(Float64,4,length(tspan),trajnum)
+    traj = Array{Float64}(4,length(tspan),trajnum)
     # function to produce the next work item from the queue.
     # in this case it's just an index.
     i = 1

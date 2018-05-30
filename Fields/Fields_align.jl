@@ -5,7 +5,7 @@ function align_field_tree!{T<:FieldNode}(f::T)
     debug("unaligned position $(unalign_geo["pos"])")
     debug("unaligned size $(unalign_geo["size"])")
     debug("unaligned resolution $(unalign_geo["res"])")
-    arr_sz = floor(Integer,unalign_geo["size"]./unalign_geo["res"])
+    arr_sz = floor.(Integer,unalign_geo["size"]./unalign_geo["res"])
     new_sz = arr_sz.*unalign_geo["res"]
     align_geo = unalign_geo
     align_geo["size"] = new_sz
@@ -30,21 +30,21 @@ function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Vector{Float
     debug("align ScalarField ",f.name)
     @assert length(res) == length(pos) "dimension mismatch!"
     unalign_geo = geometry(f)
-    new_pos = ceil((unalign_geo["pos"].-pos)./res).*res.+pos
+    new_pos = ceil.((unalign_geo["pos"].-pos)./res).*res.+pos
     @assert all(map(>=, new_pos, unalign_geo["pos"]))
     @assert all(map(<, new_pos-unalign_geo["pos"],res))
     old_end = unalign_geo["pos"].+unalign_geo["size"]
-    new_end = floor((old_end.-pos)./res).*res.+pos
+    new_end = floor.((old_end.-pos)./res).*res.+pos
     @assert all(map(<=, new_end, old_end))
     @assert all(map(<, old_end.-new_end,res))
     new_size = new_end.-new_pos
     align_geo = Dict("pos"=>new_pos,"size"=>new_size,"res"=>res)
     ##### interpolate field
-    new_arr_size = round(Int64,new_size ./ res)+one(Int64)
+    new_arr_size = round.(Int64,new_size ./ res)+one(Int64)
     if (unalign_geo["pos"] == align_geo["pos"])&&(unalign_geo["res"] == align_geo["res"])
         info("no need to align!")
     else
-        new_field = SharedArray(T,new_arr_size...)
+        new_field = SharedArray{T}(new_arr_size...)
         itp_field!(new_field,f.field,unalign_geo,align_geo)
         @assert collect(size(new_field)) == new_arr_size
         setfield!(f,new_field,align_geo["pos"],align_geo["size"],scaling=f.scaling)
@@ -57,17 +57,17 @@ function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Vector{Float
     debug("align VectorField ",f.name)
     @assert length(res) == length(pos) "dimension mismatch!"
     unalign_geo = geometry(f)
-    new_pos = ceil((unalign_geo["pos"].-pos)./res).*res.+pos
+    new_pos = ceil.((unalign_geo["pos"].-pos)./res).*res.+pos
     @assert all(map(>=, new_pos, unalign_geo["pos"]))
     @assert all(map(<, new_pos-unalign_geo["pos"],res))
     old_end = unalign_geo["pos"].+unalign_geo["size"]
-    new_end = floor((old_end.-pos)./res).*res.+pos
+    new_end = floor.((old_end.-pos)./res).*res.+pos
     @assert all(map(<=, new_end, old_end))
     @assert all(map(<, old_end.-new_end,res))
     new_size = new_end.-new_pos
     align_geo = Dict("pos"=>new_pos,"size"=>new_size,"res"=>res)
     ##### interpolate field
-    new_arr_size = round(Int64,new_size ./ res)+one(Int64)
+    new_arr_size = round.(Int64,new_size ./ res)+one(Int64)
     if (unalign_geo["pos"] == align_geo["pos"])&&(unalign_geo["res"] == align_geo["res"])
         info("no need to align!")
     else
