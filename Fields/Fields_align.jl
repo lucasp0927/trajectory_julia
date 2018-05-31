@@ -1,17 +1,18 @@
 function align_field_tree!{T<:FieldNode}(f::T)
     set_geometry!(f)
-    debug("align top field node ",f.name)
+    #debug("align top field node $(f.name)")
+    @debug "align top field node "*f.name
     unalign_geo = geometry(f)
-    debug("unaligned position $(unalign_geo["pos"])")
-    debug("unaligned size $(unalign_geo["size"])")
-    debug("unaligned resolution $(unalign_geo["res"])")
+    @debug "unaligned position $(unalign_geo["pos"])"
+    @debug "unaligned size $(unalign_geo["size"])"
+    @debug "unaligned resolution $(unalign_geo["res"])"
     arr_sz = floor.(Integer,unalign_geo["size"]./unalign_geo["res"])
     new_sz = arr_sz.*unalign_geo["res"]
     align_geo = unalign_geo
     align_geo["size"] = new_sz
-    debug("aligned position $(align_geo["pos"])")
-    debug("aligned size $(align_geo["size"])")
-    debug("aligned resolution $(align_geo["res"])")
+    @debug "aligned position $(align_geo["pos"])"
+    @debug "aligned size $(align_geo["size"])"
+    @debug "aligned resolution $(align_geo["res"])"
     align_field!(f,align_geo["res"],align_geo["pos"])
     set_geometry!(f)
     set_typeof!(f)
@@ -19,7 +20,7 @@ function align_field_tree!{T<:FieldNode}(f::T)
 end
 
 function align_field!{T<:FieldNode}(f::T,res::Vector{Float64},pos::Vector{Float64})
-    debug("align FieldNode ",f.name)
+    @debug "align FieldNode $(f.name)"
     @assert length(res) == length(pos) "dimension mismatch!"
     for ff in f.fields
         align_field!(ff,res,pos)
@@ -27,7 +28,7 @@ function align_field!{T<:FieldNode}(f::T,res::Vector{Float64},pos::Vector{Float6
 end
 
 function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Vector{Float64},pos::Vector{Float64})
-    debug("align ScalarField ",f.name)
+    @debug "align ScalarField $(f.name)"
     @assert length(res) == length(pos) "dimension mismatch!"
     unalign_geo = geometry(f)
     new_pos = ceil.((unalign_geo["pos"].-pos)./res).*res.+pos
@@ -42,7 +43,7 @@ function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Vector{Float
     ##### interpolate field
     new_arr_size = round.(Int64,new_size ./ res)+one(Int64)
     if (unalign_geo["pos"] == align_geo["pos"])&&(unalign_geo["res"] == align_geo["res"])
-        info("no need to align!")
+        @info "no need to align!"
     else
         new_field = SharedArray{T}(new_arr_size...)
         itp_field!(new_field,f.field,unalign_geo,align_geo)
@@ -54,7 +55,7 @@ function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Vector{Float
 end
 
 function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Vector{Float64},pos::Vector{Float64})
-    debug("align VectorField ",f.name)
+    @debug "align ScalarField $(f.name)"    
     @assert length(res) == length(pos) "dimension mismatch!"
     unalign_geo = geometry(f)
     new_pos = ceil.((unalign_geo["pos"].-pos)./res).*res.+pos
@@ -69,7 +70,7 @@ function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Vector{Float
     ##### interpolate field
     new_arr_size = round.(Int64,new_size ./ res)+one(Int64)
     if (unalign_geo["pos"] == align_geo["pos"])&&(unalign_geo["res"] == align_geo["res"])
-        info("no need to align!")
+        @info "no need to align!"
     else
         #loop over three components
         new_field = SharedArray(T,3,new_arr_size...)
@@ -147,7 +148,7 @@ function test_align()
     end
 
     function test_interpolate{T<:ComplexOrFloat}(f::ScalarField{T,2},func)
-        info("testing ",f.name)
+        @info "testing $(f.name)"
         sz = size(f.field)
         pos = f.position
         res = f.res
@@ -160,11 +161,11 @@ function test_align()
             end
         end
         err = sum/(sz[1]*sz[2])
-        info(string(err))
+        @info string(err)
         return err
     end
     function test_interpolate{T<:ComplexOrFloat}(f::ScalarField{T,3},func)
-        info("testing ",f.name)
+        @info "testing $(f.name)"        
         sz = size(f.field)
         pos = f.position
         res = f.res
@@ -178,11 +179,11 @@ function test_align()
             end
         end
         err = sum/(sz[1]*sz[2]*sz[3])
-        info(string(err))
+        @info string(err)
         return err
     end
     function test_interpolate{T<:ComplexOrFloat}(f::VectorField{T,3},func)
-        info("testing ",f.name)
+        @info "testing $(f.name)"
         sz = size(f.field)
         pos = f.position
         res = f.res
@@ -196,12 +197,12 @@ function test_align()
             end
         end
         err = sum/(sz[1]*sz[2]*sz[3]*3)
-        info(string(err))
+        @info string(err)
         return err
     end
 
     function test_interpolate{T<:ComplexOrFloat}(f::VectorField{T,2},func)
-        info("testing ",f.name)
+        @info "testing $(f.name)"        
         sz = size(f.field)
         pos = f.position
         res = f.res
@@ -214,12 +215,12 @@ function test_align()
             end
         end
         err = sum/(3*sz[1]*sz[2])
-        info(string(err))
+        @info string(err)
         return err
     end
 
     #2D scalar
-    info("2D Scalar")
+    @info "2D Scalar"
     func1 = (x,y)->(sin(x/10.0)+cos(y/10.0))*exp(-((x-75.0)^2+(y-75.0)^2)/20^2)
     func2 = (x,y)->(sin(x/10.0)+cos(y/10.0))*exp(-((x-50.0)^2+(y-50.0)^2)/30^2)
     func3 = (x,y)->(sin(x/10.0)+cos(y/10.0))*exp(-((x-50.0)^2+(y-50.0)^2)/20^2)
@@ -244,7 +245,7 @@ function test_align()
 
 
     #2D vector
-    info("2D Vector")
+    @info "2D Vector"
     func1 = (x,y)->repmat([(sin(x/10.0)+cos(y/10.0))*exp(-((x-75.0)^2+(y-75.0)^2)/20^2)],3)
     func2 = (x,y)->repmat([(sin(x/10.0)+cos(y/10.0))*exp(-((x-50.0)^2+(y-50.0)^2)/30^2)],3)
     func3 = (x,y)->repmat([(sin(x/10.0)+cos(y/10.0))*exp(-((x-50.0)^2+(y-50.0)^2)/20^2)],3)
@@ -268,7 +269,7 @@ function test_align()
     @test test_interpolate(complex_vf,func3)<= 1e-2
 
     #3D Scalar
-    info("3D Scalar")
+    @info "3D Scalar"
     func1 = (x,y,z)->(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-75.0)^2+(y-75.0)^2)/20^2)*exp(-(z-5.0)^2/(2.0^2))
     func2 = (x,y,z)->(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-50.0)^2+(y-50.0)^2)/30^2)*exp(-(z-5.0)^2/(2.0^2))
     func3 = (x,y,z)->(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-50.0)^2+(y-50.0)^2)/20^2)*exp(-(z-5.0)^2/(2.0^2))
@@ -291,7 +292,7 @@ function test_align()
     @test test_interpolate(float_sf2,func2) <= 1e-2
     @test test_interpolate(complex_sf,func3)<= 1e-2
     #3D Vector
-    info("3D Vector")
+    @info "3D Vector"
     func1 = (x,y,z)->repmat([(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-75.0)^2+(y-75.0)^2)/20^2)*exp(-(z-5.0)^2/(2.0^2))],3)
     func2 = (x,y,z)->repmat([(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-50.0)^2+(y-50.0)^2)/30^2)*exp(-(z-5.0)^2/(2.0^2))],3)
     func3 = (x,y,z)->repmat([(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-50.0)^2+(y-50.0)^2)/20^2)*exp(-(z-5.0)^2/(2.0^2))],3)

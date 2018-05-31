@@ -1,10 +1,8 @@
 module Fields
 using Interpolations
-#using Devectorize
 using Base.Cartesian
 using Base.Test
-using Logging
-#using FastAnonymous
+using MicroLogging
 #TODO: align use Flat() boundary condition, add more
 #TODO: getindex overload for fields.
 #TODO: support different resolution for different area
@@ -17,7 +15,7 @@ include("Fields_type.jl")
 include("Fields_function.jl")
 
 function init_parallel!(sfn::ScalarFieldNode)
-    info("initializing Fields module...")
+    @info "initializing Fields module..."
     @sync begin
         for p = 1:nprocs()     #initialize Fields module on each processe
             #set all scaling to t->0.0
@@ -43,24 +41,23 @@ function reset!()
 end
 
 function test()
-    Logging.configure(level=Logging.INFO)
-    info("testing zero_field")
+    @info "testing zero_field"
     test_zero_field()
-    info("testing typeof")
+    @info "testing typeof"
     test_typeof()
-    info("testing find")
+    @info "testing find"
     test_find()
-    info("testing geometry")
+    @info "testing geometry"
     test_geometry()
-    info("testing align")
+    @info "testing align"
     test_align()
 #####
-#    info("testing build")
+#    @info "testing build"
 #    test_build()
 #####
-    info("testing interpolate")
+    @info "testing interpolate"
     test_interpolate()
-    info("testing gradient")
+    @info "testing gradient"
     test_gradient()
 end
 

@@ -54,10 +54,10 @@ function output_movie(mov_tspan,range,res,filename;traj=false)
 end
 
 function output_image_gp(t,range,filename,sfn;v_min=0.0,v_max=0.0,xres=1300,yres=1000,save_data=false,data_filename = "")
-    debug("in TrajAnalyzer.output_image_gp()... with sfn")
+    @debug "in TrajAnalyzer.output_image_gp()... with sfn"
     output_data = Fields.composite_with_position(range,t,[10.0,10.0],sfn)
     current_folder = pwd()
-    debug("current_folder: $current_folder")
+    @debug "current_folder: $current_folder"
     image_folder = mktempdir(tempdir())
     cd(image_folder)
     h5write(image_folder*"/data.h5", "output", output_data)
@@ -77,10 +77,10 @@ function output_image_gp(t,range,filename,sfn;v_min=0.0,v_max=0.0,xres=1300,yres
 end
 
 function output_image_gp(t,range,filename;v_min=0.0,v_max=0.0,xres=1300,yres=1000,save_data=false,data_filename = "")
-    debug("in TrajAnalyzer.output_image_gp()")
+    @debug "in TrajAnalyzer.output_image_gp()"
     output_data = Fields.composite_with_position(range,t,[10.0,10.0])
     current_folder = pwd()
-    debug("current_folder: $current_folder")
+    @debug "current_folder: $current_folder"
     hash_key = string(hash(rand()))
     image_folder = "/tmp/image"*hash_key
     mkdir(image_folder)

@@ -1,9 +1,7 @@
 module TrajSolver
-#using TrajAnalyzer
-#using Sundials
 using DifferentialEquations
 using Fields
-using Logging
+using MicroLogging
 #using Optim
 using ProgressMeter
 
@@ -28,14 +26,14 @@ include("../TrajAnalyzer/TrajAnalyzer_output.jl")
 include("../TrajAnalyzer/TrajAnalyzer_trajectories.jl")
 
 function calculate_traj()
-    info("distribute atoms...")
+    @info "distribute atoms..."
     #init trajnum initial xv pairs
     if trajsolver_config["atom-config"]["init-type"] == "fit-trap"
-        info("fitting trap...")
+        @info "fitting trap..."
         prepare_U_prob()
         init_xv = distribute_atoms()
     elseif trajsolver_config["atom-config"]["init-type"] == "from-file"
-        info("reading initial condition from "*trajsolver_config["atom-config"]["filename"]*"...")
+        @info "reading initial condition from "*trajsolver_config["atom-config"]["filename"]*"..."
         result = matread(trajsolver_config["atom-config"]["filename"])
         traj_s = copy_to_sharedarray!(result["traj"])
         trajectories = Trajectories(result,traj_s)
@@ -52,7 +50,7 @@ function calculate_traj()
     i = 1
     pm = Progress(trajnum, 1)
     nextidx() = (next!(pm);idx=i; i+=1; idx)
-    info("calculate trajectories...")
+    @info "calculate trajectories..."
     @time @sync begin
         for p = 2:nprocs()
             @async begin
@@ -87,7 +85,7 @@ function calculate_traj()
 end
 
 function calculate_traj_unbalanced()
-    info("calculate trajectories...")
+    @info "calculate trajectories..."
 #    parallel_set_iter(i)
     prepare_U_prob()
     @time @sync begin
@@ -139,10 +137,10 @@ function solve_traj()
     init_xv = distribute_atoms()
     #initialize sundials
     if solver == "ADAMS"
-        debug("Using solver ADAMS")
+        @debug "Using solver ADAMS"
         mem = convert(Sundials.CVODE_ptr,Sundials.CVodeHandle(Sundials.CV_ADAMS, Sundials.CV_FUNCTIONAL))
     elseif solver == "BDF"
-        debug("Using solver BDF")
+        @debug "Using solver BDF"
         mem = convert(Sundials.CVODE_ptr,Sundials.CVodeHandle(Sundials.CV_BDF, Sundials.CV_NEWTON))
     else
         err("Unknown ODE solver $solver.")

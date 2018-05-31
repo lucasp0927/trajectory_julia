@@ -122,7 +122,7 @@ function distribute_atoms_inner(sfn::ScalarFieldNode{2},traj_num::Int64)
     t = tspan[1]
     x_range = [sfn.position[1],sfn.position[1]+sfn.size[1]]
     y_range = [sfn.position[2],sfn.position[2]+sfn.size[2]]
-    debug("distrubute atoms at t=$t, t_axial=$axial_temperature, t_radial=$radial_temperature, x_range=$x_range, y_range=$y_range,  traj_num=$traj_num")
+    @debug "distrubute atoms at t=$t, t_axial=$axial_temperature, t_radial=$radial_temperature, x_range=$x_range, y_range=$y_range,  traj_num=$traj_num"
     init_xv = zeros(Float64,(4,traj_num))
     vp_a = sqrt(2.0*KB*axial_temperature/M_CS)
     vp_r = sqrt(2.0*KB*radial_temperature/M_CS)

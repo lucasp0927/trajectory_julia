@@ -1,6 +1,6 @@
 module TrajAnalyzer
 using Fields
-using Logging
+using MicroLogging
 using PyCall
 using ProgressMeter
 using MAT
@@ -21,12 +21,11 @@ global range_i, range_j
 #for TrajAnalyzer_output to determin using ffmpeg or avconv.
 @pyimport platform
 function calc_score(area)
-    debug("In TrajAnalyzer.calc_score()")
     pp = Polygon([promote(area...)...])
     score = @parallel (+) for i = 1:size(Trajs.traj,3)
         sum(map(j->pointInPolygon(pp,Trajs.traj[1:2,j,i])?1:0,1:size(Trajs.traj,2)))
     end
-    debug("score: $score")
+    @debug "score: $score"
     return score
 end
 end

@@ -52,11 +52,11 @@ function parse_commandline()
     parsed_args = parse_args(s)
     need_traj_flag = parsed_args["spectrum"] || parsed_args["movie"] || parsed_args["ngamma1d"] || parsed_args["trajinit"]
     if need_traj_flag && (parsed_args["trajectory"] == false && parsed_args["infile"] == "")
-        err("please provide input file prefix.")
+        @error "please provide input file prefix."
     end
-    debug("Parsed args:")
+    @debug "Parsed args:"
     for (key,val) in parsed_args
-        debug("  $key  =>  $(repr(val))")
+        @debug "  $key  =>  $(repr(val))"
     end
     flags = Dict("calc_traj_flag" => parsed_args["trajectory"],
                  "spectrum_flag" => parsed_args["spectrum"],
@@ -76,9 +76,9 @@ function parse_config(filename,parsed_args)
     @assert length(keys(fields_config)) == 1 "more than 1 top level fieldnode!"
     trajsolver_config = config["trajsolver-config"]
     job_config = config["job-config"]
-    debug("fields config:",convert(Dict{Any,Any},copy(fields_config)))
-    debug("trajsolver config:",convert(Dict{Any,Any},copy(trajsolver_config)))
-    debug("job config:",convert(Dict{Any,Any},copy(job_config)))
+    @debug "fields config:" convert(Dict{Any,Any},copy(fields_config))
+    @debug "trajsolver config:" convert(Dict{Any,Any},copy(trajsolver_config))
+    @debug "job config:" convert(Dict{Any,Any},copy(job_config))
     if length(parsed_args["irange"]) != 0
         job_config["range_i_start"] = parsed_args["irange"][1]
         job_config["range_i_end"] = parsed_args["irange"][2]

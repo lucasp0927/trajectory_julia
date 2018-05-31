@@ -6,7 +6,7 @@ using Base.Test
             idx_a = [searchsorted(range_i,idx[1])]
             a[idx_a...] = calc_avg_ngamma1d_parallel()
             if idx[1] == range_i[end]
-                info("saving ngamma1d...")
+                @info "saving ngamma1d..."
                 matwrite(filename, Dict("ng1d" => a))
             end
         elseif length(idx) == 2
@@ -14,7 +14,7 @@ using Base.Test
             idx_a = [searchsorted(range_i,idx[1]),searchsorted(range_j,idx[2])]
             a[idx_a...] = calc_avg_ngamma1d_parallel()
             if idx[1] == range_i[end] && idx[2] == range_j[end]
-                info("saving ngamma1d...")
+                @info "saving ngamma1d..."
                 matwrite(filename, Dict("ng1d" => a))
             end
         end

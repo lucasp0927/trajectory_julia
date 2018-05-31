@@ -5,7 +5,7 @@ using HDF5
 
 function fit_trap(data,axial_t,radial_t)
     if axial_t == radial_t
-        info("axial temperature = radial temperature, no need for matlab.")
+        @info "axial temperature = radial temperature, no need for matlab."
 #        prob,xstart,xend,ystart,yend = mxcall(:fit_trap,5,data,axial_t,radial_t)
         prob,xstart,xend,ystart,yend = iso_temp_prob_dist(data,axial_t)
     else

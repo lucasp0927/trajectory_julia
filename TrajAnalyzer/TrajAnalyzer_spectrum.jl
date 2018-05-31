@@ -4,7 +4,7 @@ using StatsBase
 using Distributions
 
 function spectrum(filename,gm_name)
-    debug("spectrum test!")
+    @debug "spectrum test!"
     output,output_matrix = calculate_transmission()
     average_spectrum = squeeze(mean(abs2(output),3),3)
     spectrum_data = Dict(
@@ -54,7 +54,7 @@ end
         d = Truncated(Normal(0, sqrt(pos_variance)), -1, 1)
     end
     @time @sync @parallel for i in 1:iter
-        info("iteration: $i")
+        @info "iteration: $i"
         lattice_scale::Float64 = lattice_width/lattice_unit
         #TODO: other distribution of atom_num
         atom_num = round(Int,avg_atom_num*(Trajs.atom_num/TA_Config["spectrum"]["total-atom-number"]))

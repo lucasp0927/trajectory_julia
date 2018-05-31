@@ -12,12 +12,12 @@ function job_inner_loop(config,sfn,input_prefix,output_prefix,flags,idx::Vector)
     function prepare_var()
         if flags["calc_traj_flag"]
             result = calculate_traj()
-            info("save results...")
+            @info "save results..."
             matwrite(output_prefix*".mat",result)
             traj = result["traj"]
             tspan = result["tspan"]
         elseif flags["need_traj_flag"]
-            info("read results from "*input_prefix*".mat...")
+            @info "read results from "*input_prefix*".mat..."
             result = matread(input_prefix*".mat")
             traj = result["traj"]
             tspan = result["tspan"]
@@ -27,30 +27,30 @@ function job_inner_loop(config,sfn,input_prefix,output_prefix,flags,idx::Vector)
     result,traj,tspan = prepare_var();
 
     if flags["need_traj_flag"]
-        info("Initialize TrajAnalyzer...")
+        @info "Initialize TrajAnalyzer..."
         probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
         TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
         crashed_num = length(TrajAnalyzer.traj_iscrashed())
         gap_num = length(TrajAnalyzer.traj_ingap(false))
-        info("$crashed_num trajectories crashed.")
-        info("$gap_num trajectories in gap.")
+        @info "$crashed_num trajectories crashed."
+        @info "$gap_num trajectories in gap."
     end
     if flags["movie_flag"]
-        info("Outputing Movie...")
+        @info "Outputing Movie..."
         movie_range = [promote(config["movie-output"]["range"]...)...]
         TrajAnalyzer.output_movie_traj(config["movie-output"],output_prefix*"_traj.mp4")
     end
     if flags["spectrum_flag"]
         for gm_name in config["spectrum"]["name"]
             probe_sfn = Fields.buildAndAlign(config["probe"]["field"]["fields"][gm_name],0,name=gm_name);
-            info("Initialize TrajAnalyzer...")
+            @info "Initialize TrajAnalyzer..."
             TrajAnalyzer.init_probe_parallel!(probe_sfn)
-            info("Calculating Spectrum "*gm_name*"...")
+            @info "Calculating Spectrum "*gm_name*"..."
             TrajAnalyzer.spectrum(output_prefix, gm_name)
         end
     end
     if flags["movie_data_flag"]
-        info("Calculating movie potentials...")
+        @info "Calculating movie potentials..."
         TrajAnalyzer.output_movie_data(config["movie-output"],output_prefix*"_moviedata.mat")
     end
 
@@ -67,12 +67,12 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
     range_i_step = config["range_i_step"]::Int
     jobs = config["jobs"]
     for i = range_i_start:range_i_step:range_i_end
-        info("i = "*string(i))
+        @info "i = "*string(i)
         for job in values(jobs)
             field_name = job["field"]
             s = job["scaling"]
             s = replace(s,"@i",float(i))
-            info("change scaling of field $field_name to ",s)
+            @info "change scaling of field $field_name to ",s
             s_exp = parse(s)
             Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
         end
@@ -91,13 +91,14 @@ function double_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
     range_j_end = config["range_j_end"]::Int
     jobs = config["jobs"]
     for i = range_i_start:range_i_end, j = range_j_start:range_j_end
-        info("i = "*string(i)*", j = "*string(j))
+        @info "i = "*string(i)*", j = "*string(j)
         for job in values(jobs)
             field_name = job["field"]
             s = job["scaling"]
             s = replace(s,"@i",float(i))
             s = replace(s,"@j",float(j))
-            info("change scaling of field $field_name to ",s)
+            #info("change scaling of field $field_name to ",s)
+            @info "change scaling of field $field_name to $s"
             s_exp = parse(s)
             Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
         end
@@ -109,21 +110,21 @@ function double_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
 end
 
 function optimize_ngamma1d_func(x,knobs,config::Dict,sfn::ScalarFieldNode)
-    debug("in optimize_ngamma1d_func()")
-    debug("update scaling factor...")
+    @debug "in optimize_ngamma1d_func()"
+    @debug "update scaling factor..."
     for (i,k) in enumerate(knobs)
         s = "t->$(x[i])"
-        info("change scaling of field $k to ",s)
+        @info "change scaling of field $k to $s"
         s_exp = parse(s)
         Fields.setscaling!(Fields.find_field(x->x.name==ascii(k),sfn),s_exp)
     end
     Fields.init_parallel!(sfn)
-    debug("calculate trajectories....")
+    @debug "calculate trajectories...."
     result = calculate_traj()
     probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
     TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
     ngamma1d = TrajAnalyzer.calc_avg_ngamma1d_parallel()*-1.0
-    info(ngamma1d)
+    @info string(ngamma1d)
     return ngamma1d
 end
 

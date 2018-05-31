@@ -11,9 +11,9 @@ function parse_config(filename)
     @assert length(keys(fields_config)) == 1 "more than 1 top level fieldnode!"
     trajsolver_config = config["trajsolver-config"]
     job_config = config["job-config"]
-    debug("fields config:",convert(Dict{Any,Any},copy(fields_config)))
-    debug("trajsolver config:",convert(Dict{Any,Any},copy(trajsolver_config)))
-    debug("job config:",convert(Dict{Any,Any},copy(job_config)))
+    @debug "fields config:"*convert(Dict{Any,Any},copy(fields_config))
+    @debug "trajsolver config:"*convert(Dict{Any,Any},copy(trajsolver_config))
+    @debug "job config:"*convert(Dict{Any,Any},copy(job_config))
     ##TODO: check config format
     return fields_config, trajsolver_config, job_config
 end
