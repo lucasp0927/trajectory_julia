@@ -35,7 +35,7 @@ function main()
     @info "Start calculating trajectories..."
     if job_config["type"] == "single-scan-scaling"
         @info "job type: single-scan-scaling"
-        single_scan_scaling(trajsolver_config,job_config,sfn,input_file,output_file,flags)
+        single_scan_scaling(trajsolver_config,job_config,sfn,probe_sfn,input_file,output_file,flags)
     elseif job_config["type"] == "double-scan-scaling"
         @info "job type: double-scan-scaling"
         double_scan_scaling(trajsolver_config,job_config,sfn,input_file,output_file,flags)

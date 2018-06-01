@@ -40,6 +40,7 @@ end
     # calculate transmission
 #    init_parallel(paras.phy_para,paras.sim_para,paras.time_arr,paras.freq_arr,paras.t_span,traj_selected,paras.probe)
     #preallocate matrix
+    @debug "in calculate_transmission()"
     freq_config = TA_Config["spectrum"]["frequency"]
     time_config = TA_Config["spectrum"]["time"]
     freq_range = Float64(freq_config["start"]):Float64(freq_config["step"]):Float64(freq_config["end"])
@@ -53,17 +54,22 @@ end
     elseif spectrum_mode == 2
         d = Truncated(Normal(0, sqrt(pos_variance)), -1, 1)
     end
-    @time @sync @parallel for i in 1:iter
-        @info "iteration: $i"
+    @debug "start parllel part!"
+#    @time @sync @parallel for i in 1:iter
+    @time for i in 1:iter        
+        @debug "iteration: $i"
         lattice_scale::Float64 = lattice_width/lattice_unit
         #TODO: other distribution of atom_num
         atom_num = round(Int,avg_atom_num*(Trajs.atom_num/TA_Config["spectrum"]["total-atom-number"]))
+        @debug "atom_num:", atom_num
         @assert atom_num <= Trajs.atom_num
+        @debug "generating_atom_array..."
         atom_arr::Array{Int64,2} = generate_atom_array(atom_num,Trajs.atom_num,lattice_scale)
         #@sync @parallel for fidx in collect(eachindex(freq_range))
         #preallocate array
         M_wg = Array{Complex{Float64}}(2,2,atom_num-1)
         M_atom::Array{Complex{Float64},3} = Array{Complex{Float64}}(2,2,atom_num)
+        @debug "calculating output_matrix..."        
         for fidx in collect(eachindex(freq_range))
             for tidx in eachindex(time_range)
                 output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission(time_range[tidx],freq_range[fidx],atom_arr,M_wg,M_atom,d)
@@ -80,7 +86,7 @@ function generate_atom_array(atom_num,total_atom_num,lattice_scale)
     atom_array[1,:] = sample(collect(1:total_atom_num),atom_num)
     #    atom_array[1,:] = shuffle(collect(1:total_atom_num))[1:atom_num] #atom id
     d = Truncated(Normal(lattice_scale/2, atom_beam_waist/lattice_unit), 0, lattice_scale)
-    atom_pos = round(Int64,rand(d,atom_num))
+    atom_pos = round.(Int64,rand(d,atom_num))
     @assert all(lattice_scale .>= atom_pos .>= 0)
     atom_array[2,:] = sort(atom_pos) #atom's position in unit of lattice width
 #    atom_array[2,:] = sort(round(Int64,randn(atom_num)*lattice_scale)) #atom's position in unit of lattice width
@@ -88,7 +94,7 @@ function generate_atom_array(atom_num,total_atom_num,lattice_scale)
 end
 
 function calc_gamma1d(pos,t)
-    @assert any(isnan(pos)) == false
+    @assert any(isnan.(pos)) == false
     g1d = Float64(Fields.value(pos[1:2],t,Probe::ScalarFieldNode)*gamma_1d)
     @assert isnan(g1d) == false
     return g1d
@@ -113,7 +119,7 @@ function transmission(t::Float64,detune::Float64,atom_arr::Array{Int64,2},M_wg::
     end
     for i = 1:atom_num
         pos::Vector{Float64} = Trajs[t,atom_arr[1,i]]
-        if any(isnan(pos[1:2]))
+        if any(isnan.(pos[1:2]))
             wg_transfer_matrix(M_atom,i,0.0,0.0)
         else
             if spectrum_mode == 1
