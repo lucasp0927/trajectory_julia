@@ -247,43 +247,28 @@ end
 end
 #########################
 
-#=
-@generated function value2D(pos::Vector{Float64},t::Real)
-    quote
-        x = $(Array(Float64,2))
-        res = $(Array(Float64,2))
-        res[:] = (fields::ScalarFieldNode).res
-        sample2!(fields::ScalarFieldNode,pos,t)
-        @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
-        return bicubicInterpolate((fields::ScalarFieldNode).sample,x)
-    end
-end
-
-@generated function value3D(pos::Vector{Float64},t::Real)
-    quote
-        x = $(Array(Float64,3))
-        res = $(Array(Float64,3))
-        res[:] = (fields::ScalarFieldNode).res
-        sample2!(fields::ScalarFieldNode,pos,t)
-        @nexprs 3 j->x[j] = rem(pos[j],res[j])/res[j]
-        return tricubicInterpolate((fields::ScalarFieldNode).sample,x)
-    end
-end
-=#
-
 function value(pos::Vector{Float64},t::Real)
     value(pos,t,fields::ScalarFieldNode)
 end
 
-@generated function value(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode{2})
-    quote
-        x = $(Array{Float64}(2))
-        res = $(Array{Float64}(2))
-        res .= (sfn::ScalarFieldNode).res
-        sample2!(sfn::ScalarFieldNode,pos,t)
-        @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
-        return bicubicInterpolate((sfn::ScalarFieldNode).sample,x)
-    end
+# @generated function value(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode{2})
+#     quote
+#         x = $(Array{Float64}(2))
+#         res = $(Array{Float64}(2))
+#         res .= (sfn::ScalarFieldNode).res
+#         sample2!(sfn::ScalarFieldNode,pos,t)
+#         @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
+#         return bicubicInterpolate((sfn::ScalarFieldNode).sample,x)
+#     end
+# end
+
+function value(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode{2})
+    x = Array{Float64}(2)
+    res = Array{Float64}(2)
+    res .= (sfn::ScalarFieldNode).res
+    sample2!(sfn::ScalarFieldNode,pos,t)
+    @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
+    return bicubicInterpolate((sfn::ScalarFieldNode).sample,x)
 end
 
 @generated function value(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode{3})
