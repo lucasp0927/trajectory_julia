@@ -6,7 +6,7 @@ using Distributions
 function spectrum(filename,gm_name)
     @debug "spectrum test!"
     output,output_matrix = calculate_transmission()
-    average_spectrum = squeeze(mean(abs2(output),3),3)
+    average_spectrum = squeeze(mean(abs2.(output),3),3)
     spectrum_data = Dict(
                          "spectrum"=>output,
                          "avg_spectrum"=>average_spectrum,
@@ -55,8 +55,8 @@ end
         d = Truncated(Normal(0, sqrt(pos_variance)), -1, 1)
     end
     @debug "start parllel part!"
-#    @time @sync @parallel for i in 1:iter
-    @time for i in 1:iter        
+    @time @sync @parallel for i in 1:iter
+#    @time for i in 1:iter        
         @debug "iteration: $i"
         lattice_scale::Float64 = lattice_width/lattice_unit
         #TODO: other distribution of atom_num
@@ -72,6 +72,7 @@ end
         @debug "calculating output_matrix..."        
         for fidx in collect(eachindex(freq_range))
             for tidx in eachindex(time_range)
+                @debug "fidx, tix: ", fidx, tidx
                 output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission(time_range[tidx],freq_range[fidx],atom_arr,M_wg,M_atom,d)
             end
         end

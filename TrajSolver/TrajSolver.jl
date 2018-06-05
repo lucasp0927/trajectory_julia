@@ -123,6 +123,7 @@ function solve_traj_one_shot(init_xv::Vector{Float64})
 end
 
 function solve_eq_of_motion{T<:AbstractArray}(f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::T; reltol::Float64=1e-8, abstol::Float64=1e-7, mxstep::Int64=Integer(1e6))
+    #TODO: add more solver options
     if solver == "ADAMS"
         solver_alg = CVODE_Adams()
     end
