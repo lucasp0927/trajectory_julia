@@ -24,7 +24,6 @@ include("TrajSolver_get.jl")
 include("fit_trap.jl")
 include("../TrajAnalyzer/TrajAnalyzer_output.jl")
 include("../TrajAnalyzer/TrajAnalyzer_trajectories.jl")
-
 function calculate_traj()
     @info "distribute atoms..."
     #init trajnum initial xv pairs
@@ -47,23 +46,10 @@ function calculate_traj()
     traj = Array{Float64}(4,length(tspan),trajnum)
     # function to produce the next work item from the queue.
     # in this case it's just an index.
-    i = 1
-    pm = Progress(trajnum, 1)
-    nextidx() = (next!(pm);idx=i; i+=1; idx)
     @info "calculate trajectories..."
-    @time @sync begin
-        for p = 2:nprocs()
-            @async begin
-                while true
-                    idx = nextidx()
-                    if idx>trajnum
-                        break
-                    end
-                    traj[:,:,idx] = remotecall_fetch(solve_traj_one_shot,p,init_xv[:,idx])
-                end
-            end
-        end
-    end
+    
+    @time calculate_traj_inner(init_xv,traj)
+    
     #truncate save time range
     t_idx_start = searchsortedlast(tspan,trajsolver_config["save-range"]["tstart"])
     t_idx_end = searchsortedfirst(tspan,trajsolver_config["save-range"]["tend"])
@@ -84,8 +70,39 @@ function calculate_traj()
     return result
 end
 
+function calculate_traj_inner_parallel(init_xv,traj)
+    i = 1
+    pm = Progress(trajnum,1)
+    @sync begin
+        for p = 2:nprocs()
+            @async begin
+                while true
+                    next!(pm)
+                    idx=i
+                    i+=1
+                    if idx>trajnum
+                        break
+                    end
+                    traj[:,:,idx] = remotecall_fetch(solve_traj_one_shot,p,init_xv[:,idx])
+                end
+            end
+        end
+    end    
+end
+
+function calculate_traj_inner(init_xv,traj)
+    i = 1
+    pm = Progress(trajnum,1)
+    for i = 1:trajnum
+        next!(pm)
+        if i>trajnum
+            break
+        end
+        traj[:,:,i] = solve_traj_one_shot(init_xv[:,i])
+    end
+end
+
 function calculate_traj_unbalanced()
-    @info "calculate trajectories..."
 #    parallel_set_iter(i)
     prepare_U_prob()
     @time @sync begin
