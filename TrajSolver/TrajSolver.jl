@@ -115,7 +115,7 @@ end
 function solve_traj_one_shot(init_xv::Vector{Float64})
     yout = Array{Float64}(4,length(tspan))
     fill!(yout,NaN)
-    if any(isnan(init_xv)) == false
+    if any(isnan.(init_xv)) == false
         #mycvode(Fields.gradient!,init_xv,tspan,yout;reltol=reltol, abstol=abstol)
         solve_eq_of_motion(Fields.gradient_odejl!,init_xv,tspan,yout;reltol=reltol, abstol=abstol)
     end

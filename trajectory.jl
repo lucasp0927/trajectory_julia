@@ -1,5 +1,5 @@
 using MicroLogging
-configure_logging(min_level=:debug)
+configure_logging(min_level=:info)
 include("parse.jl")
 parsed_args, flags = parse_commandline()
 
