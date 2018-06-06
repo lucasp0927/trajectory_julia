@@ -126,6 +126,8 @@ function solve_eq_of_motion{T<:AbstractArray}(f::Function, y0::Vector{Float64}, 
     #TODO: add more solver options
     if solver == "ADAMS"
         solver_alg = CVODE_Adams()
+    elseif solver == "BDF"
+        solver_alg = CVODE_BDF()
     end
     prob = ODEProblem(f,y0,(t[1],t[end]))
     integrator = init(prob, solver_alg; abstol=abstol,reltol=reltol)

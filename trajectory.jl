@@ -5,7 +5,8 @@ parsed_args, flags = parse_commandline()
 
 @info "Starting $(parsed_args["procs"]) processes."
 #addprocs(parsed_args["procs"], exeflags=`--depwarn=no --compilecache=no`)
-addprocs(parsed_args["procs"], exeflags=`--depwarn=no`)
+#addprocs(parsed_args["procs"], exeflags=`--depwarn=no`)
+addprocs(parsed_args["procs"])
 
 push!(LOAD_PATH, "./Fields")
 push!(LOAD_PATH, "./TrajSolver")
@@ -39,9 +40,9 @@ function main()
     elseif job_config["type"] == "double-scan-scaling"
         @info "job type: double-scan-scaling"
         double_scan_scaling(trajsolver_config,job_config,sfn,input_file,output_file,flags)
-    elseif job_config["type"] == "optimization"
-        @info "job type: optimization"
-        optimize_ngamma1d(job_config,sfn)
+    # elseif job_config["type"] == "optimization"
+    #     @info "job type: optimization"
+    #     optimize_ngamma1d(job_config,sfn)
     end
 end
 main()
