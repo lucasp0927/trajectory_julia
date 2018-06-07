@@ -73,7 +73,7 @@ function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Vector{Float
         @info "no need to align!"
     else
         #loop over three components
-        new_field = SharedArray(T,3,new_arr_size...)
+        new_field = SharedArray{T}(3,new_arr_size...)
         for i = 1:3
             itp_field!(myslice(new_field,i),myslice(f.field,i),unalign_geo,align_geo)
         end

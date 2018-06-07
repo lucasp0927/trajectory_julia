@@ -80,16 +80,10 @@ end
 end
 
 @inbounds function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::VectorField{T,2},pidx::Vector{Int64},s::K)
-#    src = view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4])
-#    copy_scale!(f.sample,src,s)
-    #    copy!(f.sample::Array{T,3},view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4]))
-
-    copy!(f.sample::Array{T,3},@view f.field[:,pidx[1]:pidx[2],pidx[3]:pidx[4]])
-    scale!(f.sample::Array{T,3},s)
-    #blascopy!(48,view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4]),1,f.sample,1)
-    #scal!(48, s, f.sample, 1)
+#    f.sample[1:3,1:4,1:4] = f.field[:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)]*s;
+    f.sample = f.field[:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)]*s;    
+    #copy!(f.sample::Array{T,3},@view f.field[:,pidx[1]:pidx[2],pidx[3]:pidx[4]])
     #scale!(f.sample::Array{T,3},s)
-#    copy_scale!(f.sample,f.field[:,pidx[1]:pidx[2],pidx[3]:pidx[4]],s)
 end
 
 #function copy_scale!{T<:ComplexOrFloat}(dest::AbstractArray,src::AbstractArray,s::T)
@@ -109,7 +103,7 @@ end
     f.pidx[4] = f.pidx[3]+3
     f.pidx[5] = round(Int64,div(f.rel_pos[3],f.res[3]::Float64))
     f.pidx[6] = f.pidx[5]+3
-    f.s::Complex{Float64} = convert(Complex{Float64},(f.scaling::Function)(t))
+    f.s::Complex{Float64} = convert(Complex{Float64},(Base.invokelatest(f.scaling::Function))(t))
     sample_field(f,f.pidx,f.s)
 end
 
@@ -135,9 +129,10 @@ function sample2!(f::VectorFieldNode{2},pos::Vector{Float64},t::Real)
 end
 
 @fastmath @inbounds function add_sample!{T<:ComplexOrFloat}(sample1::Array{T,3},sample2::Array{T,3})
-    @simd for i in eachindex(sample1)
-        sample1[i] += sample2[i]
-    end
+    sample1 .+= sample2
+    # @simd for i in eachindex(sample1)
+    #     sample1[i] += sample2[i]
+    # end
 end
 #3D Vector Field Node
 function sample2!(f::VectorFieldNode{3},pos::Vector{Float64},t::Real)
@@ -153,9 +148,10 @@ function sample2!(f::VectorFieldNode{3},pos::Vector{Float64},t::Real)
 end
 
 @fastmath @inbounds function add_sample!{T<:ComplexOrFloat}(sample1::Array{T,4},sample2::Array{T,4})
-    for i in eachindex(sample1)
-        sample1[i] += sample2[i]
-    end
+    sample1 .+= sample2
+    # for i in eachindex(sample1)
+    #     sample1[i] += sample2[i]
+    # end
 end
 #2D Scalar Field Node
 @inbounds function sample2!(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real)
@@ -256,24 +252,15 @@ function value(pos::Vector{Float64},t::Real)
     value(pos,t,fields::ScalarFieldNode)
 end
 
-# @generated function value(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode{2})
-#     quote
-#         x = $(Array{Float64}(2))
-#         res = $(Array{Float64}(2))
-#         res .= (sfn::ScalarFieldNode).res
-#         sample2!(sfn::ScalarFieldNode,pos,t)
-#         @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
-#         return bicubicInterpolate((sfn::ScalarFieldNode).sample,x)
-#     end
-# end
-
-function value(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode{2})
-    x = Array{Float64}(2)
-    res = Array{Float64}(2)
-    res .= (sfn::ScalarFieldNode).res
-    sample2!(sfn::ScalarFieldNode,pos,t)
-    @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
-    return bicubicInterpolate((sfn::ScalarFieldNode).sample,x)
+@generated function value(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode{2})
+    quote
+        x = $(Array{Float64}(2))
+        res = $(Array{Float64}(2))
+        res .= (sfn::ScalarFieldNode).res
+        sample2!(sfn::ScalarFieldNode,pos,t)
+        @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
+        return bicubicInterpolate((sfn::ScalarFieldNode).sample,x)
+    end
 end
 
 @generated function value(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode{3})
@@ -391,10 +378,10 @@ function test_gradient()
     ######################
     @info "testing 3D value"
     #prepare interpolation
-    f1_s = SharedArray(Float64, (1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->func1_3d(ind2sub(S,x)...),Base.localindexes(S)))
-    f2_s = SharedArray(Float64, (1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->func2_3d(ind2sub(S,x)...),Base.localindexes(S)))
-    f3_s = SharedArray(Float64, (1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->func3_3d(ind2sub(S,x)...),Base.localindexes(S)))
-    f4_s = SharedArray(Complex{Float64}, (3,1000,1000,100), init=sa_init )
+    f1_s = SharedArray{Float64}((1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->func1_3d(ind2sub(S,x)...),Base.localindexes(S)))
+    f2_s = SharedArray{Float64}((1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->func2_3d(ind2sub(S,x)...),Base.localindexes(S)))
+    f3_s = SharedArray{Float64}( (1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->func3_3d(ind2sub(S,x)...),Base.localindexes(S)))
+    f4_s = SharedArray{Complex{Float64}}((3,1000,1000,100), init=sa_init)
     for i = 1:100
         x = rand(1:1000)
         y = rand(1:1000)
@@ -407,7 +394,7 @@ function test_gradient()
     f4_s[:,x,y,z] = func4_3d(x,y,z)
     end
     =#
-    f4norm2_s = SharedArray(Float64, (1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->norm(func4_3d(ind2sub(S,x)...))^2,Base.localindexes(S)))
+    f4norm2_s = SharedArray{Float64}((1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->norm(func4_3d(ind2sub(S,x)...))^2,Base.localindexes(S)))
     f3d = f1_s.+f2_s.+f3_s.+f4norm2_s
     f_itp_3d = interpolate(f3d, BSpline(Cubic(Line())), OnGrid())
     #prepare field

@@ -38,7 +38,7 @@ function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,id
     if flags["movie_flag"]
         @info "Outputing Movie..."
         movie_range = [promote(config["movie-output"]["range"]...)...]
-        TrajAnalyzer.output_movie_traj(config["movie-output"],output_prefix*"_traj.mp4")
+        @time TrajAnalyzer.output_movie_traj(config["movie-output"],output_prefix*"_traj.mp4")
     end
     if flags["spectrum_flag"]
         for gm_name in config["spectrum"]["name"]
