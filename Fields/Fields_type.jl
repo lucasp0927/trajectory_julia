@@ -16,6 +16,7 @@ type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     scaling_expr::Expr
     dim::Integer
     sample::Array{T,N}
+#    sample_views::SubArray{T,N}    
     rel_pos::Vector{Float64}
     pidx::Vector{Int64}
     s::Float64
@@ -23,7 +24,8 @@ type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     function ScalarField{T,N}(f::SharedArray{T,N},pos::Vector{Float64},sz::Vector{Float64};scaling_expr::Expr = parse("t->1.0"), name::String = "ScalarField")  where {T <: ComplexOrFloat,N}
         res = sz./(collect(size(f))[1:N]-1)
         @assert all(x->x!=0,res) "zero resolution!"
-        length(pos)==length(sz)==N==ndims(f)?new(f,pos,sz,res,eval(scaling_expr),scaling_expr,N,zeros(T,repmat([4],N)...),repmat([0.0],N),repmat([0],N*2),zero(Float64),ascii(name)):err("dimension error!")
+        @assert length(pos)==length(sz)==N==ndims(f)
+        new(f,pos,sz,res,eval(scaling_expr),scaling_expr,N,zeros(T,repmat([4],N)...),repmat([0.0],N),repmat([0],N*2),zero(Float64),ascii(name))
     end
 end
 
@@ -35,8 +37,8 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     scaling::Function
     scaling_expr::Expr
     dim::Integer
-#    sample::Array{T,N+1}
     sample::Array{T}
+    sample_views::SubArray{T}
     rel_pos::Vector{Float64}
     pidx::Vector{Int64}
     s::Complex{Float64}
@@ -44,7 +46,10 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     function VectorField{T,N}(f::SharedArray{T},pos::Vector{Float64},sz::Vector{Float64};scaling_expr::Expr =  parse("t->1.0"), name::String = "VectorField") where {T <: ComplexOrFloat, N}
         res = sz./(collect(size(f))[2:N+1]-1)
         @assert all(x->x!=0,res) "zero resolution!"
-        length(pos)==length(sz)==N==ndims(f)-1?new(f,pos,sz,res,eval(scaling_expr),scaling_expr,N,zeros(T,[3,repmat([4],N)...]...),repmat([0.0],N),repmat([0],N*2),zero(Complex{Float64}),ascii(name)):err("dimension error!")
+        @assert length(pos)==length(sz)==N==ndims(f)-1
+        s = zeros(T,[3,repmat([4],N)...]...)
+        sv = @views s[:]
+        new(f,pos,sz,res,eval(scaling_expr),scaling_expr,N,s,sv,repmat([0.0],N),repmat([0],N*2),zero(Complex{Float64}),ascii(name))
     end
 end
 

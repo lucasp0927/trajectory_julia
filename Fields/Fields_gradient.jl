@@ -79,9 +79,9 @@ end
     sample_field(f,f.pidx,f.s)
 end
 
-@inbounds function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::VectorField{T,2},pidx::Vector{Int64},s::K)
+function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::VectorField{T,2},pidx::Vector{Int64},s::K)
 #    f.sample[1:3,1:4,1:4] = f.field[:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)]*s;
-    f.sample = f.field[:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)]*s;    
+    @views f.sample[1:3,1:4,1:4] .= @views f.field[:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)].*s;    
     #copy!(f.sample::Array{T,3},@view f.field[:,pidx[1]:pidx[2],pidx[3]:pidx[4]])
     #scale!(f.sample::Array{T,3},s)
 end
@@ -178,27 +178,24 @@ end
 
 @fastmath @inbounds function add_vector_field!{T<:ComplexOrFloat}(sample::Array{Float64,2},vf_sample::Array{T,3})
     for j = 1:4, i = 1:4
-#        sample[i,j] += sumabs2(vf_sample[:,i,j])
         @simd for k = 1:3
             sample[i,j] += abs2(vf_sample[k,i,j])
         end
     end
-    #    f.sample[:,:] .+= squeeze(sumabs2(f.vf_sample,1),1)[:,:]
 end
 
 @fastmath @inbounds function add_fields!{T<:AbstractVectorField}(f::T,sample::Array{Float64,2},vf_sample::Array{Complex{Float64},3})
-
-    @simd for i in eachindex(vf_sample)
-        vf_sample[i] += f.sample[i]
-    end
-#    vf_sample[:] .+= f.sample[:]
+    # @simd for i in eachindex(vf_sample)
+    #     vf_sample[i] += f.sample[i]
+    # end
+    vf_sample .+= f.sample
 end
 
 @fastmath @inbounds function add_fields!{T<:AbstractScalarField}(f::T,sample::Array{Float64,2},vf_sample::Array{Complex{Float64},3})
-    @simd for i in eachindex(sample)
-        sample[i] += f.sample[i]
-    end
-#    sample[:] .+= f.sample[:]
+    # @simd for i in eachindex(sample)
+    #     sample[i] += f.sample[i]
+    # end
+    sample .+= f.sample
 end
 #3D Scalar Field Node
 @inbounds function sample2!(f::ScalarFieldNode{3},pos::Vector{Float64},t::Real)
@@ -230,7 +227,6 @@ end
             sample[i,j,k] += abs2(vf_sample[s,i,j,k])
         end
     end
-    #    f.sample[:,:] .+= squeeze(sumabs2(f.vf_sample,1),1)[:,:]
 end
 
 @fastmath @inbounds function add_fields!{T<:AbstractVectorField}(f::T,sample::Array{Float64,3},vf_sample::Array{Complex{Float64},4})
