@@ -9,12 +9,9 @@ type Trajectories
         traj = traj_s
         atom_num = size(traj,3)
         tspan = copy(result["tspan"])
-        @info size(tspan)
         t_div = mean(diff(tspan))
         pos = copy(result["pos"])
-        @info size(pos)
         siz = copy(result["siz"])
-        @info size(siz)
         new(traj,atom_num,vec(tspan),t_div,vec(pos),vec(siz))
     end
 end
