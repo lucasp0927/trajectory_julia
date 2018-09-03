@@ -25,7 +25,7 @@ function build_field_file(field_config::Dict,level::Integer;name::String="field"
     @info padding(level),"    size: $sz"
     @info padding(level),"    scaling: ",field_config["scaling"]
     @info padding(level),"    reading ",var," from ",filename,"..."
-    field_s = mat2sharedarray(filename,var)
+    field_s = file2sharedarray(filename,var)
     if ft == ScalarField
         @assert ndims(field_s) == dim
     else

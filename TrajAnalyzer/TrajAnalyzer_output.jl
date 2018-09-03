@@ -19,7 +19,7 @@ function output_movie_data(config,filename)
     mov_tspan = collect(config["tstart"]:config["tdiv"]:config["tend"])
     mov_range = [promote(config["range"]...)...]
     potential = cat(3,pmap(t->Fields.composite(mov_range,t),mov_tspan)...)
-    matwrite(filename,Dict("potential"=>potential))
+    dicttoh5(filename,Dict("potential"=>potential))
 end
 
 function output_movie(mov_tspan,range,res,filename;traj=false)

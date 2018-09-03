@@ -13,12 +13,11 @@ function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,id
         if flags["calc_traj_flag"]
             result = calculate_traj()
             @info "save results..."
-            matwrite(output_prefix*".mat",result)
+            dicttoh5(output_prefix*".h5",result)
             traj = result["traj"]
             tspan = result["tspan"]
         elseif flags["need_traj_flag"]
-            @info "read results from "*input_prefix*".mat..."
-            result = matread(input_prefix*".mat")
+            result = h5todict(input_prefix*".h5");
             traj = result["traj"]
             tspan = result["tspan"]
         end
@@ -51,7 +50,7 @@ function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,id
     end
     if flags["movie_data_flag"]
         @info "Calculating movie potentials..."
-        TrajAnalyzer.output_movie_data(config["movie-output"],output_prefix*"_moviedata.mat")
+        TrajAnalyzer.output_movie_data(config["movie-output"],output_prefix*"_moviedata.h5")
     end
 
     # if flags["ngamma1d_flag"]

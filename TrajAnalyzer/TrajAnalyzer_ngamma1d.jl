@@ -7,7 +7,7 @@ using Base.Test
             a[idx_a...] = calc_avg_ngamma1d_parallel()
             if idx[1] == range_i[end]
                 @info "saving ngamma1d..."
-                matwrite(filename, Dict("ng1d" => a))
+                dicttoh5(filename, Dict("ng1d" => a))
             end
         elseif length(idx) == 2
             a = $(zeros(Float64,length(range_i),length(range_j)))
@@ -15,7 +15,7 @@ using Base.Test
             a[idx_a...] = calc_avg_ngamma1d_parallel()
             if idx[1] == range_i[end] && idx[2] == range_j[end]
                 @info "saving ngamma1d..."
-                matwrite(filename, Dict("ng1d" => a))
+                dicttoh5(filename, Dict("ng1d" => a))
             end
         end
     end
