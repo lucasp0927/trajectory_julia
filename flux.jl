@@ -78,7 +78,7 @@ end
             reduce((x,y)->cat_ignore_empty(x,y),tmp)
         end
     end
-    dicttoh5(filename,flux)
+    matwrite(filename,flux)
     for k in keys(flux)
         println(k," ",size(flux[k]))
     end
@@ -105,7 +105,7 @@ end
             tmp[:,2:end]
         end
     end
-    dicttoh5(filename,flux)
+    matwrite(filename,flux)
     for k in keys(flux)
         println(k," ",size(flux[k]))
     end
