@@ -1,3 +1,5 @@
+using SharedArrays
+
 function init_probe_parallel!(probe_sfn::ScalarFieldNode)
     @sync begin
         for p = 1:nprocs()

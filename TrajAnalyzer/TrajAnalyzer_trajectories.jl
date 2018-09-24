@@ -1,4 +1,5 @@
-type Trajectories
+using SharedArrays
+mutable struct Trajectories
     traj::SharedArray{Float64}  #traj[1,:,:] =>x coordinate, traj[2,:,:] => y coordinate
     atom_num::Int64
     tspan::Vector{Float64}
@@ -34,7 +35,7 @@ import Base.getindex
     return result
 end
 
-@inbounds function getindex{T<:Range}(tr::Trajectories,t::Float64,traj_id::T)
+@inbounds function getindex(tr::Trajectories,t::Float64,traj_id::T) where {T<:Range}
     #Linear interpolation
     #TODO: higher order interpolation
 #    @assert t>=tr.tspan[1] && t<=tr.tspan[end]
@@ -62,7 +63,7 @@ end
     return result
 end
 
-function getindex{T<:Colon}(tr::Trajectories,t::Float64,traj_id::T)
+function getindex(tr::Trajectories,t::Float64,traj_id::T) where {T <: Colon}
     getindex(tr,t,range(1,size(tr.traj,3)))
     #Linear interpolation
     #TODO: higher order interpolation
@@ -80,7 +81,7 @@ function getindex{T<:Colon}(tr::Trajectories,t::Float64,traj_id::T)
 =#
 end
 
-function getindex{T<:Range}(tr::Trajectories,t_range::T,traj_id)
+function getindex(tr::Trajectories,t_range::T,traj_id) where {T <: Range}
     #Linear interpolation
     #TODO: higher order interpolation
     reduce((x,y)->cat(2,x,y),[tr[t,traj_id] for t in t_range])
