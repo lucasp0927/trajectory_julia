@@ -1,4 +1,4 @@
-function align_field_tree!{T<:FieldNode}(f::T)
+function align_field_tree!(T)
     set_geometry!(f)
     #debug("align top field node $(f.name)")
     @debug "align top field node "*f.name
@@ -19,7 +19,7 @@ function align_field_tree!{T<:FieldNode}(f::T)
     gc()
 end
 
-function align_field!{T<:FieldNode}(f::T,res::Vector{Float64},pos::Vector{Float64})
+function align_field!(T,res::Vector{Float64},pos::Vector{Float64})
     @debug "align FieldNode $(f.name)"
     @assert length(res) == length(pos) "dimension mismatch!"
     for ff in f.fields
@@ -27,7 +27,7 @@ function align_field!{T<:FieldNode}(f::T,res::Vector{Float64},pos::Vector{Float6
     end
 end
 
-function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Vector{Float64},pos::Vector{Float64})
+function align_field!(f::ScalarField{T, N}, res::Vector{Float64}, pos::Vector{Float64}) where {T <: ComplexOrFloat, N}
     @debug "align ScalarField $(f.name)"
     @assert length(res) == length(pos) "dimension mismatch!"
     unalign_geo = geometry(f)
@@ -54,7 +54,7 @@ function align_field!{T<:ComplexOrFloat,N}(f::ScalarField{T,N},res::Vector{Float
     end
 end
 
-function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Vector{Float64},pos::Vector{Float64})
+function align_field!(f::VectorField{T, N}, res::Vector{Float64}, pos::Vector{Float64}) where {T <: ComplexOrFloat, N}
     @debug "align ScalarField $(f.name)"    
     @assert length(res) == length(pos) "dimension mismatch!"
     unalign_geo = geometry(f)
@@ -85,12 +85,12 @@ function align_field!{T<:ComplexOrFloat,N}(f::VectorField{T,N},res::Vector{Float
 end
 
 #TODO clean this up with meta programming?
-@generated function myslice{T<:ComplexOrFloat,N}(A::Array{T,N},i::Integer)
+@generated function myslice(A::Array{T, N}, i::Integer) where {T <: ComplexOrFloat, N}
     ex_str = "view(A,i"*repeat(",:",N-1)*")"
     parse(ex_str)
 end
 
-@generated function myslice{T<:ComplexOrFloat,N}(A::SharedArray{T,N},i::Integer)
+@generated function myslice(A::SharedArray{T, N}, i::Integer) where {T <: ComplexOrFloat, N}
     ex_str = "view(A,i"*repeat(",:",N-1)*")"
     parse(ex_str)
 end
@@ -110,7 +110,7 @@ end
     return old_idx
 end
 
-@generated function itp_field!{T<:Union{Array,SubArray,SharedArray},K<:Union{Array,SubArray,SharedArray}}(new_field::T,old_field::K,unalign_geo,align_geo)
+@generated function itp_field!(new_field::T, old_field::K, unalign_geo, align_geo) where {T <: Union{Array, SubArray, SharedArray}, K <: Union{Array, SubArray, SharedArray}}
     N::Int64 = ndims(new_field)
     quote
 #        old_field_itp = interpolate(old_field, BSpline(Cubic(Flat())), OnGrid())
@@ -147,7 +147,7 @@ function test_align()
         @test all(map(≈,sizerem,res) | map(x->x<1e-10,sizerem))
     end
 
-    function test_interpolate{T<:ComplexOrFloat}(f::ScalarField{T,2},func)
+    function test_interpolate(f::ScalarField{T, 2}, func) where T <: ComplexOrFloat
         @info "testing $(f.name)"
         sz = size(f.field)
         pos = f.position
@@ -164,7 +164,7 @@ function test_align()
         @info string(err)
         return err
     end
-    function test_interpolate{T<:ComplexOrFloat}(f::ScalarField{T,3},func)
+    function test_interpolate(f::ScalarField{T, 3}, func) where T <: ComplexOrFloat
         @info "testing $(f.name)"        
         sz = size(f.field)
         pos = f.position
@@ -182,7 +182,7 @@ function test_align()
         @info string(err)
         return err
     end
-    function test_interpolate{T<:ComplexOrFloat}(f::VectorField{T,3},func)
+    function test_interpolate(f::VectorField{T, 3}, func) where T <: ComplexOrFloat
         @info "testing $(f.name)"
         sz = size(f.field)
         pos = f.position
@@ -201,7 +201,7 @@ function test_align()
         return err
     end
 
-    function test_interpolate{T<:ComplexOrFloat}(f::VectorField{T,2},func)
+    function test_interpolate(f::VectorField{T, 2}, func) where T <: ComplexOrFloat
         @info "testing $(f.name)"        
         sz = size(f.field)
         pos = f.position

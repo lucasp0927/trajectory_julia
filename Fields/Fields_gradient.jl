@@ -6,17 +6,17 @@ include("../constant.jl")
 
 #@inbounds @fastmath function in_field{T<:Field}(f::T,pos::Vector{Float64})
 
-@inbounds @fastmath function in_field{T<:Union{FieldNode2D,ComplexField2D,FloatField2D}}(f::T,pos::Vector{Float64})
+@inbounds @fastmath function in_field(f::T, pos::Vector{Float64}) where T <: Union{FieldNode2D, ComplexField2D, FloatField2D}
     return (f.res[1]::Float64<(pos[1]-f.position[1]::Float64)<(f.size[1]::Float64-f.res[1]::Float64) && f.res[2]::Float64<(pos[2]-f.position[2]::Float64)<(f.size[2]::Float64-f.res[2]::Float64))
 end
 
-@inbounds @fastmath function in_field{T<:Union{FieldNode3D,ComplexField3D,FloatField3D}}(f::T,pos::Vector{Float64})
+@inbounds @fastmath function in_field(f::T, pos::Vector{Float64}) where T <: Union{FieldNode3D, ComplexField3D, FloatField3D}
     # periodic in z direction?
     return (f.res[1]::Float64<(pos[1]-f.position[1]::Float64)<(f.size[1]::Float64-f.res[1]::Float64) && f.res[2]::Float64<(pos[2]-f.position[2]::Float64)<(f.size[2]::Float64-f.res[2]::Float64) && f.res[3]::Float64<(pos[3]-f.position[3]::Float64)<(f.size[3]::Float64-f.res[3]::Float64))
 end
 
 #2D Scalar sample
-@fastmath @inbounds function sample2!{T<:ComplexOrFloat}(f::ScalarField{T,2},pos::Vector{Float64},t::Real)
+@fastmath @inbounds function sample2!(f::ScalarField{T, 2}, pos::Vector{Float64}, t::Real) where T <: ComplexOrFloat
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
     f.rel_pos[2] = pos[2]-f.position[2]::Float64
     f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))
@@ -34,7 +34,7 @@ end
     sample_field(f,f.pidx,f.s)
 end
 
-@inbounds function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::ScalarField{T,2},pidx::Vector{Int64},s::K)
+@inbounds function sample_field(f::ScalarField{T, 2}, pidx::Vector{Int64}, s::K) where {T <: ComplexOrFloat, K <: ComplexOrFloat}
     #f.sample[:,:] = view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]).*s
     copy!(f.sample::Array{T,2},view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]))
     scale!(f.sample::Array{T,2},s)
@@ -42,7 +42,7 @@ end
 end
 
 #3D scalar sample
-@fastmath @inbounds function sample2!{T<:ComplexOrFloat}(f::ScalarField{T,3},pos::Vector{Float64},t::Real)
+@fastmath @inbounds function sample2!(f::ScalarField{T, 3}, pos::Vector{Float64}, t::Real) where T <: ComplexOrFloat
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
     f.rel_pos[2] = pos[2]-f.position[2]::Float64
     f.rel_pos[3] = pos[3]-f.position[3]::Float64
@@ -56,12 +56,12 @@ end
     sample_field(f,f.pidx,f.s)
 end
 
-@inbounds function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::ScalarField{T,3},pidx::Vector{Int64},s::K)
+@inbounds function sample_field(f::ScalarField{T, 3}, pidx::Vector{Int64}, s::K) where {T <: ComplexOrFloat, K <: ComplexOrFloat}
     copy!(f.sample,view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4],pidx[5]:pidx[6]))
     scal!(64,s,f.sample,1)
 end
 #2D vector sample
-@fastmath @inbounds function sample2!{T<:ComplexOrFloat}(f::VectorField{T,2},pos::Vector{Float64},t::Real)
+@fastmath @inbounds function sample2!(f::VectorField{T, 2}, pos::Vector{Float64}, t::Real) where T <: ComplexOrFloat
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
     f.rel_pos[2] = pos[2]-f.position[2]::Float64
     f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))
@@ -79,7 +79,7 @@ end
     sample_field(f,f.pidx,f.s)
 end
 
-function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::VectorField{T,2},pidx::Vector{Int64},s::K)
+function sample_field(f::VectorField{T, 2}, pidx::Vector{Int64}, s::K) where {T <: ComplexOrFloat, K <: ComplexOrFloat}
 #    f.sample[1:3,1:4,1:4] = f.field[:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)]*s;
     @views f.sample[1:3,1:4,1:4] .= @views f.field[:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)].*s;    
     #copy!(f.sample::Array{T,3},@view f.field[:,pidx[1]:pidx[2],pidx[3]:pidx[4]])
@@ -93,7 +93,7 @@ end
 #end
 
 #3D vector sample
-@fastmath @inbounds function sample2!{T<:ComplexOrFloat}(f::VectorField{T,3},pos::Vector{Float64},t::Real)
+@fastmath @inbounds function sample2!(f::VectorField{T, 3}, pos::Vector{Float64}, t::Real) where T <: ComplexOrFloat
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
     f.rel_pos[2] = pos[2]-f.position[2]::Float64
     f.rel_pos[3] = pos[3]-f.position[3]::Float64
@@ -107,7 +107,7 @@ end
     sample_field(f,f.pidx,f.s)
 end
 
-@inbounds function sample_field{T<:ComplexOrFloat,K<:ComplexOrFloat}(f::VectorField{T,3},pidx::Vector{Int64},s::K)
+@inbounds function sample_field(f::VectorField{T, 3}, pidx::Vector{Int64}, s::K) where {T <: ComplexOrFloat, K <: ComplexOrFloat}
     copy!(f.sample,view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4],pidx[5]:pidx[6]))
     scal!(192,s,f.sample,1)
 end
@@ -128,7 +128,7 @@ function sample2!(f::VectorFieldNode{2},pos::Vector{Float64},t::Real)
 #    scale_sample!(f.sample,s)
 end
 
-@fastmath @inbounds function add_sample!{T<:ComplexOrFloat}(sample1::Array{T,3},sample2::Array{T,3})
+@fastmath @inbounds function add_sample!(sample1::Array{T, 3}, sample2::Array{T, 3}) where T <: ComplexOrFloat
     sample1 .+= sample2
     # @simd for i in eachindex(sample1)
     #     sample1[i] += sample2[i]
@@ -147,7 +147,7 @@ function sample2!(f::VectorFieldNode{3},pos::Vector{Float64},t::Real)
     scal!(192,f.s,f.sample,1)
 end
 
-@fastmath @inbounds function add_sample!{T<:ComplexOrFloat}(sample1::Array{T,4},sample2::Array{T,4})
+@fastmath @inbounds function add_sample!(sample1::Array{T, 4}, sample2::Array{T, 4}) where T <: ComplexOrFloat
     sample1 .+= sample2
     # for i in eachindex(sample1)
     #     sample1[i] += sample2[i]
@@ -176,7 +176,7 @@ end
 #    scale_sample!(f.sample,s)
 end
 
-@fastmath @inbounds function add_vector_field!{T<:ComplexOrFloat}(sample::Array{Float64,2},vf_sample::Array{T,3})
+@fastmath @inbounds function add_vector_field!(sample::Array{Float64, 2}, vf_sample::Array{T, 3}) where T <: ComplexOrFloat
     for j = 1:4, i = 1:4
         @simd for k = 1:3
             sample[i,j] += abs2(vf_sample[k,i,j])
@@ -184,14 +184,14 @@ end
     end
 end
 
-@fastmath @inbounds function add_fields!{T<:AbstractVectorField}(f::T,sample::Array{Float64,2},vf_sample::Array{Complex{Float64},3})
+@fastmath @inbounds function add_fields!(f::T, sample::Array{Float64, 2}, vf_sample::Array{Complex{Float64}, 3}) where T <: AbstractVectorField
     # @simd for i in eachindex(vf_sample)
     #     vf_sample[i] += f.sample[i]
     # end
     vf_sample .+= f.sample
 end
 
-@fastmath @inbounds function add_fields!{T<:AbstractScalarField}(f::T,sample::Array{Float64,2},vf_sample::Array{Complex{Float64},3})
+@fastmath @inbounds function add_fields!(f::T, sample::Array{Float64, 2}, vf_sample::Array{Complex{Float64}, 3}) where T <: AbstractScalarField
     # @simd for i in eachindex(sample)
     #     sample[i] += f.sample[i]
     # end
@@ -218,7 +218,7 @@ end
     #    scale_sample!(f.sample,s)
 end
 
-@fastmath @inbounds function add_vector_field!{T<:ComplexOrFloat}(sample::Array{Float64,3},vf_sample::Array{T,4})
+@fastmath @inbounds function add_vector_field!(sample::Array{Float64, 3}, vf_sample::Array{T, 4}) where T <: ComplexOrFloat
     # for j=1:4, i=1:4
     #     sample[i,j] += sumabs2(vf_sample[:,i,j])
     # end
@@ -229,14 +229,14 @@ end
     end
 end
 
-@fastmath @inbounds function add_fields!{T<:AbstractVectorField}(f::T,sample::Array{Float64,3},vf_sample::Array{Complex{Float64},4})
+@fastmath @inbounds function add_fields!(f::T, sample::Array{Float64, 3}, vf_sample::Array{Complex{Float64}, 4}) where T <: AbstractVectorField
     @simd for i in eachindex(vf_sample)
         vf_sample[i] += f.sample[i]
     end
 #    vf_sample[:] .+= f.sample[:]
 end
 
-@fastmath @inbounds function add_fields!{T<:AbstractScalarField}(f::T,sample::Array{Float64,3},vf_sample::Array{Complex{Float64},4})
+@fastmath @inbounds function add_fields!(f::T, sample::Array{Float64, 3}, vf_sample::Array{Complex{Float64}, 4}) where T <: AbstractScalarField
     @simd for i in eachindex(sample)
         sample[i] += f.sample[i]
     end

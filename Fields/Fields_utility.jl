@@ -1,15 +1,15 @@
 # utility functions, for simple fields
-function zero_field{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling_expr::Expr = parse("t->1.0"), name::String="scalarfield")
+function zero_field(#s431::Type{ScalarField{T, N}}, res::Vector{Int64}, pos::Vector{Float64}, size::Vector{Float64}; scaling_expr::Expr = parse("t->1.0"), name::String = "scalarfield") where {T <: ComplexOrFloat, N}
     @assert length(res) ==  length(pos) == length(size) "dimension mismatch"
-    return ScalarField{T,N}(copy_to_sharedarray!(zeros(T,res...)),pos,size,scaling_expr=scaling_expr,name=ascii(name))
+    return ScalarField{T, N}(copy_to_sharedarray!(zeros(T,(3,res...))),pos,size,scaling_expr = scaling_expr,name=ascii(name))
 end
 
-function zero_field{T<:ComplexOrFloat,N}(::Type{VectorField{T,N}},res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling_expr::Expr = parse("t->1.0"), name::String="vectorfield")
+function zero_field(#s431::Type{VectorField{T, N}}, res::Vector{Int64}, pos::Vector{Float64}, size::Vector{Float64}; scaling_expr::Expr = parse("t->1.0"), name::String = "vectorfield") where {T <: ComplexOrFloat, N
     @assert length(res) ==  length(pos) == length(size) "dimension mismatch"
     return VectorField{T,N}(copy_to_sharedarray!(zeros(T,(3,res...))),pos,size,scaling_expr = scaling_expr,name=ascii(name))
 end
 
-@generated function func2field{T<:ComplexOrFloat,N}(::Type{ScalarField{T,N}},func::Function,res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling_expr::Expr = parse("t->1.0"),name::String="scalarfield")
+@generated function func2field(#s431::Type{ScalarField{T, N}}, func::Function, res::Vector{Int64}, pos::Vector{Float64}, size::Vector{Float64}; scaling_expr::Expr = parse("t->1.0"), name::String = "scalarfield") where {T <: ComplexOrFloat, N}
     quote
         @assert length(res)==length(pos)==length(size)==N
         @nexprs $N j->(x_j = linspace(pos[j],pos[j]+size[j],res[j]))
@@ -22,7 +22,8 @@ end
     end
 end
 
-@generated function func2field{T<:ComplexOrFloat,N}(::Type{VectorField{T,N}},func::Function,res::Vector{Int64},pos::Vector{Float64},size::Vector{Float64};scaling_expr::Expr = parse("t->1.0"), name::String="vectorfield")
+@generated function func2field(#s431::Type{VectorField{T, N}}, func::Function, res::Vector{Int64}, pos::Vector{Float64}, size::Vector{Float64}; scaling_expr::Expr = parse("t->1.0"), name::String = "vectorfield") where {T <: ComplexOrFloat, N}
+    using LinearAlgebra
     quote
         @assert length(res)==length(pos)==length(size)==N
         @nexprs $N j->(x_j = linspace(pos[j],pos[j]+size[j],res[j]))

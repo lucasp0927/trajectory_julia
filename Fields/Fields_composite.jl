@@ -40,7 +40,7 @@ function composite_with_position(range::Vector{Float64},t::Float64,res::Vector{F
     return output
 end
 
-function composite{T<:Union{VectorField,ScalarField}}(f::T,t::Real)
+function composite(f::T, t::Real) where T <: Union{VectorField, ScalarField}
     return T(f.field*f.scaling(t),f.position,f.size,scaling = t->1.0)
 end
 

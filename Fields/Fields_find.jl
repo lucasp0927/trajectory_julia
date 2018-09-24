@@ -1,4 +1,4 @@
-function find_field{T<:FieldNode}(criteria::Function,f::T)
+function find_field(criteria::Function,f::T) where {T <: FieldNode}
     #currently only find one result
     if criteria(f)
         return f
@@ -12,10 +12,10 @@ function find_field{T<:FieldNode}(criteria::Function,f::T)
     end
 end
 
-find_field{T<:Union{ScalarField,VectorField}}(criteria::Function,f::T) = criteria(f)?f:err("Can't find field.")
+find_field(criteria::Function,f::T) where {T<:Union{ScalarField, VectorField}} = criteria(f) ? f : err("Can't find field.")
 find_field_bool(criteria::Function)=find_field_bool(criteria,fields)
-find_field_bool{T<:FieldNode}(criteria::Function,f::T)=criteria(f)?true:any(map(f->find_field_bool(criteria,f),f.fields))
-find_field_bool{T<:Union{ScalarField,VectorField}}(criteria::Function,f::T)=criteria(f)
+find_field_bool(criteria::Function,f::T) where {T <: FieldNode} =criteria(f) ? true : any(map(f->find_field_bool(criteria,f),f.fields))
+find_field_bool(criteria::Function,f::T) where {T <:Union{ScalarField, VectorField}}=criteria(f) 
 
 function test_find()
     for dim in [2,3]

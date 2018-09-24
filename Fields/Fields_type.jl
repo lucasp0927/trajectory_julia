@@ -1,4 +1,5 @@
 # type definitions
+using SharedArrays
 export ComplexOrFloat
 export Field, AbstractVectorField, AbstractScalarField, VectorField, ScalarField, VectorFieldNode, ScalarFieldNode, FieldNode
 ComplexOrFloat = Union{Complex{Float64},Float64}
@@ -7,7 +8,7 @@ abstract type AbstractVectorField <: Field end
 abstract type AbstractScalarField <: Field end
 #TODO: right now sample is only for 2d, also the ScalarFieldNode.sample datatype is Float64
 
-type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
+mutable struct ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     field::SharedArray{T}
     position::Vector{Float64}
     size::Vector{Float64}
@@ -29,7 +30,7 @@ type ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     end
 end
 
-type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
+mutable struct VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     field::SharedArray{T}
     position::Vector{Float64}
     size::Vector{Float64}
@@ -53,7 +54,7 @@ type VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     end
 end
 
-type VectorFieldNode{N} <: AbstractVectorField
+mutable struct VectorFieldNode{N} <: AbstractVectorField
     fields::Vector{AbstractVectorField}
     scaling::Function
     scaling_expr::Expr
@@ -72,7 +73,7 @@ type VectorFieldNode{N} <: AbstractVectorField
     end
 end
 
-type ScalarFieldNode{N} <: AbstractScalarField
+mutable struct ScalarFieldNode{N} <: AbstractScalarField
     fields::Vector{Field}
     scaling::Function
     scaling_expr::Expr

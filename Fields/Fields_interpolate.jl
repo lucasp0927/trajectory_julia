@@ -1,4 +1,4 @@
-@generated function itp_bicubic_grad{T<:ComplexOrFloat}(A::Array{T,2},pos::Vector{Float64},res::Vector{Float64})
+@generated function itp_bicubic_grad(A::Array{T, 2}, pos::Vector{Float64}, res::Vector{Float64}) where T <: ComplexOrFloat
     quote
         arr = $(Array{T}(4))
         grad = $(Array{T}(2))
@@ -10,7 +10,7 @@
     end
 end
 
-@generated function itp_tricubic_grad{T<:ComplexOrFloat}(A::Array{T,3},pos::Vector{Float64},res::Vector{Float64})
+@generated function itp_tricubic_grad(A::Array{T, 3}, pos::Vector{Float64}, res::Vector{Float64}) where T <: ComplexOrFloat
     quote
         arr = $(Array{T}(4,4))
         grad = $(Array{T}(3))
@@ -31,7 +31,7 @@ end
 end
 
 
-@fastmath @inbounds function cubicInterpolate{T<:Union{AbstractArray{Float64,1},AbstractArray{Complex{Float64},1}}}(p::T,x::Float64)
+@fastmath @inbounds function cubicInterpolate(p::T, x::Float64) where T <: Union{AbstractArray{Float64, 1}, AbstractArray{Complex{Float64}, 1}}
     #    @assert length(p) == 4 "wrong length"
     #   p1 p2 p3 p4
     #x= -1 0  1  2
@@ -50,7 +50,7 @@ end
     return p[2] + 0.5 * x*(p[3] - p[1] + x*(2.0*p[1] - 5.0*p[2] + 4.0*p[3] - p[4] + x*(3.0*(p[2] - p[3]) + p[4] - p[1])));
 end
 =#
-@fastmath @inbounds function cubicInterpolate_grad{T<:Union{AbstractArray{Float64,1},AbstractArray{Complex{Float64},1}}}(p::T,x::Float64)
+@fastmath @inbounds function cubicInterpolate_grad(p::T, x::Float64) where T <: Union{AbstractArray{Float64, 1}, AbstractArray{Complex{Float64}, 1}}
     #    @assert length(p) == 4 "wrong length"
     #   p1 p2 p3 p4
     #x= -1 0  1  2
@@ -65,7 +65,7 @@ end
 #    return -0.5p[1]+0.5p[3]+2p[1]*x-5p[2]*x+4p[3]*x-p[4]*x-1.5(p[1]-3p[2]+3p[3]-p[4])*x^2
 end
 =#
-@generated function bicubicInterpolate{T<:ComplexOrFloat}(p::Array{T,2},x::Vector{Float64})
+@generated function bicubicInterpolate(p::Array{T, 2}, x::Vector{Float64}) where T <: ComplexOrFloat
     #p is a 4x4 array
     quote
         arr = $(Array{T}(4))
@@ -73,7 +73,7 @@ end
         return cubicInterpolate(arr, x[2]);
     end
 end
-@generated function bicubicInterpolate{T<:ComplexOrFloat}(p::SubArray{T,2},x::Vector{Float64})
+@generated function bicubicInterpolate(p::SubArray{T, 2}, x::Vector{Float64}) where T <: ComplexOrFloat
     #p is a 4x4 array
     quote
         arr = $(Array{T}(4))
@@ -82,7 +82,7 @@ end
     end
 end
 
-@generated function tricubicInterpolate{T<:ComplexOrFloat}(p::Array{T,3},x::Vector{Float64})
+@generated function tricubicInterpolate(p::Array{T, 3}, x::Vector{Float64}) where T <: ComplexOrFloat
     # p in a 4x4x4 array
     quote
         arr = $(Array{T}(4))

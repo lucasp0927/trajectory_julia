@@ -1,8 +1,8 @@
 module Fields
 using Interpolations
 using Base.Cartesian
-using Base.Test
-using MicroLogging
+using Test
+using Logging
 #TODO: align use Flat() boundary condition, add more
 #TODO: getindex overload for fields.
 #TODO: support different resolution for different area
