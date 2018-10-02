@@ -1,6 +1,6 @@
 #1.use cubic spline interpolation
 #2.use bicubic interpolation 4x4 pixels
-using Base.LinAlg.BLAS
+using LinearAlgebra
 include("Fields_interpolate.jl")
 include("../constant.jl")
 
