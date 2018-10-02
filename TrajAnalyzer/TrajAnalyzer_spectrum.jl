@@ -12,7 +12,7 @@ function spectrum(filename,gm_name)
                          "avg_spectrum"=>average_spectrum,
                          "transfer_matrix"=>output_matrix
                          )
-    matwrite(filename*"_spectrum_data_"*gm_name*".mat",spectrum_data)
+    dicttoh5(filename*"_spectrum_data_"*gm_name*".h5",spectrum_data)
     #plot using matplotlib
     freq_config = TA_Config["spectrum"]["frequency"]
     time_config = TA_Config["spectrum"]["time"]

@@ -1,9 +1,9 @@
 module TrajAnalyzer
 using Fields
-using Logging
-#using PyCall
+using MicroLogging
+using PyCall
 using ProgressMeter
-#using MAT
+using MAT
 using HDF5
 include("../fileio.jl")
 include("TrajAnalyzer_trajectories.jl")

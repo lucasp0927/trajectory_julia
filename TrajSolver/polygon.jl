@@ -1,4 +1,4 @@
-mutable struct Polygon
+type Polygon
     n::Int64
     x::Vector{Float64}
     y::Vector{Float64}

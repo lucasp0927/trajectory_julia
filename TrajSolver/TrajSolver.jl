@@ -33,7 +33,8 @@ function calculate_traj()
         init_xv = distribute_atoms()
     elseif trajsolver_config["atom-config"]["init-type"] == "from-file"
         @info "reading initial condition from "*trajsolver_config["atom-config"]["filename"]*"..."
-        result = matread(trajsolver_config["atom-config"]["filename"])
+        result = h5todict(trajsolver_config["atom-config"]["filename"])
+        #result = matread(trajsolver_config["atom-config"]["filename"])
         traj_s = copy_to_sharedarray!(result["traj"])
         trajectories = Trajectories(result,traj_s)
         t = float(trajsolver_config["atom-config"]["time"])
