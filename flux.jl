@@ -16,7 +16,7 @@ end
     if val==0
         return 0
     else
-        return val>0?1:2
+        return val>0 ? 1 : 2
     end
 end
 
@@ -70,10 +70,10 @@ end
         v = [promote(v...)...]
         @assert length(v)==4 "wrong array length"
         k = ascii(k)
-        flux[k] = @parallel ((x,y)->cat_ignore_empty(x,y)) for i = 1:size(traj_s,3) #loop over trajectories
+        flux[k] = @distributed ((x,y)->cat_ignore_empty(x,y)) for i = 1:size(traj_s,3) #loop over trajectories
             tmp = map(1:length(tspan)-1)do j
                 (b,d) = doIntersect(v[1:2],v[3:4],traj_s[1:2,j,i],traj_s[1:2,j+1,i])
-                b?Float64[tspan[j],traj_s[1:4,j,i]...,d]:Float64[]
+                b ? Float64[tspan[j],traj_s[1:4,j,i]...,d] : Float64[]
             end
             reduce((x,y)->cat_ignore_empty(x,y),tmp)
         end
@@ -94,7 +94,7 @@ end
         v = [promote(v...)...]
         @assert length(v)==4 "wrong array length"
         k = ascii(k)
-        flux[k] = @parallel ((x,y)->cat_ignore_empty(x,y)) for i = 1:size(traj_s,3) #loop over trajectories
+        flux[k] = @distributed ((x,y)->cat_ignore_empty(x,y)) for i = 1:size(traj_s,3) #loop over trajectories
             tmp = zeros(Float64,7)
             for j = 1:length(tspan_s)-1
             (b,d) = doIntersect(v[1:2],v[3:4],traj_s[1:2,j,i],traj_s[1:2,j+1,i])

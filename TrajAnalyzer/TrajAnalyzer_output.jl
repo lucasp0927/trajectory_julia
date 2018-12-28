@@ -31,14 +31,15 @@ function output_movie(mov_tspan,range,res,filename;traj=false)
     current_folder = pwd()
     movie_folder = mktempdir(tempdir())
     if traj==false
-        @sync @parallel for t in collect(enumerate(mov_tspan))
+#        @sync @parallel for t in collect(enumerate(mov_tspan))
+        @sync @distributed for t in collect(enumerate(mov_tspan))            
             output_image_gp(t[2],range,movie_folder*"/img"*@sprintf("%04d",t[1])*".png",v_min=v_min,v_max=v_max)
         end
     else
         res_x = res[1]
         res_y = res[2]
         tdiv = mean(diff(mov_tspan))
-        @sync @parallel for t in collect(enumerate(mov_tspan))
+        @sync @distributed for t in collect(enumerate(mov_tspan))
             output_image_gp_traj(t[2],range,res_x,res_y,movie_folder*"/img"*@sprintf("%04d",t[1])*".png",v_min=v_min,v_max=v_max,tdiv=tdiv)
         end
     end
@@ -111,7 +112,7 @@ function output_image_gp_traj(t,range,res_x,res_y,filename;v_min=0.0,v_max=0.1,t
     #make atom red before vanishing.
     if tdiv>0.0
         tmp_next = (Trajs[t+tdiv,:])[1:2,:]
-        dots[3,:] = [(isnan(tmp[1,i])==false && isnan(tmp_next[1,i])==true)?1.0:0.0 for i in 1:size(tmp,2)]
+        dots[3,:] = [(isnan(tmp[1,i])==false && isnan(tmp_next[1,i])==true) ? 1.0 : 0.0 for i in 1:size(tmp,2)]
     end
     output_data = Fields.composite_with_position(range,t,[res_x,res_y])
     current_folder = pwd()

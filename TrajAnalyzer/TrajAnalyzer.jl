@@ -1,6 +1,8 @@
 module TrajAnalyzer
+using Distributed
+using SharedArrays
+using Printf
 using Fields
-using MicroLogging
 using PyCall
 using ProgressMeter
 using MAT
@@ -22,8 +24,8 @@ global range_i, range_j
 @pyimport platform
 function calc_score(area)
     pp = Polygon([promote(area...)...])
-    score = @parallel (+) for i = 1:size(Trajs.traj,3)
-        sum(map(j->pointInPolygon(pp,Trajs.traj[1:2,j,i])?1:0,1:size(Trajs.traj,2)))
+    score = @distributed (+) for i = 1:size(Trajs.traj,3)
+        sum(map(j->pointInPolygon(pp,Trajs.traj[1:2,j,i]) ? 1 : 0,1:size(Trajs.traj,2)))
     end
     @debug "score: $score"
     return score

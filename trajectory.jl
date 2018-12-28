@@ -1,12 +1,11 @@
-using MicroLogging
-configure_logging(min_level=:info)
 include("parse.jl")
+using Distributed
 parsed_args, flags = parse_commandline()
 
 @info "Starting $(parsed_args["procs"]) processes."
 #addprocs(parsed_args["procs"], exeflags=`--depwarn=no --compilecache=no`)
 #addprocs(parsed_args["procs"], exeflags=`--depwarn=no`)
-addprocs(parsed_args["procs"])
+
 
 push!(LOAD_PATH, "./Fields")
 push!(LOAD_PATH, "./TrajSolver")
@@ -16,7 +15,7 @@ using TrajSolver
 using TrajAnalyzer
 include("fileio.jl")
 include("job_manage.jl")
-
+addprocs(parsed_args["procs"])
 function prepare()
     config_file,input_file,output_file = parsed_args["config"],parsed_args["infile"],parsed_args["outfile"]
     fields_config,trajsolver_config,job_config = parse_config(config_file,parsed_args)

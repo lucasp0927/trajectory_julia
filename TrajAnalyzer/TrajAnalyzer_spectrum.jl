@@ -1,5 +1,5 @@
 include("TrajAnalyzer_transfermatrix.jl")
-using PyCall
+#using PyCall
 using StatsBase
 using Distributions
 
@@ -22,16 +22,17 @@ function spectrum(filename,gm_name)
     tend = Float64(time_config["end"])
     freq_range = fstart:Float64(freq_config["step"]):fend
     time_range = tstart:Float64(time_config["step"]):tend
-    pyimport("matplotlib")[:use]("Agg")
-    @pyimport matplotlib.pyplot as plt
-    @pyimport numpy as np
-    plt.pcolormesh(np.asarray(time_range),np.asarray(freq_range),average_spectrum,cmap="RdBu")
-    plt.axis([tstart, tend, fstart, fend])
-    plt.colorbar()
-    plt.xlabel("time(us)")
-    plt.ylabel("detuning (MHz)")
-    plt.savefig(filename*"_spectrum_"*gm_name*".png")
-    plt.clf()
+    # TODO: fix pyimport for julia 1.0
+    # pyimport("matplotlib")[:use]("Agg")
+    # @pyimport matplotlib.pyplot as plt
+    # @pyimport numpy as np
+    # plt.pcolormesh(np.asarray(time_range),np.asarray(freq_range),average_spectrum,cmap="RdBu")
+    # plt.axis([tstart, tend, fstart, fend])
+    # plt.colorbar()
+    # plt.xlabel("time(us)")
+    # plt.ylabel("detuning (MHz)")
+    # plt.savefig(filename*"_spectrum_"*gm_name*".png")
+    # plt.clf()
 end
 
 @inbounds function calculate_transmission()
@@ -55,7 +56,7 @@ end
         d = Truncated(Normal(0, sqrt(pos_variance)), -1, 1)
     end
     @debug "start parllel part!"
-    @time @sync @parallel for i in 1:iter
+    @time @sync @distributed for i in 1:iter
 #    @time for i in 1:iter        
         @debug "iteration: $i"
         lattice_scale::Float64 = lattice_width/lattice_unit

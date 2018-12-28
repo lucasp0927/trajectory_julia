@@ -1,7 +1,9 @@
 module TrajSolver
+using Distributed
+using SharedArrays
+using Printf
 using DifferentialEquations
 using Fields
-using MicroLogging
 #using Optim
 using ProgressMeter
 
@@ -140,7 +142,7 @@ function solve_traj_one_shot(init_xv::Vector{Float64})
     return yout
 end
 
-function solve_eq_of_motion{T<:AbstractArray}(f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::T; reltol::Float64=1e-8, abstol::Float64=1e-7, mxstep::Int64=Integer(1e6))
+function solve_eq_of_motion(f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::T; reltol::Float64=1e-8, abstol::Float64=1e-7, mxstep::Int64=Integer(1e6)) where T<:AbstractArray
     #TODO: add more solver options
     if solver == "ADAMS"
         solver_alg = CVODE_Adams()
@@ -198,7 +200,7 @@ end
     return true
 end
 
-@inbounds function mycvode{T<:AbstractArray}(f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::T; reltol::Float64=1e-8, abstol::Float64=1e-7, mxstep::Int64=Integer(1e6), userdata::Any=nothing)
+@inbounds function mycvode(f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::T; reltol::Float64=1e-8, abstol::Float64=1e-7, mxstep::Int64=Integer(1e6), userdata::Any=nothing) where T<:AbstractArray
     # f, Function to be optimized of the form f(y::Vector{Float64}, fy::Vector{Float64}, t::Float64)
     #    where `y` is the input vector, and `fy` is the
     # y0, Vector of initial values

@@ -1,4 +1,4 @@
-using Base.Test
+#using Base.Test
 @generated function ngamma1d(idx::Vector,filename)
     quote
         if length(idx) == 1
@@ -27,7 +27,7 @@ function calc_avg_ngamma1d()
 end
 
 function calc_avg_ngamma1d_parallel()
-    ng1d = @parallel (+) for t in Trajs.tspan
+    ng1d = @distributed (+) for t in Trajs.tspan
         calc_ngamma1d(t)
     end
     ng1d = ng1d/length(Trajs.tspan)
