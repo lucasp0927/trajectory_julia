@@ -35,8 +35,9 @@ end
 end
 
 @inbounds function sample_field(f::ScalarField{T, 2}, pidx::Vector{Int64}, s::K) where {T <: ComplexOrFloat, K <: ComplexOrFloat}
-    f.sample[:,:] = view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]).*s
-    #copy!(f.sample::Array{T,2},view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]))
+    #f.sample[:,:] = view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]).*s
+    copyto!(f.sample::Array{T,2},view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]))
+    LinearAlgebra.BLAS.scal!(16,s,f.sample,1)
     #scale!(f.sample::Array{T,2},s)
 #    scal!(16,s,f.sample,1)
 end

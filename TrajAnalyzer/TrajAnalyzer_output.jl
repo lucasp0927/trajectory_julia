@@ -15,7 +15,7 @@ function output_movie_traj_flux(config,filename,result,tspan,flux)
 end
 
 function output_movie_data(config,filename)
-    @assert contains(filename,".mat")
+    @assert occursin(".mat",filename)
     mov_tspan = collect(config["tstart"]:config["tdiv"]:config["tend"])
     mov_range = [promote(config["range"]...)...]
     potential = cat(3,pmap(t->Fields.composite(mov_range,t),mov_tspan)...)
@@ -23,7 +23,7 @@ function output_movie_data(config,filename)
 end
 
 function output_movie(mov_tspan,range,res,filename;traj=false)
-    @assert contains(filename,".mp4")
+    @assert occursin(".mp4",filename)
     #pre render potential to find v_min and v_max
     output_pre = pmap(t->Fields.composite(range,t),mov_tspan)
     v_min = minimum(map(minimum,output_pre))
@@ -44,13 +44,13 @@ function output_movie(mov_tspan,range,res,filename;traj=false)
         end
     end
     cd(movie_folder)
-    if contains(platform.platform(),"Ubuntu-12.04")||contains(platform.platform(),"Ubuntu-14.04")
-        run(pipeline(`avconv -framerate 5 -i img%04d.png -s:v 1300x1000 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p out.mp4`,stderr=current_folder*"/ffmpeg.log"))
-    else
-        run(pipeline(`ffmpeg -framerate 5 -i img%04d.png -s:v 1300x1000 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p out.mp4`,stderr=current_folder*"/ffmpeg.log"))
-    end
+    # if occursin("Ubuntu-12.04",platform.platform())||occursin("Ubuntu-14.04",platform.platform())
+    #     run(pipeline(`avconv -framerate 5 -i img%04d.png -s:v 1300x1000 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p out.mp4`,stderr=current_folder*"/ffmpeg.log"))
+    # else
+    run(pipeline(`ffmpeg -framerate 5 -i img%04d.png -s:v 1300x1000 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p out.mp4`,stderr=current_folder*"/ffmpeg.log"))
+#    end
     cd(current_folder)
-    cp(movie_folder*"/out.mp4",filename,remove_destination=true)
+    cp(movie_folder*"/out.mp4",filename,force=true)
     rm(movie_folder,recursive=true)
 end
 
@@ -134,6 +134,7 @@ function output_image_gp_traj(t,range,res_x,res_y,filename;v_min=0.0,v_max=0.1,t
     end
     run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);time=$t;set cbrange [$v_min:$v_max]" output_image_gp_traj.gp`)
     cd(current_folder)
-    cp(image_folder*"/data.png",filename,remove_destination=true)
+    #cp(image_folder*"/data.png",filename,remove_destination=true)
+    cp(image_folder*"/data.png",filename,force=true)
     rm(image_folder,recursive=true)
 end
