@@ -99,13 +99,13 @@ end
     #2D
     #position at current index
     #@devec    idx_pos = apos.+ ares.*(index-1)
-    idx_pos = apos.+ ares.*(index-1)
+    idx_pos = apos.+ ares.*(index.-1)
     #calculate the old field index
     #@devec    old_idx = ((idx_pos.-uapos)./uares)+1
-    old_idx = ((idx_pos.-uapos)./uares)+1
+    old_idx = ((idx_pos.-uapos)./uares).+1
     #test
     #@devec    un_idx_pos = uapos.+ uares.*(old_idx-1)
-    un_idx_pos = uapos.+ uares.*(old_idx-1)
+    un_idx_pos = uapos.+ uares.*(old_idx.-1)
     @assert   un_idx_pos ≈ idx_pos "coordinate transform check"
     return old_idx
 end
@@ -121,7 +121,7 @@ end
         uares::Vector{Float64} = unalign_geo["res"]
         start_idx = transform_coordinate(apos,ares,uapos,uares,ones(Int64,$N))
         end_idx = transform_coordinate(apos,ares,uapos,uares,collect(size(new_field)))
-        @nexprs $N j-> x_j = linspace(start_idx[j],end_idx[j],size(new_field,j))
+        @nexprs $N j-> x_j = range(start_idx[j],stop=end_idx[j],length=size(new_field,j))
         @nloops $N i new_field begin
             (@nref $N new_field i) = (@nref $N old_field_itp j->x_j[i_j])
         end

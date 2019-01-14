@@ -3,10 +3,10 @@ using SharedArrays
 function setfield!(f::VectorField{T,N},A::SharedArray{T},pos::Vector{Float64}, sz::Vector{Float64};scaling::Function = t-> begin
 1
 end) where {T <: ComplexOrFloat, N}
-    res = sz./(collect(size(A))[2:N+1]-1)
+    res = sz./(collect(size(A))[2:N+1].-1)
     @assert all(x->x!=0,res) "zero resolution!"
     @assert length(pos)==length(sz)==N==ndims(A)-1 "dimension error!"
-    f.field = Array(T,1)
+    f.field = Array{T}(undef,1)
     f.field = A
     f.position = pos
     f.size = sz
@@ -18,10 +18,10 @@ end
 function setfield!(f::ScalarField{T,N},A::SharedArray{T},pos::Vector{Float64},sz::Array{Float64};scaling::Function = t-> begin
 1
 end) where {T <: ComplexOrFloat, N}
-    res = sz./(collect(size(A))[1:N]-1)
+    res = sz./(collect(size(A))[1:N].-1)
     @assert all(x->x!=0,res) "zero resolution!"
     @assert length(pos)==length(sz)==N==ndims(A) "dimension error!"
-    f.field = Array{T}(1)
+    f.field = Array{T}(undef,1)
     f.field = A
     f.position = pos
     f.size = sz
@@ -30,10 +30,10 @@ end) where {T <: ComplexOrFloat, N}
     f.dim = N
 end
 
-function setscaling!(f::Field,scaling::Function)
-    Base.error("scaling_expr not changed.")
-    f.scaling = scaling
-end
+# function setscaling!(f::Field,scaling::Function)
+#     Base.error("scaling_expr not changed.")
+#     f.scaling = scaling
+# end
 
 function setscaling!(f::Field,scaling_expr::Expr)
     f.scaling_expr = scaling_expr

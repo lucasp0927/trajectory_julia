@@ -29,7 +29,7 @@ end
     # pidx[1] = round(Int64,cld(rel_pos[1],f.res[1]::Float64))
     # pidx[2] = round(Int64,cld(rel_pos[2],f.res[2]::Float64))
     
-    #    f.s::Float64 = (f.scaling::Function)(t)::Float64
+    #f.s::Float64 = (f.scaling::Function)(t)::Float64
     f.s::Float64 = Base.invokelatest(f.scaling, t)::Float64        
     sample_field(f,f.pidx,f.s)
 end
@@ -74,8 +74,8 @@ end
     # pidx = Array(Int64,2)
     # pidx[1] = round(Int64,cld(rel_pos[1],f.res[1]::Float64))
     # pidx[2] = round(Int64,cld(rel_pos[2],f.res[2]::Float64))
-    # f.s::Complex{Float64} = convert(Complex{Float64},(f.scaling::Function)(t))
-    f.s::Complex{Float64} = convert(Complex{Float64},Base.invokelatest(f.scaling::Function,t))    
+    #f.s::Complex{Float64} = convert(Complex{Float64},(f.scaling::Function)(t))
+    f.s::Complex{Float64} = convert(Complex{Float64},Base.invokelatest(f.scaling::Function,t))
 #    s = f.scaling(t)
     sample_field(f,f.pidx,f.s)
 end
@@ -105,6 +105,7 @@ end
     f.pidx[5] = round(Int64,div(f.rel_pos[3],f.res[3]::Float64))
     f.pidx[6] = f.pidx[5]+3
     f.s::Complex{Float64} = convert(Complex{Float64},(Base.invokelatest(f.scaling::Function))(t))
+    #f.s::Complex{Float64} = convert(Complex{Float64},(f.scaling::Function)(t))
     sample_field(f,f.pidx,f.s)
 end
 
@@ -123,8 +124,9 @@ function sample2!(f::VectorFieldNode{2},pos::Vector{Float64},t::Real)
     end
     #    f.s::Complex{Float64} = convert(Complex{Float64},f.scaling(t))
     #f.s::Complex{Float64} = ((f.scaling::Function)(t))::Complex{Float64}
-    f.s::Complex{Float64} = (Base.invokelatest(f.scaling::Function,t))::Complex{Float64}    
-    scale!(f.sample,f.s)
+    f.s::Complex{Float64} = (Base.invokelatest(f.scaling::Function,t))::Complex{Float64}
+    f.sample .*= f.s
+    #scale!(f.sample,f.s)
 #    scal!(48,f.s,f.sample,1)
 #    scale_sample!(f.sample,s)
 end

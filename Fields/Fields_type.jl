@@ -68,7 +68,8 @@ mutable struct VectorFieldNode{N} <: AbstractVectorField
     sample::Array{Complex{Float64}}
     s::Complex{Float64}
     name::String
-    function VectorFieldNode{N}(f::Vector{T};scaling_expr::Expr  = parse("t->1.0+0.0im"),name::String="VectorFieldNode") where {T<:AbstractVectorField, N}
+    #TODO: require T<:AbstractVectorField for f::Vector{T}
+    function VectorFieldNode{N}(f::Vector{T};scaling_expr::Expr  = parse("t->1.0+0.0im"),name::String="VectorFieldNode") where {T<:Field, N}
         @assert all(x->x.dim==N,f) "dimension error!"
         new(f,eval(scaling_expr),scaling_expr,N,[],[],[],Complex{Float64},zeros(Complex{Float64},[3,repeat([4],N)...]...),zero(Complex{Float64}),ascii(name))
     end
@@ -89,6 +90,7 @@ mutable struct ScalarFieldNode{N} <: AbstractScalarField
     s::Float64
     one_vf_flag::Bool
     name::String
+    #TODO: require T<:AbstractScalarField for f::Vector{T}    
     function ScalarFieldNode{N}(f::Vector{T};scaling_expr::Expr = parse("t->1.0"), name::String="ScalarFieldNode") where {T<:Field, N}
         @assert all(x->x.dim==N,f) "dimension error!"
         flag = (length(f) == 1) && typeof(f[1])<:AbstractVectorField

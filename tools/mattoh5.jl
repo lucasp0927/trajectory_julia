@@ -6,9 +6,24 @@ function dicttoh5(filename, data)
     varnames = collect(keys(data))
     fid = h5open(filename,"w")
     for name in varnames
-        write(fid,name,data[name])
+        @info name
+        @info typeof(data[name])
+        write_dataset(fid,name,data[name])
     end
     close(fid)
+end
+
+function write_dataset(fid,name,data::T) where T<:Number
+    write(fid,name,data)
+end
+
+function write_dataset(fid,name,data::Array{T}) where T<:Real
+    write(fid,name,data)
+end
+
+function write_dataset(fid,name,data::Array{T}) where T<:Complex
+    write(fid,name*"/real",real(data))
+    write(fid,name*"/imag",imag(data))        
 end
 
 function h5todict(filename)
@@ -18,7 +33,13 @@ function h5todict(filename)
     fid = h5open(filename,"r")
     varnames = names(fid)
     for name in varnames
-        data[name] = read(fid,name)
+        if isa(fid[name],HDF5Group)
+            data[name] = read(fid,name*"/real") .+ (read(fid,name*"/imag").*1im)
+        elseif isa(fid[name],HDF5Dataset)
+            data[name] = read(fid,name)
+        else
+            @error "unexpected HDF5 file structure"
+        end
     end
     close(fid)
     return data
@@ -38,6 +59,23 @@ function parse_commandline()
     return parse_args(s)
 end
 
+function check_data(data1,data2)
+    @info "Check data consistency"
+    @assert isequal(data1,data2)
+    # keys1 = keys(data1)
+    # keys2 = keys(data2)
+    # @info keys1
+    # @info keys2
+    # @assert keys1 == keys2
+
+    # for key in keys1
+    #     @info "check "*key
+    #     @info size(data1[key])
+    #     @info size(data2[key])        
+    #     @assert isequal(data1[key],data2[key])
+    # end
+end
+
 function main()
     parsed_args = parse_commandline()
     # println("Parsed args:")
@@ -45,11 +83,14 @@ function main()
     #     println("  $arg  =>  $val")
     # end
     infile = parsed_args["infile"]
-    outfile = parsed_args["outfile"]    
+    @assert occursin(".mat", infile)
+    outfile = parsed_args["outfile"]
+    @assert occursin(".h5", outfile)    
     data = matread(infile)
     dicttoh5(outfile,data)
+    # check if data consistency
     data2 = h5todict(outfile)
-    @assert data == data2
+    check_data(data,data2)
 end
 
 main()

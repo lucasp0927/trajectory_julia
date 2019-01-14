@@ -97,7 +97,7 @@ function build_field(field_config::Dict,level::Integer;name::String = "field")
     elseif field_config["field-type"] == "VectorFieldNode"
         @info padding(level)*"building VectorFieldNode "*name
         @info padding(level)*"scaling:"* field_config["scaling"]
-        f_arr = Array{Field}(length(field_config["fields"]))
+        f_arr = Array{Field}(undef,length(field_config["fields"]))
         for (i,x) in enumerate(field_config["fields"])
             f_arr[i] = build_field(x[2],level+1,name=ascii(x[1]))
         end

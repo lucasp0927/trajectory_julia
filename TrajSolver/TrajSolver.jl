@@ -53,7 +53,7 @@ function calculate_traj()
     # in this case it's just an index.
     @info "calculate trajectories..."
     
-    @time calculate_traj_inner(init_xv,traj)
+    @time calculate_traj_inner_parallel(init_xv,traj)
     
     #truncate save time range
     t_idx_start = searchsortedlast(tspan,trajsolver_config["save-range"]["tstart"])
