@@ -1,4 +1,4 @@
-function align_field_tree!(T)
+function align_field_tree!(f::T) where T<:FieldNode
     set_geometry!(f)
     #debug("align top field node $(f.name)")
     @debug "align top field node "*f.name
@@ -16,10 +16,10 @@ function align_field_tree!(T)
     align_field!(f,align_geo["res"],align_geo["pos"])
     set_geometry!(f)
     set_typeof!(f)
-    gc()
+    Base.GC.gc()
 end
 
-function align_field!(T,res::Vector{Float64},pos::Vector{Float64})
+function align_field!(f::T,res::Vector{Float64},pos::Vector{Float64}) where T<:FieldNode
     @debug "align FieldNode $(f.name)"
     @assert length(res) == length(pos) "dimension mismatch!"
     for ff in f.fields
@@ -41,7 +41,7 @@ function align_field!(f::ScalarField{T, N}, res::Vector{Float64}, pos::Vector{Fl
     new_size = new_end.-new_pos
     align_geo = Dict("pos"=>new_pos,"size"=>new_size,"res"=>res)
     ##### interpolate field
-    new_arr_size = round.(Int64,new_size ./ res)+one(Int64)
+    new_arr_size = round.(Int64,new_size ./ res).+one(Int64)
     if (unalign_geo["pos"] == align_geo["pos"])&&(unalign_geo["res"] == align_geo["res"])
         @info "no need to align!"
     else
@@ -68,7 +68,7 @@ function align_field!(f::VectorField{T, N}, res::Vector{Float64}, pos::Vector{Fl
     new_size = new_end.-new_pos
     align_geo = Dict("pos"=>new_pos,"size"=>new_size,"res"=>res)
     ##### interpolate field
-    new_arr_size = round.(Int64,new_size ./ res)+one(Int64)
+    new_arr_size = round.(Int64,new_size ./ res).+one(Int64)
     if (unalign_geo["pos"] == align_geo["pos"])&&(unalign_geo["res"] == align_geo["res"])
         @info "no need to align!"
     else

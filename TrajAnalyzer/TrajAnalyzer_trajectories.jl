@@ -1,3 +1,4 @@
+using Statistics
 struct Trajectories
     traj::SharedArray{Float64}  #traj[1,:,:] =>x coordinate, traj[2,:,:] => y coordinate
     atom_num::Int64
@@ -6,12 +7,12 @@ struct Trajectories
     pos::Vector{Float64}
     siz::Vector{Float64}
     function Trajectories(result::Dict,traj_s::SharedArray{Float64})
-        traj = traj_s
-        atom_num = size(traj,3)
-        tspan = copy(result["tspan"])
-        t_div = mean(diff(tspan))
-        pos = copy(result["pos"])
-        siz = copy(result["siz"])
+        traj = traj_s::SharedArray{Float64}
+        atom_num = size(traj,3)::Int64
+        tspan = vec(copy(result["tspan"]))::Vector{Float64}
+        t_div = Statistics.mean(diff(tspan))::Float64
+        pos = vec(copy(result["pos"]))::Vector{Float64}
+        siz = vec(copy(result["siz"]))::Vector{Float64}
         new(traj,atom_num,vec(tspan),t_div,vec(pos),vec(siz))
     end
 end
@@ -41,7 +42,7 @@ end
     t_idx = searchsortedlast(tr.tspan,t)
     @assert t_idx >=1 && t_idx <= length(tr.tspan)
     t_div = tr.t_div::Float64
-    result = Array{Float64}(size(tr.traj,1),length(traj_id))
+    result = Array{Float64}(undef,size(tr.traj,1),length(traj_id))
     if t_idx != length(tr.tspan)
         r = (t-tr.tspan[t_idx])/t_div
         result .= tr.traj[:,t_idx,traj_id].*(1.0-r)

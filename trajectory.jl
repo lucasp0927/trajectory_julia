@@ -1,21 +1,19 @@
 include("parse.jl")
-using Distributed
 parsed_args, flags = parse_commandline()
 
 @info "Starting $(parsed_args["procs"]) processes."
-#addprocs(parsed_args["procs"], exeflags=`--depwarn=no --compilecache=no`)
-#addprocs(parsed_args["procs"], exeflags=`--depwarn=no`)
+using Distributed
+addprocs(parsed_args["procs"])
 
-
-push!(LOAD_PATH, "./Fields")
-push!(LOAD_PATH, "./TrajSolver")
-push!(LOAD_PATH, "./TrajAnalyzer")
+@everywhere push!(LOAD_PATH, "./Fields")
+@everywhere push!(LOAD_PATH, "./TrajSolver")
+@everywhere push!(LOAD_PATH, "./TrajAnalyzer")
 using Fields
 using TrajSolver
 using TrajAnalyzer
 include("fileio.jl")
 include("job_manage.jl")
-addprocs(parsed_args["procs"])
+
 function prepare()
     config_file,input_file,output_file = parsed_args["config"],parsed_args["infile"],parsed_args["outfile"]
     fields_config,trajsolver_config,job_config = parse_config(config_file,parsed_args)
@@ -29,8 +27,9 @@ end
 
 function main()
     sfn,probe_sfn,input_file,output_file,job_config,trajsolver_config = prepare()
+    @info "initializing TrajSolver..."
     TrajSolver.init_parallel(trajsolver_config,probe_sfn)    
-    @info "initialize fields"
+    @info "initializing fields..."
     Fields.init_parallel!(sfn)
     @info "Start calculating trajectories..."
     if job_config["type"] == "single-scan-scaling"

@@ -1,4 +1,5 @@
 module Fields
+using Distributed
 using Interpolations
 using Base.Cartesian
 using Test
@@ -17,10 +18,10 @@ include("Fields_function.jl")
 function init_parallel!(sfn::ScalarFieldNode)
     @info "initializing Fields module..."
     @sync begin
-        for p = 1:nprocs()     #initialize Fields module on each processe
+        for p = 1:Distributed.nprocs()     #initialize Fields module on each processe
             #set all scaling to t->0.0
             clean_scaling!(sfn)
-            @async remotecall_fetch(init!,p,sfn)
+            @async Distributed.remotecall_fetch(init!,p,sfn)
         end
     end
     eval_scaling!(sfn)
@@ -29,15 +30,15 @@ end
 function init!(sfn::ScalarFieldNode)
     global fields
     fields = 0
-    gc()
+    GC.gc()
     fields = copyfield(sfn)
-    gc()
+    GC.gc()
 end
 
 function reset!()
     global fields
     fields = 0
-    gc()
+    GC.gc()
 end
 
 function test()

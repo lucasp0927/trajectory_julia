@@ -2,6 +2,7 @@ include("flux.jl")
 #include("benchmark.jl")
 using Optim
 using PyCall
+
 @pyimport scipy.optimize as opt
 function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,idx::Vector)
     if config["type"] == "single-scan-scaling"
@@ -70,9 +71,9 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         for job in values(jobs)
             field_name = job["field"]
             s = job["scaling"]
-            s = replace(s,"@i",float(i))
+            s = replace(s,"@i"=>float(i))
             @info "change scaling of field $field_name to ",s
-            s_exp = parse(s)
+            s_exp = Meta.parse(s)
             Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
         end
         Fields.init_parallel!(sfn)

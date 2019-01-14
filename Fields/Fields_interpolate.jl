@@ -1,7 +1,7 @@
 @generated function itp_bicubic_grad(A::Array{T, 2}, pos::Vector{Float64}, res::Vector{Float64}) where T <: ComplexOrFloat
     quote
-        arr = $(Array{T}(4))
-        grad = $(Array{T}(2))
+        arr = $(Array{T}(undef,4))
+        grad = $(Array{T}(undef,2))
         @nexprs 4 j->(arr[j] = cubicInterpolate_grad(view(A,:,j), pos[1]);)
         grad[1] = cubicInterpolate(arr, pos[2])/res[1];
         @nexprs 4 j->(arr[j] = cubicInterpolate_grad(view(A,j,:), pos[2]);)
@@ -12,8 +12,8 @@ end
 
 @generated function itp_tricubic_grad(A::Array{T, 3}, pos::Vector{Float64}, res::Vector{Float64}) where T <: ComplexOrFloat
     quote
-        arr = $(Array{T}(4,4))
-        grad = $(Array{T}(3))
+        arr = $(Array{T}(undef,4,4))
+        grad = $(Array{T}(undef,3))
         for k = 1:4
             @nexprs 4 j->(arr[j,k] = cubicInterpolate_grad(view(A,:,j,k), pos[1]);)
         end
@@ -68,7 +68,7 @@ end
 @generated function bicubicInterpolate(p::Array{T, 2}, x::Vector{Float64}) where T <: ComplexOrFloat
     #p is a 4x4 array
     quote
-        arr = $(Array{T}(4))
+        arr = $(Array{T}(undef,4))
         @nexprs 4 j->(arr[j] = cubicInterpolate(view(p,:,j), x[1]);)
         return cubicInterpolate(arr, x[2]);
     end
@@ -76,7 +76,7 @@ end
 @generated function bicubicInterpolate(p::SubArray{T, 2}, x::Vector{Float64}) where T <: ComplexOrFloat
     #p is a 4x4 array
     quote
-        arr = $(Array{T}(4))
+        arr = $(Array{T}(undef,4))
         @nexprs 4 j->(arr[j] = cubicInterpolate(view(p,:,j), x[1]);)
         return cubicInterpolate(arr, x[2]);
     end
@@ -85,7 +85,7 @@ end
 @generated function tricubicInterpolate(p::Array{T, 3}, x::Vector{Float64}) where T <: ComplexOrFloat
     # p in a 4x4x4 array
     quote
-        arr = $(Array{T}(4))
+        arr = $(Array{T}(undef,4))
         @nexprs 4 j->(arr[j] = bicubicInterpolate(view(p,:,:,j), x[1:2]);)
         return cubicInterpolate(arr, x[3]);
     end

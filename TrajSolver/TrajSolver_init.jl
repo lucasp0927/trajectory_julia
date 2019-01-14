@@ -1,7 +1,7 @@
 function allocate_jobs(totaljob)
     nchunks = nworkers()
     jobs = fill(fld(totaljob,nchunks),nchunks)
-    jobs[1:totaljob%nchunks] += 1
+    jobs[1:totaljob%nchunks] .+= 1
     start = round(Int64,sum(jobs[1:myid()-2])+1)
     stop = round(Int64,sum(jobs[1:myid()-1]))
     return start,stop
@@ -10,16 +10,17 @@ end
 function init_parallel(config::Dict,probe_sfn::ScalarFieldNode)
 #    println("start initialization TrajSolver module...")
     @sync begin
-        for p = 1:nprocs()
+        for p = 1:Distributed.nprocs()
             Fields.clean_scaling!(probe_sfn)
-            @async remotecall_wait(init!,p,config,probe_sfn)
+            @async Distributed.remotecall_wait(init!,p,config,probe_sfn)
         end
     end
     Fields.eval_scaling!(probe_sfn)
 end
 
 function init!(config::Dict,probe_sfn::ScalarFieldNode)
-    srand()
+    #    srand()
+    Random.seed!()
 #    println("initialize TrajSolver module on process ", myid())
     global my_trajnum
     global solver, reltol, abstol
@@ -60,7 +61,7 @@ function init!(config::Dict,probe_sfn::ScalarFieldNode)
     #calculate my_trajnum
     jobs = allocate_jobs(trajnum)
     my_trajnum = jobs[2]-jobs[1]+1
-    result = Array{Float64}(4,length(tspan),my_trajnum)
+    result = Array{Float64}(undef,4,length(tspan),my_trajnum)
 end
 
 function range2sfn(range)

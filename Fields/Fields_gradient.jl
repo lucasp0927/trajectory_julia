@@ -35,9 +35,9 @@ end
 end
 
 @inbounds function sample_field(f::ScalarField{T, 2}, pidx::Vector{Int64}, s::K) where {T <: ComplexOrFloat, K <: ComplexOrFloat}
-    #f.sample[:,:] = view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]).*s
-    copy!(f.sample::Array{T,2},view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]))
-    scale!(f.sample::Array{T,2},s)
+    f.sample[:,:] = view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]).*s
+    #copy!(f.sample::Array{T,2},view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]))
+    #scale!(f.sample::Array{T,2},s)
 #    scal!(16,s,f.sample,1)
 end
 
@@ -170,8 +170,9 @@ end
        add_vector_field!(f.sample,f.vf_sample)
     end
     #f.s = (f.scaling::Function)(t)::Float64
-    f.s = Base.invokelatest(f.scaling, t)::Float64    
-    scale!(f.sample,f.s)
+    f.s = Base.invokelatest(f.scaling, t)::Float64
+    f.sample .*= f.s
+    #scale!(f.sample,f.s)
 #        scal!(16,f.s,f.sample,1)
 #    scale_sample!(f.sample,s)
 end
@@ -250,8 +251,8 @@ end
 
 @generated function value(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode{2})
     quote
-        x = $(Array{Float64}(2))
-        res = $(Array{Float64}(2))
+        x = $(Array{Float64}(undef,2))
+        res = $(Array{Float64}(undef,2))
         res .= (sfn::ScalarFieldNode).res
         sample2!(sfn::ScalarFieldNode,pos,t)
         @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
@@ -261,8 +262,8 @@ end
 
 @generated function value(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode{3})
     quote
-        x = $(Array{Float64}(3))
-        res = $(Array{Float64}(3))
+        x = $(Array{Float64}(undef,3))
+        res = $(Array{Float64}(undef,3))
         res[:] = (sfn::ScalarFieldNode).res
         sample2!(sfn::ScalarFieldNode,pos,t)
         @nexprs 3 j->x[j] = rem(pos[j],res[j])/res[j]
@@ -280,9 +281,9 @@ end
 
 @generated function gradient!(t::Float64,posvel::Vector{Float64},grad::Vector{Float64},sfn::ScalarFieldNode{2})
     quote
-        x = $(Array{Float64}(2))
-        res = $(Array{Float64}(2))
-        pos = $(Array{Float64}(2))
+        x = $(Array{Float64}(undef,2))
+        res = $(Array{Float64}(undef,2))
+        pos = $(Array{Float64}(undef,2))
         res[:] = (sfn::ScalarFieldNode).res
         pos[:] = posvel[1:2]
         @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
@@ -295,9 +296,9 @@ end
 
 @generated function gradient!(t::Float64,posvel::Vector{Float64},grad::Vector{Float64},sfn::ScalarFieldNode{3})
     quote
-        x = $(Array{Float64}(3))
-        res = $(Array{Float64}(3))
-        pos = $(Array{Float64}(3))
+        x = $(Array{Float64}(undef,3))
+        res = $(Array{Float64}(undef,3))
+        pos = $(Array{Float64}(undef,3))
         res[:] = (sfn::ScalarFieldNode).res
         pos[:] = posvel[1:3]
         @nexprs 3 j->x[j] = rem(pos[j],res[j])/res[j]

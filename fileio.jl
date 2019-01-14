@@ -1,6 +1,6 @@
 using HDF5
 ComplexOrFloat = Union{Complex{Float64},Float64}
-function copy_to_sharedarray!(arr::Array{T,N}) where {T<:ComplexOrFloat, N<:Integer}
+function copy_to_sharedarray!(arr::Array{T,N}) where {T<:ComplexOrFloat,N}
     return convert(SharedArray,arr)
 end
 
@@ -10,7 +10,7 @@ function file2sharedarray(filename,variable)
     end
     var_s = copy_to_sharedarray!(var)
     var = 0
-    gc()
+    GC.gc()
     return var_s
 end
 

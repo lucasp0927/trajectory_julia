@@ -14,10 +14,10 @@ end
 function geometry(f::T;lowest_res=true) where {T <: FieldNode}
     #find the new optimal position and size
     #minimum(cat(2,[1,2,3],[2,3,4]),2)
-    minpos::Vector{Float64} = vec(minimum(cat(2,map(x->geometry(x)["pos"],f.fields)...),2))
-    maxpos::Vector{Float64} = vec(maximum(cat(2,map(x->geometry(x)["pos"].+geometry(x)["size"],f.fields)...),2))
+    minpos::Vector{Float64} = vec(minimum(cat(map(x->geometry(x)["pos"],f.fields)...,dims=2),dims=2))
+    maxpos::Vector{Float64} = vec(maximum(cat(map(x->geometry(x)["pos"].+geometry(x)["size"],f.fields)...,dims=2),dims=2))
     myminmax = (lowest_res ? maximum : minimum)::Function
-    res::Vector{Float64} = vec(myminmax(cat(2,map(x->geometry(x)["res"],f.fields)...),2))
+    res::Vector{Float64} = vec(myminmax(cat(map(x->geometry(x)["res"],f.fields)...,dims=2),dims=2))
     @assert all(x->x!=0,res) "zero resolution!"
     return Dict("pos"=>minpos, "size"=>(maxpos-minpos), "res"=>res)
 end

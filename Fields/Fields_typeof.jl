@@ -15,7 +15,7 @@ function typeoffield(f::ScalarFieldNode)
     return typeintersect(reduce((x,y)->Union{x,y},f_member_type),ComplexOrFloat)==Float64 ? Float64 : Complex{Float64}
 end
 
-function set_typeof!(f::T) where {T <:ComplexOrFloat, N}
+function set_typeof!(f::T) where {T <:FieldNode}
     #memoize typeof
     f.typeof = typeoffield(f)
     for ff in f.fields

@@ -1,6 +1,7 @@
 module TrajSolver
 using Distributed
 using SharedArrays
+using Random
 using Printf
 using DifferentialEquations
 using Fields
@@ -36,6 +37,7 @@ function calculate_traj()
     elseif trajsolver_config["atom-config"]["init-type"] == "from-file"
         @info "reading initial condition from "*trajsolver_config["atom-config"]["filename"]*"..."
         result = h5todict(trajsolver_config["atom-config"]["filename"])
+        result["tspan"] = vec(result["tspan"])
         #result = matread(trajsolver_config["atom-config"]["filename"])
         traj_s = copy_to_sharedarray!(result["traj"])
         trajectories = Trajectories(result,traj_s)
@@ -46,7 +48,7 @@ function calculate_traj()
         err("Unknown init-type in atom-config.")
     end
     #preallocate result
-    traj = Array{Float64}(4,length(tspan),trajnum)
+    traj = Array{Float64}(undef,4,length(tspan),trajnum)
     # function to produce the next work item from the queue.
     # in this case it's just an index.
     @info "calculate trajectories..."
@@ -69,7 +71,7 @@ function calculate_traj()
                   "reltol"=>reltol,
                   "abstol"=>abstol
                   )
-    gc()
+    GC.gc()
     return result
 end
 
@@ -133,7 +135,7 @@ function calculate_traj_unbalanced()
 end
 
 function solve_traj_one_shot(init_xv::Vector{Float64})
-    yout = Array{Float64}(4,length(tspan))
+    yout = Array{Float64}(undef,4,length(tspan))
     fill!(yout,NaN)
     if any(isnan.(init_xv)) == false
         #mycvode(Fields.gradient!,init_xv,tspan,yout;reltol=reltol, abstol=abstol)
@@ -182,7 +184,7 @@ function solve_traj()
         mycvode(mem,Fields.gradient!,init,tspan,yout; reltol = reltol, abstol =abstol)
     end
     #TODO: figure out how to delete mem
-    gc()
+    GC.gc()
 end
 =#
 @inbounds function boundary(pos::Vector{Float64})
