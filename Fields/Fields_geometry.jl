@@ -11,7 +11,7 @@ function set_geometry!(f::T) where {T <: FieldNode}
     end
 end
 
-function geometry(f::T;lowest_res=true) where {T <: FieldNode}
+function geometry(f::T;lowest_res=false) where {T <: FieldNode}
     #find the new optimal position and size
     #minimum(cat(2,[1,2,3],[2,3,4]),2)
     minpos::Vector{Float64} = vec(minimum(cat(map(x->geometry(x)["pos"],f.fields)...,dims=2),dims=2))

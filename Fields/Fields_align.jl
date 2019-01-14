@@ -28,7 +28,7 @@ function align_field!(f::T,res::Vector{Float64},pos::Vector{Float64}) where T<:F
 end
 
 function align_field!(f::ScalarField{T, N}, res::Vector{Float64}, pos::Vector{Float64}) where {T <: ComplexOrFloat, N}
-    @debug "align ScalarField $(f.name)"
+    @info "align ScalarField $(f.name)"
     @assert length(res) == length(pos) "dimension mismatch!"
     unalign_geo = geometry(f)
     new_pos = ceil.((unalign_geo["pos"].-pos)./res).*res.+pos
@@ -55,7 +55,7 @@ function align_field!(f::ScalarField{T, N}, res::Vector{Float64}, pos::Vector{Fl
 end
 
 function align_field!(f::VectorField{T, N}, res::Vector{Float64}, pos::Vector{Float64}) where {T <: ComplexOrFloat, N}
-    @debug "align ScalarField $(f.name)"    
+    @info "align VectorField $(f.name)"    
     @assert length(res) == length(pos) "dimension mismatch!"
     unalign_geo = geometry(f)
     new_pos = ceil.((unalign_geo["pos"].-pos)./res).*res.+pos
@@ -87,12 +87,12 @@ end
 #TODO clean this up with meta programming?
 @generated function myslice(A::Array{T, N}, i::Integer) where {T <: ComplexOrFloat, N}
     ex_str = "view(A,i"*repeat(",:",N-1)*")"
-    parse(ex_str)
+    Meta.parse(ex_str)
 end
 
 @generated function myslice(A::SharedArray{T, N}, i::Integer) where {T <: ComplexOrFloat, N}
     ex_str = "view(A,i"*repeat(",:",N-1)*")"
-    parse(ex_str)
+    Meta.parse(ex_str)
 end
 
 @inbounds function transform_coordinate(apos::Vector{Float64},ares::Vector{Float64},uapos::Vector{Float64},uares::Vector{Float64},index::Vector{Int64})
@@ -114,7 +114,7 @@ end
     N::Int64 = ndims(new_field)
     quote
 #        old_field_itp = interpolate(old_field, BSpline(Cubic(Flat())), OnGrid())
-        old_field_itp = interpolate(old_field, BSpline(Cubic(Periodic())), OnGrid())
+        old_field_itp = interpolate(old_field, BSpline(Cubic(Periodic(Interpolations.OnGrid()))))
         apos::Vector{Float64} = align_geo["pos"]
         ares::Vector{Float64} = align_geo["res"]
         uapos::Vector{Float64} = unalign_geo["pos"]
@@ -123,7 +123,8 @@ end
         end_idx = transform_coordinate(apos,ares,uapos,uares,collect(size(new_field)))
         @nexprs $N j-> x_j = range(start_idx[j],stop=end_idx[j],length=size(new_field,j))
         @nloops $N i new_field begin
-            (@nref $N new_field i) = (@nref $N old_field_itp j->x_j[i_j])
+            #(@nref $N new_field i) = (@nref $N old_field_itp j->x_j[i_j])
+            (@nref $N new_field i) = (@ncall $N old_field_itp j->x_j[i_j])            
         end
         old_field_itp = 0
     end
