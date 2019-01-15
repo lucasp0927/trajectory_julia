@@ -22,13 +22,13 @@ function prepare()
     @info "building field $name"
     sfn = Fields.buildAndAlign(fields_config["field"],0,name=ascii([k for k in keys(fields_config)][1]))
     probe_sfn = Fields.buildAndAlign(job_config["probe"]["field"],0,name=ascii([k for k in keys(job_config["probe"])][1]))
-    return sfn,probe_sfn,input_file,output_file,job_config,trajsolver_config    
+    return sfn,probe_sfn,input_file,output_file,job_config,trajsolver_config
 end
 
 function main()
     sfn,probe_sfn,input_file,output_file,job_config,trajsolver_config = prepare()
     @info "initializing TrajSolver..."
-    TrajSolver.init_parallel(trajsolver_config,probe_sfn)    
+    TrajSolver.init_parallel(trajsolver_config,probe_sfn)
     @info "initializing fields..."
     Fields.init_parallel!(sfn)
     @info "Start calculating trajectories..."
