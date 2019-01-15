@@ -85,7 +85,7 @@ function build_field(field_config::Dict,level::Integer;name::String = "field")
         @info padding(level)*"building ScalarFieldNode "* name
         @info padding(level)*"scaling:"* field_config["scaling"]
 #        f_arr = Array(Any,length(field_config["fields"]))
-        f_arr = Array{Field}(undef,length(field_config["fields"]))
+        f_arr = Array{Union{AbstractScalarField,VectorFieldNode}}(undef,length(field_config["fields"]))
         for (i,x) in enumerate(field_config["fields"])
             f_arr[i] = build_field(x[2],level+1,name=ascii(x[1]))
         end

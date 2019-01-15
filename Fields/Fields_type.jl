@@ -89,8 +89,7 @@ mutable struct ScalarFieldNode{N} <: AbstractScalarField
     s::Float64
     one_vf_flag::Bool
     name::String
-    #TODO: restrict type
-    function ScalarFieldNode{N}(f::Vector{T};scaling_expr::Expr = parse("t->1.0"), name::String="ScalarFieldNode") where {T<:Field, N}
+    function ScalarFieldNode{N}(f::Vector{T};scaling_expr::Expr = parse("t->1.0"), name::String="ScalarFieldNode") where {T<:Union{AbstractScalarField,VectorFieldNode}, N}
         @assert all(x->x.dim==N,f) "dimension error!"
         flag = (length(f) == 1) && typeof(f[1])<:AbstractVectorField
         new(f,eval(scaling_expr),scaling_expr,N,[],[],[],Complex{Float64},zeros(Float64,repeat([4],N)...),zeros(Complex{Float64},[3,repeat([4],N)...]...),zero(Float64),flag, ascii(name))
