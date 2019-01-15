@@ -17,7 +17,7 @@ mutable struct ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     scaling_expr::Expr
     dim::Integer
     sample::Array{T,N}
-#    sample_views::SubArray{T,N}    
+#    sample_views::SubArray{T,N}
     rel_pos::Vector{Float64}
     pidx::Vector{Int64}
     s::Float64
@@ -27,7 +27,7 @@ mutable struct ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
         @assert all(x->x!=0,res) "zero resolution!"
         @assert length(pos)==length(sz)==N==ndims(f)
 #        new(f,pos,sz,res,eval(scaling_expr),scaling_expr,N,zeros(T,repmat([4],N)...),repmat([0.0],N),repmat([0],N*2),zero(Float64),ascii(name))
-        new(f,pos,sz,res,eval(scaling_expr),scaling_expr,N,zeros(T,repeat([4],N)...),repeat([0.0],N),repeat([0],N*2),zero(Float64),ascii(name))        
+        new(f,pos,sz,res,eval(scaling_expr),scaling_expr,N,zeros(T,repeat([4],N)...),repeat([0.0],N),repeat([0],N*2),zero(Float64),ascii(name))
     end
 end
 
@@ -68,8 +68,7 @@ mutable struct VectorFieldNode{N} <: AbstractVectorField
     sample::Array{Complex{Float64}}
     s::Complex{Float64}
     name::String
-    #TODO: require T<:AbstractVectorField for f::Vector{T}
-    function VectorFieldNode{N}(f::Vector{T};scaling_expr::Expr  = parse("t->1.0+0.0im"),name::String="VectorFieldNode") where {T<:Field, N}
+    function VectorFieldNode{N}(f::Vector{T};scaling_expr::Expr  = parse("t->1.0+0.0im"),name::String="VectorFieldNode") where {T<:AbstractVectorField, N}
         @assert all(x->x.dim==N,f) "dimension error!"
         new(f,eval(scaling_expr),scaling_expr,N,[],[],[],Complex{Float64},zeros(Complex{Float64},[3,repeat([4],N)...]...),zero(Complex{Float64}),ascii(name))
     end
@@ -90,7 +89,7 @@ mutable struct ScalarFieldNode{N} <: AbstractScalarField
     s::Float64
     one_vf_flag::Bool
     name::String
-    #TODO: require T<:AbstractScalarField for f::Vector{T}    
+    #TODO: restrict type
     function ScalarFieldNode{N}(f::Vector{T};scaling_expr::Expr = parse("t->1.0"), name::String="ScalarFieldNode") where {T<:Field, N}
         @assert all(x->x.dim==N,f) "dimension error!"
         flag = (length(f) == 1) && typeof(f[1])<:AbstractVectorField
