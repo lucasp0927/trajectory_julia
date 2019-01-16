@@ -75,14 +75,17 @@ end
     # pidx[1] = round(Int64,cld(rel_pos[1],f.res[1]::Float64))
     # pidx[2] = round(Int64,cld(rel_pos[2],f.res[2]::Float64))
     #f.s::Complex{Float64} = convert(Complex{Float64},(f.scaling::Function)(t))
-    f.s::Complex{Float64} = convert(Complex{Float64},Base.invokelatest(f.scaling::Function,t))
+    f.s = convert(Complex{Float64},Base.invokelatest(f.scaling::Function,t))::Complex{Float64}
 #    s = f.scaling(t)
     sample_field(f,f.pidx,f.s)
 end
 
 function sample_field(f::VectorField{T, 2}, pidx::Vector{Int64}, s::K) where {T <: ComplexOrFloat, K <: ComplexOrFloat}
 #    f.sample[1:3,1:4,1:4] = f.field[:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)]*s;
-    @views f.sample[1:3,1:4,1:4] .= @views f.field[:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)].*s;
+    #@views f.sample[1:3,1:4,1:4] .= @views f.field[:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)].*s;
+    @inbounds copyto!(f.sample,view(f.field,:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)))
+    @fastmath f.sample .*= s
+#    f.sample[1:3,1:4,1:4] .= @views f.field[:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)].*s
     #copy!(f.sample::Array{T,3},@view f.field[:,pidx[1]:pidx[2],pidx[3]:pidx[4]])
     #scale!(f.sample::Array{T,3},s)
 end
@@ -104,7 +107,7 @@ end
     f.pidx[4] = f.pidx[3]+3
     f.pidx[5] = round(Int64,div(f.rel_pos[3],f.res[3]::Float64))
     f.pidx[6] = f.pidx[5]+3
-    f.s::Complex{Float64} = convert(Complex{Float64},(Base.invokelatest(f.scaling::Function))(t))
+    f.s = convert(Complex{Float64},(Base.invokelatest(f.scaling::Function))(t))::Complex{Float64}
     #f.s::Complex{Float64} = convert(Complex{Float64},(f.scaling::Function)(t))
     sample_field(f,f.pidx,f.s)
 end

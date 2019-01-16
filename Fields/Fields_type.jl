@@ -23,7 +23,7 @@ mutable struct ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
     s::Float64
     name::String
     function ScalarField{T,N}(f::SharedArray{T,N},pos::Vector{Float64},sz::Vector{Float64};scaling_expr::Expr = parse("t->1.0"), name::String = "ScalarField")  where {T <: ComplexOrFloat,N}
-        res = sz./(collect(size(f))[1:N].-1)
+        res = (sz./(collect(size(f))[1:N].-1))::Vector{Float64}
         @assert all(x->x!=0,res) "zero resolution!"
         @assert length(pos)==length(sz)==N==ndims(f)
 #        new(f,pos,sz,res,eval(scaling_expr),scaling_expr,N,zeros(T,repmat([4],N)...),repmat([0.0],N),repmat([0],N*2),zero(Float64),ascii(name))
@@ -46,7 +46,7 @@ mutable struct VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     s::Complex{Float64}
     name::String
     function VectorField{T,N}(f::SharedArray{T},pos::Vector{Float64},sz::Vector{Float64};scaling_expr::Expr =  parse("t->1.0"), name::String = "VectorField") where {T <: ComplexOrFloat, N}
-        res = sz./(collect(size(f))[2:N+1].-1)
+        res = (sz./(collect(size(f))[2:N+1].-1))::Vector{Float64}
         @assert all(x->x!=0,res) "zero resolution!"
         @assert length(pos)==length(sz)==N==ndims(f)-1
         s = zeros(T,[3,repeat([4],N)...]...)

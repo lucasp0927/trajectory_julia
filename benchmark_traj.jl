@@ -46,12 +46,14 @@ function benchmark_gradient(range,t)
     return output
 end
 
-benchmark_value(range,0.0)
+#benchmark_value(range,0.0)
 benchmark_gradient(range,0.0)
+@time benchmark_gradient(range,0.0)
 Profile.clear()
-@profile benchmark_value(range,0.0)
-#using ProfileView
-#ProfileView.view()
+#@profile benchmark_value(range,0.0)
+@profile benchmark_gradient(range,0.0)
+using ProfileView
+ProfileView.view()
 #@time benchmark_gradient(range,0.0)
 
 #@btime Fields.value([10.0,5.0],0.0)
