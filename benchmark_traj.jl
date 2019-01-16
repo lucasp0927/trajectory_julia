@@ -21,6 +21,7 @@ sfn = Fields.buildAndAlign(fields_config["field"],0,name=ascii([k for k in keys(
 
 Fields.init_parallel!(sfn)
 range = [-150.0, 150.0, -150.0, 150.0]
+#range = [-1.0, 1.0, -1.0, 1.0]
 #print(Fields.fields.res)
 #@btime Fields.composite(range,0.0)
 function benchmark_value(range,t)
@@ -50,10 +51,13 @@ end
 benchmark_gradient(range,0.0)
 @time benchmark_gradient(range,0.0)
 Profile.clear()
+Profile.clear_malloc_data()
 #@profile benchmark_value(range,0.0)
+@info "profiling..."
+#benchmark_gradient(range,0.0)
 @profile benchmark_gradient(range,0.0)
-using ProfileView
-ProfileView.view()
+#using ProfileView
+#ProfileView.view()
 #@time benchmark_gradient(range,0.0)
 
 #@btime Fields.value([10.0,5.0],0.0)

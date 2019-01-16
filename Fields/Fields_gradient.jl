@@ -80,14 +80,25 @@ end
     sample_field(f,f.pidx,f.s)
 end
 
-function sample_field(f::VectorField{T, 2}, pidx::Vector{Int64}, s::K) where {T <: ComplexOrFloat, K <: ComplexOrFloat}
+#function sample_field(f::VectorField{T, 2}, pidx::Vector{Int64}, s::K) where {T <: ComplexOrFloat, K <: Float64}
 #    f.sample[1:3,1:4,1:4] = f.field[:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)]*s;
     #@views f.sample[1:3,1:4,1:4] .= @views f.field[:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)].*s;
-    @inbounds copyto!(f.sample,view(f.field,:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)))
-    @fastmath f.sample .*= s
+    #    @inbounds copyto!(f.sample,view(f.field,:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)))
+    #    @fastmath f.sample .*= s
+#    @. @views f.sample[1:3,1:4,1:4] = (f.field::SharedArray{T,3})[:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)]*s
 #    f.sample[1:3,1:4,1:4] .= @views f.field[:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)].*s
     #copy!(f.sample::Array{T,3},@view f.field[:,pidx[1]:pidx[2],pidx[3]:pidx[4]])
     #scale!(f.sample::Array{T,3},s)
+#end
+
+function sample_field(f::VectorField{T, 2}, pidx::Vector{Int64}, s::K) where {T <: Float64, K <: Complex{Float64}}
+    @. @views f.sample[1:3,1:4,1:4] = (f.field::SharedArray{T,3})[:,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)]*s
+end
+
+function sample_field(f::VectorField{T, 2}, pidx::Vector{Int64}, s::K) where {T <: Complex{Float64}, K <: Complex{Float64}}
+    #@. @views f.sample[1:3,1:4,1:4] = (f.field::SharedArray{T,3})[1:3,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)]*s
+    #use more memory but slightly faster!
+    @views f.sample = (f.field::SharedArray{T,3})[1:3,pidx[1]:(pidx[1]+3),pidx[3]:(pidx[3]+3)]*s
 end
 
 #function copy_scale!{T<:ComplexOrFloat}(dest::AbstractArray,src::AbstractArray,s::T)
@@ -291,7 +302,7 @@ end
         res = $(Array{Float64}(undef,2))
         pos = $(Array{Float64}(undef,2))
         res[:] = (sfn::ScalarFieldNode).res
-        pos[:] = posvel[1:2]
+        pos[:] = @view posvel[1:2]
         @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
         sample2!(sfn::ScalarFieldNode,pos,t)
         grad[1] = posvel[3]
