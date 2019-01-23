@@ -8,7 +8,7 @@ function file2sharedarray(filename,variable)
     # var = h5open(filename,"r") do file
     #     read(file,variable)
     # end
-    fid = h5open(filename,"r")    
+    fid = h5open(filename,"r")
     if isa(fid[variable],HDF5Group)
         var = read(fid,variable*"/real") .+ (read(fid,variable*"/imag").*1im)
     elseif isa(fid[variable],HDF5Dataset)
@@ -17,7 +17,7 @@ function file2sharedarray(filename,variable)
         @error "unexpected HDF5 file structure"
     end
     close(fid)
-    
+
     var_s = copy_to_sharedarray!(var)
     var = 0
     GC.gc()
@@ -28,6 +28,7 @@ function h5todict(filename)
     #read variables under /
     @assert filename[end-2:end] == ".h5"
     data = Dict()
+    @info "Opening file "*filename
     fid = h5open(filename,"r")
     varnames = names(fid)
     for name in varnames

@@ -77,6 +77,7 @@ function parse_config(filename,parsed_args)
     trajsolver_config = config["trajsolver-config"]
     trajsolver_config["simulation-type"] = sim_type
     job_config = config["job-config"]
+    job_config["movie-output"]["simulation-type"] = sim_type
     @debug "fields config:" convert(Dict{Any,Any},copy(fields_config))
     @debug "trajsolver config:" convert(Dict{Any,Any},copy(trajsolver_config))
     @debug "job config:" convert(Dict{Any,Any},copy(job_config))

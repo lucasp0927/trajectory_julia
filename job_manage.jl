@@ -37,8 +37,16 @@ function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,id
     end
     if flags["movie_flag"]
         @info "Outputing Movie..."
-        movie_range = [promote(config["movie-output"]["range"]...)...]
-        @time TrajAnalyzer.output_movie_traj(config["movie-output"],output_prefix*"_traj.mp4")
+        sim_type = config["movie-output"]["simulation-type"]
+        if sim_type == "2D"
+            movie_range = [promote(config["movie-output"]["range"]...)...]
+            @time TrajAnalyzer.output_movie_traj_2d(config["movie-output"],output_prefix*"_traj.mp4")
+        elseif sim_type == "3D"
+            movie_range = [promote(config["movie-output"]["range"]...)...]
+            @time TrajAnalyzer.output_movie_traj_3d(config["movie-output"],output_prefix*"_traj.mp4")
+        else
+            @error "unrecognized simulation type: "* sim_type
+        end
     end
     if flags["spectrum_flag"]
         for gm_name in config["spectrum"]["name"]
@@ -51,7 +59,7 @@ function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,id
     end
     if flags["movie_data_flag"]
         @info "Calculating movie potentials..."
-        TrajAnalyzer.output_movie_data(config["movie-output"],output_prefix*"_moviedata.h5")
+        TrajAnalyzer.output_movie_data_2d(config["movie-output"],output_prefix*"_moviedata.h5")
     end
 
     # if flags["ngamma1d_flag"]
