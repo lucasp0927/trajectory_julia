@@ -58,8 +58,10 @@ end
 end
 
 @inbounds function sample_field(f::ScalarField{T, 3}, pidx::Vector{Int64}, s::K) where {T <: ComplexOrFloat, K <: ComplexOrFloat}
-    copy!(f.sample,view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4],pidx[5]:pidx[6]))
-    scal!(64,s,f.sample,1)
+    copyto!(f.sample::Array{T,3},view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4],pidx[5]:pidx[6]))
+    LinearAlgebra.BLAS.scal!(64,s,f.sample,1)
+    # copy!(f.sample,view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4],pidx[5]:pidx[6]))
+    # scal!(64,s,f.sample,1)
 end
 #2D vector sample
 @fastmath @inbounds function sample2!(f::VectorField{T, 2}, pos::Vector{Float64}, t::Real) where T <: ComplexOrFloat
@@ -118,14 +120,15 @@ end
     f.pidx[4] = f.pidx[3]+3
     f.pidx[5] = round(Int64,div(f.rel_pos[3],f.res[3]::Float64))
     f.pidx[6] = f.pidx[5]+3
-    f.s = convert(Complex{Float64},(Base.invokelatest(f.scaling::Function))(t))::Complex{Float64}
+    f.s = convert(Complex{Float64},Base.invokelatest(f.scaling::Function,t))::Complex{Float64}
     #f.s::Complex{Float64} = convert(Complex{Float64},(f.scaling::Function)(t))
     sample_field(f,f.pidx,f.s)
 end
 
 @inbounds function sample_field(f::VectorField{T, 3}, pidx::Vector{Int64}, s::K) where {T <: ComplexOrFloat, K <: ComplexOrFloat}
-    copy!(f.sample,view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4],pidx[5]:pidx[6]))
-    scal!(192,s,f.sample,1)
+    #copy!(f.sample,view(f.field,:,pidx[1]:pidx[2],pidx[3]:pidx[4],pidx[5]:pidx[6]))
+    #scal!(192,s,f.sample,1)
+    @views f.sample = (f.field::SharedArray{T,4})[1:3,pidx[1]:pidx[2],pidx[3]:pidx[4],pidx[5]:pidx[6]]*s
 end
 #2D Vector Field Node
 function sample2!(f::VectorFieldNode{2},pos::Vector{Float64},t::Real)
@@ -160,8 +163,10 @@ function sample2!(f::VectorFieldNode{3},pos::Vector{Float64},t::Real)
             add_sample!(f.sample,ff.sample)
         end
     end
-    f.s::Complex{Float64} = (f.scaling::Function)(t)::Complex{Float64}
-    scal!(192,f.s,f.sample,1)
+    f.s = convert(Complex{Float64},Base.invokelatest(f.scaling::Function,t))::Complex{Float64}
+    #f.s = (f.scaling::Function)(t)::Complex{Float64}
+    f.sample .*= f.s
+    #scal!(192,f.s,f.sample,1)
 end
 
 @fastmath @inbounds function add_sample!(sample1::Array{T, 4}, sample2::Array{T, 4}) where T <: ComplexOrFloat
@@ -232,7 +237,8 @@ end
         add_vector_field!(f.sample,f.vf_sample)
     end
     f.s = (f.scaling::Function)(t)::Float64
-    scal!(64,f.s,f.sample,1)
+    #scal!(64,f.s,f.sample,1)
+    f.sample .*= f.s
     #    scale_sample!(f.sample,s)
 end
 

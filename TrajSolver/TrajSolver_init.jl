@@ -21,7 +21,8 @@ end
 function init!(config::Dict,probe_sfn::ScalarFieldNode)
     #    srand()
     Random.seed!()
-#    println("initialize TrajSolver module on process ", myid())
+    #    println("initialize TrajSolver module on process ", myid())
+    global sim_type
     global my_trajnum
     global solver, reltol, abstol
     global trajnum, tspan, tdiv
@@ -33,6 +34,8 @@ function init!(config::Dict,probe_sfn::ScalarFieldNode)
     Probe = Fields.copyfield(probe_sfn)
     trajsolver_config = config
     #simulation-config
+    sim_type = config["simulation-type"]::String
+    @assert (sim_type == "2D") | (sim_type == "3D")
     trajnum = round(Int64,config["simulation-config"]["traj_num"])::Int64
     tstart = float(config["simulation-config"]["tstart"])::Float64
     tend = float(config["simulation-config"]["tend"])::Float64

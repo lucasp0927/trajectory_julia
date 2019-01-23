@@ -9,6 +9,7 @@ using Fields
 using ProgressMeter
 
 export calculate_traj
+global sim_type
 global my_trajnum
 global solver, reltol, abstol
 global trajnum, tspan, tdiv
@@ -47,14 +48,18 @@ function calculate_traj()
     else
         err("Unknown init-type in atom-config.")
     end
-    #preallocate result
-    traj = Array{Float64}(undef,4,length(tspan),trajnum)
+    #preallocate result according to dim
+    if sim_type == "2D"
+        traj = Array{Float64}(undef,4,length(tspan),trajnum)
+    else
+        traj = Array{Float64}(undef,6,length(tspan),trajnum)
+    end
     # function to produce the next work item from the queue.
     # in this case it's just an index.
     @info "calculate trajectories..."
-    
+
     @time calculate_traj_inner_parallel(init_xv,traj)
-    
+
     #truncate save time range
     t_idx_start = searchsortedlast(tspan,trajsolver_config["save-range"]["tstart"])
     t_idx_end = searchsortedfirst(tspan,trajsolver_config["save-range"]["tend"])
@@ -92,7 +97,7 @@ function calculate_traj_inner_parallel(init_xv,traj)
                 end
             end
         end
-    end    
+    end
 end
 
 function calculate_traj_inner(init_xv,traj)
@@ -135,7 +140,11 @@ function calculate_traj_unbalanced()
 end
 
 function solve_traj_one_shot(init_xv::Vector{Float64})
-    yout = Array{Float64}(undef,4,length(tspan))
+    if sim_type::String == "2D"
+        yout = Array{Float64}(undef,4,length(tspan))
+    elseif sim_type::String == "3D"
+        yout = Array{Float64}(undef,6,length(tspan))
+    end
     fill!(yout,NaN)
     if any(isnan.(init_xv)) == false
         #mycvode(Fields.gradient!,init_xv,tspan,yout;reltol=reltol, abstol=abstol)

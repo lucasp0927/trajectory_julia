@@ -6,6 +6,7 @@ struct Trajectories
     t_div::Float64
     pos::Vector{Float64}
     siz::Vector{Float64}
+    dim::Int64
     function Trajectories(result::Dict,traj_s::SharedArray{Float64})
         traj = traj_s::SharedArray{Float64}
         atom_num = size(traj,3)::Int64
@@ -13,7 +14,9 @@ struct Trajectories
         t_div = Statistics.mean(diff(tspan))::Float64
         pos = vec(copy(result["pos"]))::Vector{Float64}
         siz = vec(copy(result["siz"]))::Vector{Float64}
-        new(traj,atom_num,vec(tspan),t_div,vec(pos),vec(siz))
+        dim = (size(traj)[1])/2
+        @assert dim == length(siz) == length(pos)
+        new(traj,atom_num,vec(tspan),t_div,vec(pos),vec(siz),dim)
     end
 end
 
@@ -64,7 +67,7 @@ end
 end
 
 function getindex(tr::Trajectories,t::Float64,traj_id::T) where T<:Colon
-    getindex(tr,t,range(1,size(tr.traj,3)))
+    getindex(tr,t,1:size(tr.traj,3))
     #Linear interpolation
     #TODO: higher order interpolation
     #    @assert t>=tr.tspan[1] && t<=tr.tspan[end]
@@ -81,7 +84,7 @@ function getindex(tr::Trajectories,t::Float64,traj_id::T) where T<:Colon
 =#
 end
 
-function getindex(tr::Trajectories,t_range::T,traj_id) where T<:UnitRange
+function getindex(tr::Trajectories,t_range::T,traj_id) where T<:AbstractArray
     #Linear interpolation
     #TODO: higher order interpolation
     reduce((x,y)->cat(2,x,y),[tr[t,traj_id] for t in t_range])
