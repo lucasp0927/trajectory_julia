@@ -7,6 +7,7 @@ using PyCall
 using ProgressMeter
 using MAT
 using HDF5
+using GR
 include("../fileio.jl")
 include("TrajAnalyzer_trajectories.jl")
 include("../TrajSolver/polygon.jl")

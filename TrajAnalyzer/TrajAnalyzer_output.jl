@@ -73,7 +73,8 @@ function output_movie_3d(mov_tspan,range,res,filename)
     res_y = res[2]
     tdiv = mean(diff(mov_tspan))
     @sync @distributed for t in collect(enumerate(mov_tspan))
-        output_image_3d(t[2],range,res_x,res_y,movie_folder*"/img"*@sprintf("%04d",t[1])*".png")
+#    for t in collect(enumerate(mov_tspan))
+        output_image_3d(t[2],range,res_x,res_y,movie_folder*"/img"*@sprintf("%04d",t[1])*".png",tdiv)
     end
     cd(movie_folder)
     run(pipeline(`ffmpeg -framerate 5 -i img%04d.png -s:v 1300x1000 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p out.mp4`,stderr=current_folder*"/ffmpeg.log"))
@@ -82,38 +83,26 @@ function output_movie_3d(mov_tspan,range,res,filename)
     rm(movie_folder,recursive=true)
 end
 
-function output_image_3d(t,range,res_x,res_y,filename)
+function output_image_3d(t,range,res_x,res_y,filename,tdiv)
+    #plots backend
     tmp = (Trajs[t,:])[1:3,:]
-    dots = zeros(Float64,3,size(tmp,2))
+    dots = zeros(Float64,4,size(tmp,2))
     dots[1:3,:] = tmp[:,:]
     #make atom red before vanishing.
-    # if tdiv>0.0
-    #     tmp_next = (Trajs[t+tdiv,:])[1:2,:]
-    #     dots[3,:] = [(isnan(tmp[1,i])==false && isnan(tmp_next[1,i])==true) ? 1.0 : 0.0 for i in 1:size(tmp,2)]
-    # end
+    tmp_next = (Trajs[t+tdiv,:])[1:2,:]
+    dots[4,:] = [(isnan(tmp[1,i])==false && isnan(tmp_next[1,i])==true) ? 1.0 : 0.0 for i in 1:size(tmp,2)]
 
-#    output_data = Fields.composite_with_position(range,t,[res_x,res_y])
     current_folder = pwd()
     hash_key = string(hash(rand()))
     image_folder = "/tmp/image"*hash_key
     mkdir(image_folder)
     cd(image_folder)
-#    h5write(image_folder*"/data.h5", "output", output_data)
     h5write(image_folder*"/dots.h5", "output", dots)
-#    run(`h5totxt -o data.txt data.h5`)
     run(`h5totxt -o dots.txt dots.h5`)
-    cp(current_folder*"/gnuplot/output_image_gp_traj.gp",image_folder*"/output_image_gp_traj.gp")
-#    if v_min==0.0 && v_max==0.0
-        # stupid hack to fix v_min and v_max
-#        v_min = minimum(output_data[3,:,:])
-#        v_min = max(-2e-3,v_min)
-#        v_max = maximum(output_data[3,:,:])
-#        run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);time=$t" output_image_gp_traj.gp`)
-#    end
-#    run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);time=$t;set cbrange [$v_min:$v_max]" output_image_gp_traj.gp`)
+    cp(current_folder*"/gnuplot/output_image_gp_traj_3d.gp",image_folder*"/output_image_gp_traj_3d.gp")
+    run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);zstart=$(range[5]);zend=$(range[6]);time=$t" output_image_gp_traj_3d.gp`)
     cd(current_folder)
     cp(image_folder*"/data.png",filename,force=true)
-    rm(image_folder,recursive=true)
 end
 
 function output_image_gp_2d(t,range,filename,sfn;v_min=0.0,v_max=0.0,xres=1300,yres=1000,save_data=false,data_filename = "")

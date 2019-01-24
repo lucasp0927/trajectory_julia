@@ -32,6 +32,9 @@ function init_parallel!(result::Dict,probe_sfn::ScalarFieldNode,ForceFields_sfn:
 end
 
 function init!(result::Dict,traj_s::SharedArray{Float64},probe_sfn::ScalarFieldNode,ForceFields_sfn::ScalarFieldNode,config::Dict)
+    #ploting backend
+#    @info "set gr() as Plots.jl backend."
+#    gr()
     global spectrum_mode, vector_shift
     global Trajs, Probe, ForceFields, TA_Config
     global avg_atom_num,lattice_width,lattice_unit,k_ratio,gamma_1d,gamma_prime,pos_variance,atom_beam_waist, probe_contrast
