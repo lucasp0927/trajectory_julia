@@ -1,13 +1,11 @@
 module TrajAnalyzer
+using Printf
 using Distributed
 using SharedArrays
-using Printf
 using Fields
-using PyCall
 using ProgressMeter
-using MAT
 using HDF5
-using GR
+
 include("../fileio.jl")
 include("TrajAnalyzer_trajectories.jl")
 include("../TrajSolver/polygon.jl")
@@ -22,7 +20,6 @@ global avg_atom_num,lattice_width,lattice_unit,k_ratio,gamma_1d,gamma_prime
 global range_i, range_j
 
 #for TrajAnalyzer_output to determin using ffmpeg or avconv.
-@pyimport platform
 function calc_score(area)
     pp = Polygon([promote(area...)...])
     score = @distributed (+) for i = 1:size(Trajs.traj,3)

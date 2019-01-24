@@ -5,7 +5,6 @@ using Random
 using Printf
 using DifferentialEquations
 using Fields
-#using Optim
 using ProgressMeter
 
 export calculate_traj
