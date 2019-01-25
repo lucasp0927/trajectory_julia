@@ -94,6 +94,26 @@ function calculate_traj_inner_parallel_2d(init_xv,traj)
     end
 end
 
+function calculate_traj_inner_parallel_3d(init_xv,traj)
+    i = 1
+    pm = Progress(trajnum,1)
+    @sync begin
+        for p = 2:nprocs()
+            @async begin
+                while true
+                    next!(pm)
+                    idx=i
+                    i+=1
+                    if idx>trajnum
+                        break
+                    end
+                    traj[:,:,idx] = remotecall_fetch(solve_traj_one_shot_3d,p,init_xv[:,idx])
+                end
+            end
+        end
+    end
+end
+
 # function calculate_traj_inner(init_xv,traj)
 #     i = 1
 #     pm = Progress(trajnum,1)
@@ -107,18 +127,23 @@ end
 # end
 
 function solve_traj_one_shot_2d(init_xv::Vector{Float64})
-    if sim_type::String == "2D"
-        yout = Array{Float64}(undef,4,length(tspan))
-    elseif sim_type::String == "3D"
-        yout = Array{Float64}(undef,6,length(tspan))
-    end
+    yout = Array{Float64}(undef,4,length(tspan))
     fill!(yout,NaN)
     if any(isnan.(init_xv)) == false
-        #mycvode(Fields.gradient!,init_xv,tspan,yout;reltol=reltol, abstol=abstol)
         solve_eq_of_motion_2d(Fields.gradient_odejl!,init_xv,tspan,yout;reltol=reltol, abstol=abstol)
     end
     return yout
 end
+
+function solve_traj_one_shot_3d(init_xv::Vector{Float64})
+    yout = Array{Float64}(undef,6,length(tspan))
+    fill!(yout,NaN)
+    if any(isnan.(init_xv)) == false
+        solve_eq_of_motion_3d(Fields.gradient_odejl!,init_xv,tspan,yout;reltol=reltol, abstol=abstol)
+    end
+    return yout
+end
+
 
 function solve_eq_of_motion_2d(f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::T; reltol::Float64=1e-8, abstol::Float64=1e-7, mxstep::Int64=Integer(1e6)) where T<:AbstractArray
     #TODO: add more solver options
@@ -140,6 +165,27 @@ function solve_eq_of_motion_2d(f::Function, y0::Vector{Float64}, t::Vector{Float
     end
 end
 
+function solve_eq_of_motion_3d(f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::T; reltol::Float64=1e-8, abstol::Float64=1e-7, mxstep::Int64=Integer(1e6)) where T<:AbstractArray
+    #TODO: add more solver options
+    if solver == "ADAMS"
+        solver_alg = CVODE_Adams()
+    elseif solver == "BDF"
+        solver_alg = CVODE_BDF()
+    end
+    prob = ODEProblem(f,y0,(t[1],t[end]))
+    integrator = init(prob, solver_alg; abstol=abstol,reltol=reltol)
+    yout[:,1] = y0
+    for i = 2:length(t)
+        dt = t[i] - t[i-1]
+        step!(integrator,dt,true)
+        yout[:,i] = integrator.u
+        if boundary_3d(yout[1:3,i],t[i]) == false
+            break
+        end
+    end
+end
+
+
 @inbounds function boundary_2d(pos::Vector{Float64})
     #return false if particle should be removed
     for p in in_boundaries::Vector{Polygon}
@@ -154,4 +200,24 @@ end
     end
     return true
 end
+
+@inbounds function boundary_3d(pos::Vector{Float64},t::Float64)
+    if Fields.value(pos,t,Fields.material) > 0.5
+        return false
+    else
+        return true
+    end
+    #return false if particle should be removed
+    # for p in in_boundaries::Vector{Polygon}
+    #     if pointInPolygon(p,pos)==true
+    #         return false
+    #     end
+    # end
+    # for p in out_boundaries::Vector{Polygon}
+    #     if pointInPolygon(p,pos)==false
+    #         return false
+    #     end
+    # end
+end
+
 end

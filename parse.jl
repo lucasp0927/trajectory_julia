@@ -73,6 +73,7 @@ function parse_config(filename,parsed_args)
     config = YAML.load(open(filename))
     sim_type = config["simulation-type"]
     fields_config = config["fields-config"]
+    material_config = config["material-config"]
     @assert length(keys(fields_config)) == 1 "more than 1 top level fieldnode!"
     trajsolver_config = config["trajsolver-config"]
     trajsolver_config["simulation-type"] = sim_type
@@ -90,5 +91,5 @@ function parse_config(filename,parsed_args)
         job_config["range_j_end"] = parsed_args["jrange"][2]
     end
     ##TODO: check config format
-    return fields_config, trajsolver_config, job_config
+    return fields_config, trajsolver_config, job_config, material_config
 end

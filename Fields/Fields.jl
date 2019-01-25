@@ -8,6 +8,7 @@ using Logging
 #TODO: getindex overload for fields.
 #TODO: support different resolution for different area
 global fields
+global material
 global value
 include("../fileio.jl")
 include("Fields_type.jl")
@@ -15,23 +16,28 @@ include("Fields_type.jl")
 # include all Fields files.
 include("Fields_function.jl")
 
-function init_parallel!(sfn::ScalarFieldNode)
+function init_parallel!(sfn::ScalarFieldNode, mat_sfn::ScalarFieldNode)
     @info "initializing Fields module..."
     @sync begin
         for p = 1:Distributed.nprocs()     #initialize Fields module on each processe
             #set all scaling to t->0.0
             clean_scaling!(sfn)
-            @async Distributed.remotecall_fetch(init!,p,sfn)
+            clean_scaling!(mat_sfn)
+            @async Distributed.remotecall_fetch(init!,p,sfn,mat_sfn)
         end
     end
     eval_scaling!(sfn)
+    eval_scaling!(mat_sfn)
 end
 
-function init!(sfn::ScalarFieldNode)
+function init!(sfn::ScalarFieldNode,mat_sfn::ScalarFieldNode)
     global fields
+    global material
     fields = 0
+    material= 0
     GC.gc()
     fields = copyfield(sfn)
+    material = copyfield(mat_sfn)
     GC.gc()
 end
 

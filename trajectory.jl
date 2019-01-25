@@ -16,21 +16,21 @@ include("job_manage.jl")
 
 function prepare()
     config_file,input_file,output_file = parsed_args["config"],parsed_args["infile"],parsed_args["outfile"]
-    fields_config,trajsolver_config,job_config = parse_config(config_file,parsed_args)
+    fields_config,trajsolver_config,job_config,material_config = parse_config(config_file,parsed_args)
     #info("building field $([k for k in keys(fields_config)][1])...")
     name = ascii([k for k in keys(fields_config)][1])
     @info "building field $name"
     sfn = Fields.buildAndAlign(fields_config["field"],0,name=ascii([k for k in keys(fields_config)][1]))
     probe_sfn = Fields.buildAndAlign(job_config["probe"]["field"],0,name=ascii([k for k in keys(job_config["probe"])][1]))
-    return sfn,probe_sfn,input_file,output_file,job_config,trajsolver_config
+    mat_sfn = Fields.buildAndAlign(material_config["material"],0,name=ascii([k for k in keys(material_config)][1]))
+    return sfn,probe_sfn,mat_sfn,input_file,output_file,job_config,trajsolver_config
 end
 
 function main()
-    sfn,probe_sfn,input_file,output_file,job_config,trajsolver_config = prepare()
+    sfn,probe_sfn,mat_sfn,input_file,output_file,job_config,trajsolver_config = prepare()
     @info "initializing TrajSolver..."
     TrajSolver.init_parallel(trajsolver_config,probe_sfn)
-    @info "initializing fields..."
-    Fields.init_parallel!(sfn)
+    Fields.init_parallel!(sfn, mat_sfn)
     @info "Start calculating trajectories..."
     if job_config["type"] == "single-scan-scaling"
         @info "job type: single-scan-scaling"
