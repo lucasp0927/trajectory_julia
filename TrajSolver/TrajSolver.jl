@@ -18,6 +18,7 @@ global out_boundaries
 global result
 global U_prob #probability for atom distribution
 global trajsolver_config
+global periodic_condition
 
 include("../constant.jl")
 include("../fileio.jl")
@@ -182,9 +183,20 @@ function solve_eq_of_motion_3d(f::Function, y0::Vector{Float64}, t::Vector{Float
         if boundary_3d(yout[1:3,i],t[i]) == false
             break
         end
+        # periodic boundary condition
+        if (periodic_condition::PeriodicCondition).periodic_condition::Bool == true
+            dim = (periodic_condition::PeriodicCondition).dim::Int64
+            p_start = (periodic_condition::PeriodicCondition).periodic_start::Float64
+            p_end = (periodic_condition::PeriodicCondition).periodic_end::Float64
+            p_dist = p_end-p_start
+            if yout[3,i] > p_end
+                yout[3,i] -= p_dist
+            elseif yout[3,i] < p_start
+                yout[3,i] += p_dist
+            end
+        end
     end
 end
-
 
 @inbounds function boundary_2d(pos::Vector{Float64})
     #return false if particle should be removed
@@ -207,17 +219,6 @@ end
     else
         return true
     end
-    #return false if particle should be removed
-    # for p in in_boundaries::Vector{Polygon}
-    #     if pointInPolygon(p,pos)==true
-    #         return false
-    #     end
-    # end
-    # for p in out_boundaries::Vector{Polygon}
-    #     if pointInPolygon(p,pos)==false
-    #         return false
-    #     end
-    # end
 end
 
 end

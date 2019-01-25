@@ -18,6 +18,13 @@ function init_parallel(config::Dict,probe_sfn::ScalarFieldNode)
     Fields.eval_scaling!(probe_sfn)
 end
 
+struct PeriodicCondition
+    periodic_condition::Bool
+    dim::Int64
+    periodic_start::Float64
+    periodic_end::Float64
+end
+
 function init!(config::Dict,probe_sfn::ScalarFieldNode)
     #    srand()
     Random.seed!()
@@ -30,8 +37,9 @@ function init!(config::Dict,probe_sfn::ScalarFieldNode)
     global in_boundaries, out_boundaries
     global result
     global trajsolver_config
-    global Probe
-    Probe = Fields.copyfield(probe_sfn)
+    global periodic_condition
+
+#    Probe = Fields.copyfield(probe_sfn)
     trajsolver_config = config
     #simulation-config
     sim_type = config["simulation-type"]::String
@@ -53,14 +61,27 @@ function init!(config::Dict,probe_sfn::ScalarFieldNode)
         init_range = convert(Dict{String,Vector{Float64}},config["atom-config"]["init-range"])
     end
     #boundary
-    in_boundaries = map(values(config["in-boundary"]))do x
-        return Polygon([promote(x...)...])
+    if sim_type == "2D"
+        in_boundaries = map(values(config["in-boundary"]))do x
+            return Polygon([promote(x...)...])
+        end
+        in_boundaries = [promote(in_boundaries...)...]::Vector{Polygon}
+        out_boundaries = map(values(config["out-boundary"]))do x
+            return Polygon([promote(x...)...])
+        end
+        out_boundaries = [promote(out_boundaries...)...]::Vector{Polygon}
     end
-    in_boundaries = [promote(in_boundaries...)...]::Vector{Polygon}
-    out_boundaries = map(values(config["out-boundary"]))do x
-        return Polygon([promote(x...)...])
+    #periodic condition
+    if "periodic-condition" in keys(trajsolver_config)
+        @info "set periodic condition to true"
+        periodic_condition = PeriodicCondition(true,
+                                               Int64(trajsolver_config["periodic-condition"]["dim"]),
+                                               Float64(trajsolver_config["periodic-condition"]["start"]),
+                                               Float64(trajsolver_config["periodic-condition"]["end"]))
+
+    else
+        periodic_condition = PeriodicCondition(false,0,0.0,0.0)
     end
-    out_boundaries = [promote(out_boundaries...)...]::Vector{Polygon}
     #calculate my_trajnum
     jobs = allocate_jobs(trajnum)
     my_trajnum = jobs[2]-jobs[1]+1
