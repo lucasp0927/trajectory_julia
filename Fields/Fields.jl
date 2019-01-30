@@ -47,6 +47,24 @@ function reset!()
     GC.gc()
 end
 
+function save_field(f::ScalarFieldNode)
+    @info "save field to debug_save_filed.h5!"
+    dict = Dict()
+    path = f.name
+    field_to_dict(f,dict,path)
+    dicttoh5("debug_save_field.h5",dict)
+end
+
+function field_to_dict(f::T, dict::Dict, path::String) where {T<:FieldNode}
+    for ff in f.fields
+        field_to_dict(ff,dict,path*"/"*f.name)
+    end
+end
+
+function field_to_dict(f::T, dict::Dict, path::String) where {T <: Union{VectorField,ScalarField}}
+    dict[path*"/"*f.name] = sdata(f.field)
+end
+
 function test()
     @info "testing zero_field"
     test_zero_field()

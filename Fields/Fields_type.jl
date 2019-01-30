@@ -47,6 +47,7 @@ mutable struct VectorField{T <: ComplexOrFloat, N} <: AbstractVectorField
     name::String
     function VectorField{T,N}(f::SharedArray{T},pos::Vector{Float64},sz::Vector{Float64};scaling_expr::Expr =  parse("t->1.0"), name::String = "VectorField") where {T <: ComplexOrFloat, N}
         res = (sz./(collect(size(f))[2:N+1].-1))::Vector{Float64}
+        @info "resolution:" res
         @assert all(x->x!=0,res) "zero resolution!"
         @assert length(pos)==length(sz)==N==ndims(f)-1
         s = zeros(T,[3,repeat([4],N)...]...)

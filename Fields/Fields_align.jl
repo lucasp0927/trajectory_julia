@@ -41,10 +41,10 @@ function align_field!(f::ScalarField{T, N}, res::Vector{Float64}, pos::Vector{Fl
     new_size = new_end.-new_pos
     align_geo = Dict("pos"=>new_pos,"size"=>new_size,"res"=>res)
     ##### interpolate field
-    new_arr_size = round.(Int64,new_size ./ res).+one(Int64)
     if (unalign_geo["pos"] == align_geo["pos"])&&(unalign_geo["res"] == align_geo["res"])
         @info "no need to align!"
     else
+        new_arr_size = round.(Int64,new_size ./ res).+one(Int64)
         new_field = SharedArray{T}(new_arr_size...)
         itp_field!(new_field,f.field,unalign_geo,align_geo)
         @assert collect(size(new_field)) == new_arr_size
@@ -55,7 +55,7 @@ function align_field!(f::ScalarField{T, N}, res::Vector{Float64}, pos::Vector{Fl
 end
 
 function align_field!(f::VectorField{T, N}, res::Vector{Float64}, pos::Vector{Float64}) where {T <: ComplexOrFloat, N}
-    @info "align VectorField $(f.name)"    
+    @info "align VectorField $(f.name)"
     @assert length(res) == length(pos) "dimension mismatch!"
     unalign_geo = geometry(f)
     new_pos = ceil.((unalign_geo["pos"].-pos)./res).*res.+pos
@@ -68,11 +68,11 @@ function align_field!(f::VectorField{T, N}, res::Vector{Float64}, pos::Vector{Fl
     new_size = new_end.-new_pos
     align_geo = Dict("pos"=>new_pos,"size"=>new_size,"res"=>res)
     ##### interpolate field
-    new_arr_size = round.(Int64,new_size ./ res).+one(Int64)
     if (unalign_geo["pos"] == align_geo["pos"])&&(unalign_geo["res"] == align_geo["res"])
         @info "no need to align!"
     else
         #loop over three components
+        new_arr_size = round.(Int64,new_size ./ res).+one(Int64)
         new_field = SharedArray{T}(3,new_arr_size...)
         for i = 1:3
             itp_field!(myslice(new_field,i),myslice(f.field,i),unalign_geo,align_geo)
@@ -110,7 +110,7 @@ end
     return old_idx
 end
 
-@generated function itp_field!(new_field::T, old_field::K, unalign_geo, align_geo) where {T <: Union{Array, SubArray, SharedArray}, K <: Union{Array, SubArray, SharedArray}}
+@generated function itp_field!(new_field::T, old_field::K, unalign_geo, align_geo) where {T <: AbstractArray, K <: AbstractArray}
     N::Int64 = ndims(new_field)
     quote
 #        old_field_itp = interpolate(old_field, BSpline(Cubic(Flat())), OnGrid())
@@ -124,7 +124,7 @@ end
         @nexprs $N j-> x_j = range(start_idx[j],stop=end_idx[j],length=size(new_field,j))
         @nloops $N i new_field begin
             #(@nref $N new_field i) = (@nref $N old_field_itp j->x_j[i_j])
-            (@nref $N new_field i) = (@ncall $N old_field_itp j->x_j[i_j])            
+            (@nref $N new_field i) = (@ncall $N old_field_itp j->x_j[i_j])
         end
         old_field_itp = 0
     end
@@ -166,7 +166,7 @@ function test_align()
         return err
     end
     function test_interpolate(f::ScalarField{T, 3}, func) where T <: ComplexOrFloat
-        @info "testing $(f.name)"        
+        @info "testing $(f.name)"
         sz = size(f.field)
         pos = f.position
         res = f.res
@@ -203,7 +203,7 @@ function test_align()
     end
 
     function test_interpolate(f::VectorField{T, 2}, func) where T <: ComplexOrFloat
-        @info "testing $(f.name)"        
+        @info "testing $(f.name)"
         sz = size(f.field)
         pos = f.position
         res = f.res
