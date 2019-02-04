@@ -103,6 +103,7 @@ function output_image_3d(t,range,res_x,res_y,filename,tdiv)
     run(`gnuplot -e "xstart=$(range[1]);xend=$(range[2]);ystart=$(range[3]);yend=$(range[4]);zstart=$(range[5]);zend=$(range[6]);time=$t" output_image_gp_traj_3d.gp`)
     cd(current_folder)
     cp(image_folder*"/data.png",filename,force=true)
+    rm(image_folder,recursive=true)    
 end
 
 function output_image_gp_2d(t,range,filename,sfn;v_min=0.0,v_max=0.0,xres=1300,yres=1000,save_data=false,data_filename = "")

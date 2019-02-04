@@ -37,8 +37,8 @@ end
         gap: [9890.0, 10110.0, 10110.0, 9890.0, 25120.0, 25120.0, 24880.0, 24880.0]
 """
 function filter_traj(result::Dict,config::Dict)
-    start_idx = searchsortedlast(result["tspan"],config["tstart"])
-    end_idx = searchsortedlast(result["tspan"],config["tend"])
+    start_idx = searchsortedlast(vec(result["tspan"]),config["tstart"])
+    end_idx = searchsortedlast(vec(result["tspan"]),config["tend"])
     traj = result["traj"]
     gap_p = Polygon([promote(config["gap"]...)...])
     side1_p = Polygon([promote(config["side1"]...)...])

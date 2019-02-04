@@ -23,10 +23,10 @@ set label sprintf("t = %4.4f us",time) at (xstart+(xend-xstart)/10),(ystart+(yen
 #splot "dots.txt" u 1:2:3:($3>0.5?1:2) w points pointtype 7 pointsize 1 lc variable
 
 set view equal xyz
-splot "dots.txt" u 1:2:3 w points pointtype 7 pointsize 1
+splot "dots.txt" u 1:2:3 w points pointtype 7 pointsize 0.2
 set view 0,0
-splot "dots.txt" u 1:2:3 w points pointtype 7 pointsize 1
+splot "dots.txt" u 1:2:3 w points pointtype 7 pointsize 0.2
 set view 90,0
-splot "dots.txt" u 1:2:3 w points pointtype 7 pointsize 1
+splot "dots.txt" u 1:2:3 w points pointtype 7 pointsize 0.2
 set view 90,90
-splot "dots.txt" u 1:2:3 w points pointtype 7 pointsize 1
+splot "dots.txt" u 1:2:3 w points pointtype 7 pointsize 0.2
