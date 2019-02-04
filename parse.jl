@@ -73,7 +73,17 @@ function parse_config(filename,parsed_args)
     config = YAML.load(open(filename))
     sim_type = config["simulation-type"]
     fields_config = config["fields-config"]
-    material_config = config["material-config"]
+    if sim_type == "3D"
+        material_config = config["material-config"]
+    elseif sim_type == "2D"
+        material_config =Dict{Any,Any}("material"=>
+            Dict{Any,Any}(
+            "scaling"    => "t->0.0",
+            "field-type" => "ScalarFieldNode",
+            "fields"     => Dict{Any,Any}("sphere"=>Dict{Any,Any}("scaling"=>"t->0.0","field-type"=>"ScalarField","D-type"=>"Float","init-type"=>"zero","dim"=>2,"pos"=>[0,0],"size"=>[10,10],"res"=>[1,1])),
+            "dim"        => 2
+        ))
+    end
     @assert length(keys(fields_config)) == 1 "more than 1 top level fieldnode!"
     trajsolver_config = config["trajsolver-config"]
     trajsolver_config["simulation-type"] = sim_type

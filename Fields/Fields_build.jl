@@ -38,13 +38,14 @@ end
 function build_field_zero(field_config::Dict,level::Integer;name::String="field")
     F_type = Dict("ScalarField" => ScalarField, "VectorField" => VectorField)
     D_type = Dict("Complex" => Complex{Float64}, "Float" => Float64)
-    ft = F_type[field_config["field-type"]]::DataType
-    dt = D_type[ascii(field_config["D-type"])]::DataType
+    ft = F_type[field_config["field-type"]]::Type
+    dt = D_type[ascii(field_config["D-type"])]::Type
     dim = round(field_config["dim"])::Integer
     res = convert(Vector{Int64},field_config["res"])
     pos = convert(Vector{Float64},field_config["pos"])
     sz = convert(Vector{Float64},field_config["size"])
     scaling_expr = Meta.parse(field_config["scaling"])
+    @assert length(res) == length(pos) == length(sz) == dim
     @info padding(level)*"building "*field_config["field-type"]*" "*name*" type: zero"
     @info padding(level)*"----datatype: $dt"
     @info padding(level)*"----dimension: $dim"
@@ -59,8 +60,8 @@ end
 function build_field_func(field_config::Dict,level::Integer;name::String="field")
     F_type = Dict("ScalarField" => ScalarField, "VectorField" => VectorField)
     D_type = Dict("Complex" => Complex{Float64}, "Float" => Float64)
-    ft = F_type[field_config["field-type"]]::DataType
-    dt = D_type[ascii(field_config["D-type"])]::DataType
+    ft = F_type[field_config["field-type"]]::Type
+    dt = D_type[ascii(field_config["D-type"])]::Type
     dim = round(field_config["dim"])::Integer
     res = convert(Vector{Int64},field_config["res"])
     pos = convert(Vector{Float64},field_config["pos"])
