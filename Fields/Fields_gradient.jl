@@ -7,12 +7,19 @@ include("../constant.jl")
 #@inbounds @fastmath function in_field{T<:Field}(f::T,pos::Vector{Float64})
 
 @inbounds @fastmath function in_field(f::T, pos::Vector{Float64}) where T <: Union{FieldNode2D, ComplexField2D, FloatField2D}
-    return (f.res[1]::Float64<(pos[1]-f.position[1]::Float64)<(f.size[1]::Float64-f.res[1]::Float64) && f.res[2]::Float64<(pos[2]-f.position[2]::Float64)<(f.size[2]::Float64-f.res[2]::Float64))
+    return (
+        f.res[1]::Float64<(pos[1]-f.position[1]::Float64)<(f.size[1]::Float64-f.res[1]::Float64) &&
+        f.res[2]::Float64<(pos[2]-f.position[2]::Float64)<(f.size[2]::Float64-f.res[2]::Float64)
+    )
 end
 
 @inbounds @fastmath function in_field(f::T, pos::Vector{Float64}) where T <: Union{FieldNode3D, ComplexField3D, FloatField3D}
     # periodic in z direction?
-    return (f.res[1]::Float64<(pos[1]-f.position[1]::Float64)<(f.size[1]::Float64-f.res[1]::Float64) && f.res[2]::Float64<(pos[2]-f.position[2]::Float64)<(f.size[2]::Float64-f.res[2]::Float64) && f.res[3]::Float64<(pos[3]-f.position[3]::Float64)<(f.size[3]::Float64-f.res[3]::Float64))
+    return (
+        f.res[1]::Float64<(pos[1]-f.position[1]::Float64)<(f.size[1]::Float64-f.res[1]::Float64) &&
+        f.res[2]::Float64<(pos[2]-f.position[2]::Float64)<(f.size[2]::Float64-f.res[2]::Float64) &&
+        f.res[3]::Float64<(pos[3]-f.position[3]::Float64)<(f.size[3]::Float64-f.res[3]::Float64)
+    )
 end
 
 #2D Scalar sample

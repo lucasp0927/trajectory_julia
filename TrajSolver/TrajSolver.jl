@@ -137,6 +137,12 @@ function solve_traj_one_shot_2d(init_xv::Vector{Float64})
 end
 
 function solve_traj_one_shot_3d(init_xv::Vector{Float64})
+    # @info "test mat_sfn"
+    # @info "at [9000.0,25000.0,200.0]: ",Fields.value([9000.0,25000.0,200.0],0.0,Fields.material),Fields.in_field(Fields.material,[9000.0,25000.0,200.0])
+
+    # @info "at [11000.0,25000.0,200.0]:",Fields.value([11000.0,25000.0,200.0],0.0,Fields.material),Fields.in_field(Fields.material,[11000.0,25000.0,200.0])
+    # exit()
+
     yout = Array{Float64}(undef,6,length(tspan))
     fill!(yout,NaN)
     if any(isnan.(init_xv)) == false
@@ -166,6 +172,30 @@ function solve_eq_of_motion_2d(f::Function, y0::Vector{Float64}, t::Vector{Float
     end
 end
 
+function condition1(u,t,integrator) # Event when event_f(u,t) == 0
+    dim = (periodic_condition::PeriodicCondition).dim::Int64
+    p_start = (periodic_condition::PeriodicCondition).periodic_start::Float64
+    u[dim] - p_start
+end
+
+function affect1!(integrator)
+    dim = (periodic_condition::PeriodicCondition).dim::Int64
+    p_end = (periodic_condition::PeriodicCondition).periodic_end::Float64
+    integrator.u[dim] = p_end
+end
+
+function condition2(u,t,integrator) # Event when event_f(u,t) == 0
+    dim = (periodic_condition::PeriodicCondition).dim::Int64
+    p_end = (periodic_condition::PeriodicCondition).periodic_end::Float64
+    u[dim] - p_end
+end
+
+function affect2!(integrator)
+    dim = (periodic_condition::PeriodicCondition).dim::Int64
+    p_start = (periodic_condition::PeriodicCondition).periodic_start::Float64
+    integrator.u[dim] = p_start
+end
+
 function solve_eq_of_motion_3d(f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::T; reltol::Float64=1e-8, abstol::Float64=1e-7, mxstep::Int64=Integer(1e6)) where T<:AbstractArray
     #TODO: add more solver options
     if solver == "ADAMS"
@@ -173,28 +203,42 @@ function solve_eq_of_motion_3d(f::Function, y0::Vector{Float64}, t::Vector{Float
     elseif solver == "BDF"
         solver_alg = CVODE_BDF()
     end
+
+    #periodic boundary condition with callback
+
     prob = ODEProblem(f,y0,(t[1],t[end]))
-    integrator = init(prob, solver_alg; abstol=abstol,reltol=reltol)
+    if (periodic_condition::PeriodicCondition).periodic_condition::Bool == true
+        cb1 = ContinuousCallback(condition1,affect1!)
+        cb2 = ContinuousCallback(condition2,affect2!)
+        cb = CallbackSet(cb1,cb2)
+        integrator = init(prob, solver_alg; abstol=abstol,reltol=reltol,callback=cb)
+    else
+        integrator = init(prob, solver_alg; abstol=abstol,reltol=reltol)
+    end
+
+
+
     yout[:,1] = y0
     for i = 2:length(t)
         dt = t[i] - t[i-1]
         step!(integrator,dt,true)
         yout[:,i] = integrator.u
+        # remove atom when atom is in dielectric.
         if boundary_3d(yout[1:3,i],t[i]) == false
             break
         end
         # periodic boundary condition
-        if (periodic_condition::PeriodicCondition).periodic_condition::Bool == true
-            dim = (periodic_condition::PeriodicCondition).dim::Int64
-            p_start = (periodic_condition::PeriodicCondition).periodic_start::Float64
-            p_end = (periodic_condition::PeriodicCondition).periodic_end::Float64
-            p_dist = p_end-p_start
-            if yout[3,i] > p_end
-                yout[3,i] -= p_dist
-            elseif yout[3,i] < p_start
-                yout[3,i] += p_dist
-            end
-        end
+        # if (periodic_condition::PeriodicCondition).periodic_condition::Bool == true
+        #     dim = (periodic_condition::PeriodicCondition).dim::Int64
+        #     p_start = (periodic_condition::PeriodicCondition).periodic_start::Float64
+        #     p_end = (periodic_condition::PeriodicCondition).periodic_end::Float64
+        #     p_dist = p_end-p_start
+        #     if yout[dim,i] > p_end
+        #         yout[dim,i] -= p_dist
+        #     elseif yout[dim,i] < p_start
+        #         yout[dim,i] += p_dist
+        #     end
+        # end
     end
 end
 
@@ -214,8 +258,12 @@ end
 end
 
 @inbounds function boundary_3d(pos::Vector{Float64},t::Float64)
-    if Fields.value(pos,t,Fields.material) > 0.5
-        return false
+    if Fields.in_field(Fields.material,pos)
+        if Fields.value(pos,t,Fields.material) > 0.5
+            return false
+        else
+            return true
+        end
     else
         return true
     end
