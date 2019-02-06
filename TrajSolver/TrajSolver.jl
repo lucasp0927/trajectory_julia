@@ -1,6 +1,7 @@
 module TrajSolver
 using Distributed
 using SharedArrays
+using Statistics
 using Random
 using Printf
 using DifferentialEquations
@@ -25,6 +26,7 @@ include("../fileio.jl")
 include("polygon.jl")
 include("TrajSolver_init.jl")
 include("TrajSolver_get.jl")
+include("TrajSolver_conditions.jl")
 include("fit_trap.jl")
 include("../TrajAnalyzer/TrajAnalyzer_output.jl")
 include("../TrajAnalyzer/TrajAnalyzer_trajectories.jl")
@@ -151,7 +153,6 @@ function solve_traj_one_shot_3d(init_xv::Vector{Float64})
     return yout
 end
 
-
 function solve_eq_of_motion_2d(f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::T; reltol::Float64=1e-8, abstol::Float64=1e-7, mxstep::Int64=Integer(1e6)) where T<:AbstractArray
     #TODO: add more solver options
     if solver == "ADAMS"
@@ -172,76 +173,6 @@ function solve_eq_of_motion_2d(f::Function, y0::Vector{Float64}, t::Vector{Float
     end
 end
 
-function condition1(u,t,integrator) # Event when event_f(u,t) == 0
-    dim = (periodic_condition::PeriodicCondition).dim::Int64
-    p_start = (periodic_condition::PeriodicCondition).periodic_start::Float64
-    u[dim] - p_start
-end
-
-function affect1!(integrator)
-    dim = (periodic_condition::PeriodicCondition).dim::Int64
-    p_end = (periodic_condition::PeriodicCondition).periodic_end::Float64
-    integrator.u[dim] = p_end
-end
-
-function condition1_fast(u,t,integrator) # Event when event_f(u,t) == 0
-    dim = (periodic_condition::PeriodicCondition).dim::Int64
-    p_start = (periodic_condition::PeriodicCondition).periodic_start::Float64
-    u[dim] < p_start
-end
-
-function affect1_fast!(integrator)
-    dim = (periodic_condition::PeriodicCondition).dim::Int64
-    p_start = (periodic_condition::PeriodicCondition).periodic_start::Float64
-    p_end = (periodic_condition::PeriodicCondition).periodic_end::Float64
-    dist = p_end - p_start
-    integrator.u[dim] += dist
-end
-
-function condition2(u,t,integrator) # Event when event_f(u,t) == 0
-    dim = (periodic_condition::PeriodicCondition).dim::Int64
-    p_end = (periodic_condition::PeriodicCondition).periodic_end::Float64
-    u[dim] - p_end
-end
-
-function affect2!(integrator)
-    dim = (periodic_condition::PeriodicCondition).dim::Int64
-    p_start = (periodic_condition::PeriodicCondition).periodic_start::Float64
-    integrator.u[dim] = p_start
-end
-
-function condition2_fast(u,t,integrator) # Event when event_f(u,t) == 0
-    dim = (periodic_condition::PeriodicCondition).dim::Int64
-    p_end = (periodic_condition::PeriodicCondition).periodic_end::Float64
-    u[dim] > p_end
-end
-
-function affect2_fast!(integrator)
-    dim = (periodic_condition::PeriodicCondition).dim::Int64
-    p_start = (periodic_condition::PeriodicCondition).periodic_start::Float64
-    p_end = (periodic_condition::PeriodicCondition).periodic_end::Float64
-    dist = p_end - p_start    
-    integrator.u[dim] -= dist
-end
-
-
-function condition_material(u,t,integrator)
-    !boundary_3d(u[1:3],t)
-end
-affect_material!(integrator) = terminate!(integrator)
-
-function condition_boundary(u,t,integrator)
-    return (
-        (u[2] < (boundary_condition::BoundaryCondition).ymin::Float64) ||
-        (u[2] > (boundary_condition::BoundaryCondition).ymax::Float64) ||
-        (u[1] < (boundary_condition::BoundaryCondition).xmin::Float64) ||
-        (u[1] > (boundary_condition::BoundaryCondition).xmax::Float64) ||
-        (u[3] < (boundary_condition::BoundaryCondition).zmin::Float64) ||
-        (u[3] > (boundary_condition::BoundaryCondition).zmax::Float64)
-    )
-end
-affect_boundary!(integrator) = terminate!(integrator)
-
 function solve_eq_of_motion_3d(f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::T; reltol::Float64=1e-8, abstol::Float64=1e-7, mxstep::Int64=Integer(1e6)) where T<:AbstractArray
     #TODO: add more solver options
     if solver == "ADAMS"
@@ -250,6 +181,8 @@ function solve_eq_of_motion_3d(f::Function, y0::Vector{Float64}, t::Vector{Float
         solver_alg = CVODE_BDF()
     end
     #remove atom when atom is in dielectric
+    #t_diff = mean(diff(t));
+    #cb_material = PeriodicCallback(check_material_boundary!,t_diff) #not working
     cb_material = DiscreteCallback(condition_material,affect_material!)
     cb = cb_material    
     #periodic boundary condition with callback
