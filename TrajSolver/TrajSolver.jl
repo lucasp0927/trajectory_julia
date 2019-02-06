@@ -4,6 +4,7 @@ using SharedArrays
 using Random
 using Printf
 using DifferentialEquations
+using Sundials
 using Fields
 using ProgressMeter
 
