@@ -1,6 +1,7 @@
 module TrajSolver
 using Distributed
 using SharedArrays
+using Statistics
 using Random
 using Printf
 using DifferentialEquations
@@ -20,12 +21,13 @@ global result
 global U_prob #probability for atom distribution
 global trajsolver_config
 global periodic_condition
-
+global boundary_condition
 include("../constant.jl")
 include("../fileio.jl")
 include("polygon.jl")
 include("TrajSolver_init.jl")
 include("TrajSolver_get.jl")
+include("TrajSolver_conditions.jl")
 include("fit_trap.jl")
 include("../TrajAnalyzer/TrajAnalyzer_output.jl")
 include("../TrajAnalyzer/TrajAnalyzer_trajectories.jl")
@@ -146,7 +148,6 @@ function solve_traj_one_shot_3d(init_xv::Vector{Float64})
     return yout
 end
 
-
 function solve_eq_of_motion_2d(f::Function, y0::Vector{Float64}, t::Vector{Float64} , yout::T; reltol::Float64=1e-8, abstol::Float64=1e-7, mxstep::Int64=Integer(1e6)) where T<:AbstractArray
     #TODO: add more solver options
     if solver == "ADAMS"
@@ -174,27 +175,39 @@ function solve_eq_of_motion_3d(f::Function, y0::Vector{Float64}, t::Vector{Float
     elseif solver == "BDF"
         solver_alg = CVODE_BDF()
     end
+    #remove atom when atom is in dielectric
+    #t_diff = mean(diff(t));
+    #cb_material = PeriodicCallback(check_material_boundary!,t_diff) #not working
+    cb_material = DiscreteCallback(condition_material,affect_material!)
+    cb = cb_material    
+    #periodic boundary condition with callback
     prob = ODEProblem(f,y0,(t[1],t[end]))
-    integrator = init(prob, solver_alg; abstol=abstol,reltol=reltol)
-    yout[:,1] = y0
-    for i = 2:length(t)
-        dt = t[i] - t[i-1]
-        step!(integrator,dt,true)
-        yout[:,i] = integrator.u
-        if boundary_3d(yout[1:3,i],t[i]) == false
-            break
+    if (periodic_condition::PeriodicCondition).periodic_condition::Bool
+        #cb1 = ContinuousCallback(condition1,affect1!)
+        #cb2 = ContinuousCallback(condition2,affect2!)
+        cb1 = DiscreteCallback(condition1_fast,affect1_fast!)
+        cb2 = DiscreteCallback(condition2_fast,affect2_fast!)
+        cb = CallbackSet(cb1,cb2,cb)
+        #integrator = init(prob, solver_alg; abstol=abstol,reltol=reltol,callback=cb)
+    end
+
+    if (boundary_condition::BoundaryCondition).boundary_condition::Bool
+        cb_boundary = DiscreteCallback(condition_boundary,affect_boundary!)
+        cb = CallbackSet(cb_boundary,cb)
+    end
+    
+    sol = solve(prob, solver_alg; abstol=abstol,reltol=reltol,callback=cb,saveat=t)
+    #copy results to yout
+    j = 1
+    for i = 1:length(t)
+        while j<= length(sol.t) && sol.t[j] < t[i]
+            j = j+1
         end
-        # periodic boundary condition
-        if (periodic_condition::PeriodicCondition).periodic_condition::Bool == true
-            dim = (periodic_condition::PeriodicCondition).dim::Int64
-            p_start = (periodic_condition::PeriodicCondition).periodic_start::Float64
-            p_end = (periodic_condition::PeriodicCondition).periodic_end::Float64
-            p_dist = p_end-p_start
-            if yout[3,i] > p_end
-                yout[3,i] -= p_dist
-            elseif yout[3,i] < p_start
-                yout[3,i] += p_dist
-            end
+        if j>length(sol.t)
+            break
+        else
+            @assert isapprox(sol.t[j],t[i])
+            yout[:,i] = sol.u[j]
         end
     end
 end
@@ -215,8 +228,12 @@ end
 end
 
 @inbounds function boundary_3d(pos::Vector{Float64},t::Float64)
-    if Fields.value(pos,t,Fields.material) > 0.5
-        return false
+    if Fields.in_field(Fields.material,pos)
+        if Fields.value(pos,t,Fields.material) > 0.5
+            return false
+        else
+            return true
+        end
     else
         return true
     end

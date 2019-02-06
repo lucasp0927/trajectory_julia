@@ -38,6 +38,30 @@ function init!(sfn::ScalarFieldNode,mat_sfn::ScalarFieldNode)
     GC.gc()
     fields = copyfield(sfn)
     material = copyfield(mat_sfn)
+    #eval_scaling!(fields)
+    #eval_scaling!(material)    
+    GC.gc()
+end
+
+function init_parallel_potential!(sfn::ScalarFieldNode)
+    @info "initializing Fields module potential only..."
+    @sync begin
+        for p = 1:Distributed.nprocs()     #initialize Fields module on each processe
+            #set all scaling to t->0.0
+            clean_scaling!(sfn)
+            @async Distributed.remotecall_fetch(init_potential!,p,sfn)
+        end
+    end
+    eval_scaling!(sfn)
+end
+
+function init_potential!(sfn::ScalarFieldNode)
+    global fields
+    fields = 0
+    GC.gc()
+    fields = copyfield(sfn)
+    #eval_scaling!(fields)
+    #eval_scaling!(material)    
     GC.gc()
 end
 

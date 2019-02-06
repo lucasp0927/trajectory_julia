@@ -25,6 +25,16 @@ struct PeriodicCondition
     periodic_end::Float64
 end
 
+struct BoundaryCondition
+    boundary_condition::Bool
+    xmin::Float64
+    ymin::Float64
+    zmin::Float64
+    xmax::Float64
+    ymax::Float64
+    zmax::Float64
+end
+
 function init!(config::Dict,probe_sfn::ScalarFieldNode)
     #    srand()
     Random.seed!()
@@ -38,7 +48,7 @@ function init!(config::Dict,probe_sfn::ScalarFieldNode)
     global result
     global trajsolver_config
     global periodic_condition
-
+    global boundary_condition
 #    Probe = Fields.copyfield(probe_sfn)
     trajsolver_config = config
     #simulation-config
@@ -71,9 +81,20 @@ function init!(config::Dict,probe_sfn::ScalarFieldNode)
         end
         out_boundaries = [promote(out_boundaries...)...]::Vector{Polygon}
     end
+    #boundary "3D"
+    if "boundary-condition" in keys(trajsolver_config)
+        boundary_condition = BoundaryCondition(true,
+                                               Float64(trajsolver_config["boundary-condition"]["xmin"]),
+                                               Float64(trajsolver_config["boundary-condition"]["ymin"]),
+                                               Float64(trajsolver_config["boundary-condition"]["zmin"]),
+                                               Float64(trajsolver_config["boundary-condition"]["xmax"]),
+                                               Float64(trajsolver_config["boundary-condition"]["ymax"]),
+                                               Float64(trajsolver_config["boundary-condition"]["zmax"]))
+    else
+        boundary_condition = BoundaryCondition(false,0.0,0.0,0.0,0.0,0.0,0.0)
+    end
     #periodic condition
     if "periodic-condition" in keys(trajsolver_config)
-        @info "set periodic condition to true"
         periodic_condition = PeriodicCondition(true,
                                                Int64(trajsolver_config["periodic-condition"]["dim"]),
                                                Float64(trajsolver_config["periodic-condition"]["start"]),
@@ -82,6 +103,7 @@ function init!(config::Dict,probe_sfn::ScalarFieldNode)
     else
         periodic_condition = PeriodicCondition(false,0,0.0,0.0)
     end
+
     #calculate my_trajnum
     jobs = allocate_jobs(trajnum)
     my_trajnum = jobs[2]-jobs[1]+1
