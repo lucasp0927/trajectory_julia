@@ -139,12 +139,6 @@ function solve_traj_one_shot_2d(init_xv::Vector{Float64})
 end
 
 function solve_traj_one_shot_3d(init_xv::Vector{Float64})
-    # @info "test mat_sfn"
-    # @info "at [9000.0,25000.0,200.0]: ",Fields.value([9000.0,25000.0,200.0],0.0,Fields.material),Fields.in_field(Fields.material,[9000.0,25000.0,200.0])
-
-    # @info "at [11000.0,25000.0,200.0]:",Fields.value([11000.0,25000.0,200.0],0.0,Fields.material),Fields.in_field(Fields.material,[11000.0,25000.0,200.0])
-    # exit()
-
     yout = Array{Float64}(undef,6,length(tspan))
     fill!(yout,NaN)
     if any(isnan.(init_xv)) == false

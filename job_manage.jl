@@ -84,7 +84,7 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
             s_exp = Meta.parse(s)
             Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
         end
-#        Fields.init_parallel!(sfn)
+        Fields.init_parallel_potential!(sfn)
         input_prefix = input_file*string(i)
         output_prefix = output_file*string(i)
         job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,[i])
