@@ -71,7 +71,8 @@ function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,id
         @info "Calculating movie potentials..."
         TrajAnalyzer.output_movie_data_2d(config["movie-output"],output_prefix*"_moviedata.h5")
     end
-
+    #cleanup sharedarray
+    TrajAnalyzer.cleanup()
     # if flags["ngamma1d_flag"]
     #     info("Calculating N Gamma1D.")
     #     TrajAnalyzer.ngamma1d(idx,output_prefix*"_ngamma1d.mat")

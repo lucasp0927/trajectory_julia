@@ -19,6 +19,7 @@ function init_parallel!(result::Dict,probe_sfn::ScalarFieldNode,ForceFields_sfn:
     filter_traj(result,config["filter"])
     traj_s = copy_to_sharedarray!(result["traj"])
     result_wo_traj = result
+    result = nothing
     delete!(result_wo_traj,"traj")
     @sync begin
         for p = 1:nprocs()
@@ -60,4 +61,14 @@ function init!(result::Dict,traj_s::SharedArray{Float64},probe_sfn::ScalarFieldN
         range_i = collect(Int(TA_Config["range_i_start"]):Int(TA_Config["range_i_end"]))
         range_j = collect(Int(TA_Config["range_j_start"]):Int(TA_Config["range_j_end"]))
     end
+end
+
+function cleanup()
+    global Trajs
+    foreach(Trajs.traj.refs) do r
+        @spawnat r.where finalize(fetch(r))
+    end
+    finalize(Trajs.traj.s)
+    finalize(Trajs.traj)
+    @everywhere GC.gc()
 end
