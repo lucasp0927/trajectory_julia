@@ -74,6 +74,7 @@ function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,id
     end
     #cleanup sharedarray
     TrajAnalyzer.cleanup()
+    @everywhere GC.gc()
     # if flags["ngamma1d_flag"]
     #     info("Calculating N Gamma1D.")
     #     TrajAnalyzer.ngamma1d(idx,output_prefix*"_ngamma1d.mat")
