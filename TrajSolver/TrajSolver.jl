@@ -17,7 +17,7 @@ global trajnum, tspan, tdiv
 global radial_temperature, axial_temperature, init_speed, init_range
 global in_boundaries
 global out_boundaries
-global result
+#global result
 global U_prob #probability for atom distribution
 global trajsolver_config
 global periodic_condition
@@ -79,6 +79,7 @@ function calculate_traj()
     t_idx_end = searchsortedfirst(tspan,trajsolver_config["save-range"]["tend"])
     traj_save = traj[:,t_idx_start:t_idx_end,:]
     tspan_save = tspan[t_idx_start:t_idx_end]
+    traj=nothing
     result = Dict(
                   "traj"=>traj_save,
                   "tspan"=>tspan_save,
@@ -87,7 +88,7 @@ function calculate_traj()
                   "reltol"=>reltol,
                   "abstol"=>abstol
     )
-
+    @everywhere GC.gc()
     return result
 end
 

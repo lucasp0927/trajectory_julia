@@ -45,7 +45,7 @@ function init!(config::Dict,probe_sfn::ScalarFieldNode)
     global trajnum, tspan, tdiv
     global radial_temperature, axial_temperature, init_speed, init_range
     global in_boundaries, out_boundaries
-    global result
+    #global result
     global trajsolver_config
     global periodic_condition
     global boundary_condition
@@ -107,7 +107,7 @@ function init!(config::Dict,probe_sfn::ScalarFieldNode)
     #calculate my_trajnum
     jobs = allocate_jobs(trajnum)
     my_trajnum = jobs[2]-jobs[1]+1
-    result = Array{Float64}(undef,4,length(tspan),my_trajnum)
+    #result = Array{Float64}(undef,4,length(tspan),my_trajnum)
 end
 
 function range2sfn(range)
