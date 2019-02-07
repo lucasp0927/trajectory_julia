@@ -1,12 +1,7 @@
-include("TrajAnalyzer_transfermatrix.jl")
 #using PyCall
-using StatsBase
-using Distributions
-
-function spectrum(filename,gm_name)
-    @debug "spectrum test!"
-    output,output_matrix = calculate_transmission()
-    average_spectrum = squeeze(mean(abs2.(output),3),3)
+function spectrum2d(filename,gm_name)
+    output,output_matrix = calculate_transmission2d()
+    average_spectrum = dropdims(mean(abs2.(output),dims=3),dims=3)    
     spectrum_data = Dict(
                          "spectrum"=>output,
                          "avg_spectrum"=>average_spectrum,
@@ -14,14 +9,14 @@ function spectrum(filename,gm_name)
                          )
     dicttoh5(filename*"_spectrum_data_"*gm_name*".h5",spectrum_data)
     #plot using matplotlib
-    freq_config = TA_Config["spectrum"]["frequency"]
-    time_config = TA_Config["spectrum"]["time"]
-    fstart = Float64(freq_config["start"])
-    fend   = Float64(freq_config["end"])
-    tstart = Float64(time_config["start"])
-    tend = Float64(time_config["end"])
-    freq_range = fstart:Float64(freq_config["step"]):fend
-    time_range = tstart:Float64(time_config["step"]):tend
+    # freq_config = TA_Config["spectrum"]["frequency"]
+    # time_config = TA_Config["spectrum"]["time"]
+    # fstart = Float64(freq_config["start"])
+    # fend   = Float64(freq_config["end"])
+    # tstart = Float64(time_config["start"])
+    # tend = Float64(time_config["end"])
+    # freq_range = fstart:Float64(freq_config["step"]):fend
+    # time_range = tstart:Float64(time_config["step"]):tend
     # TODO: fix pyimport for julia 1.0
     # pyimport("matplotlib")[:use]("Agg")
     # @pyimport matplotlib.pyplot as plt
@@ -35,13 +30,13 @@ function spectrum(filename,gm_name)
     # plt.clf()
 end
 
-@inbounds function calculate_transmission()
+@inbounds function calculate_transmission2d()
     # traj selection
 #    traj_selected = select_traj(paras.traj,paras.t_span,paras.select)
     # calculate transmission
 #    init_parallel(paras.phy_para,paras.sim_para,paras.time_arr,paras.freq_arr,paras.t_span,traj_selected,paras.probe)
     #preallocate matrix
-    @debug "in calculate_transmission()"
+    @debug "in calculate_transmission2d()"
     freq_config = TA_Config["spectrum"]["frequency"]
     time_config = TA_Config["spectrum"]["time"]
     freq_range = Float64(freq_config["start"]):Float64(freq_config["step"]):Float64(freq_config["end"])
@@ -65,23 +60,23 @@ end
         @debug "atom_num:", atom_num
         @assert atom_num <= Trajs.atom_num
         @debug "generating_atom_array..."
-        atom_arr::Array{Int64,2} = generate_atom_array(atom_num,Trajs.atom_num,lattice_scale)
+        atom_arr::Array{Int64,2} = generate_atom_array2d(atom_num,Trajs.atom_num,lattice_scale)
         #@sync @parallel for fidx in collect(eachindex(freq_range))
         #preallocate array
-        M_wg = Array{Complex{Float64}}(2,2,atom_num-1)
-        M_atom::Array{Complex{Float64},3} = Array{Complex{Float64}}(2,2,atom_num)
+        M_wg = Array{Complex{Float64}}(undef,2,2,atom_num-1)
+        M_atom::Array{Complex{Float64},3} = Array{Complex{Float64}}(undef,2,2,atom_num)
         @debug "calculating output_matrix..."        
         for fidx in collect(eachindex(freq_range))
             for tidx in eachindex(time_range)
                 @debug "fidx, tix: ", fidx, tidx
-                output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission(time_range[tidx],freq_range[fidx],atom_arr,M_wg,M_atom,d)
+                output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission2d(time_range[tidx],freq_range[fidx],atom_arr,M_wg,M_atom,d)
             end
         end
     end
     return sdata(output), sdata(output_matrix)
 end
 
-function generate_atom_array(atom_num,total_atom_num,lattice_scale)
+function generate_atom_array2d(atom_num,total_atom_num,lattice_scale)
     #lattice_scale = lattice_width/lattice_unit
     #(traj id,lattice id)*atom_num
     atom_array = zeros(Int64,(2,atom_num))
@@ -95,14 +90,14 @@ function generate_atom_array(atom_num,total_atom_num,lattice_scale)
     return atom_array
 end
 
-function calc_gamma1d(pos,t)
+function calc_gamma1d_2d(pos,t)
     @assert any(isnan.(pos)) == false
     g1d = Float64(Fields.value(pos[1:2],t,Probe::ScalarFieldNode)*gamma_1d)
     @assert isnan(g1d) == false
     return g1d
 end
 
-function transmission(t::Float64,detune::Float64,atom_arr::Array{Int64,2},M_wg::Array{Complex{Float64},3},M_atom::Array{Complex{Float64},3},d)
+function transmission2d(t::Float64,detune::Float64,atom_arr::Array{Int64,2},M_wg::Array{Complex{Float64},3},M_atom::Array{Complex{Float64},3},d)
     # calculate transmission at time t and detuning detune.
     # put wg from -2*Lattice_unit to first atom, and after last atom to lattice_width+2*lattice_unit
     atom_num::Int64 = size(atom_arr,2)
@@ -125,9 +120,9 @@ function transmission(t::Float64,detune::Float64,atom_arr::Array{Int64,2},M_wg::
             wg_transfer_matrix(M_atom,i,0.0,0.0)
         else
             if spectrum_mode == 1
-                g1d = calc_gamma1d(pos[1:2],t)*((1-probe_contrast)+probe_contrast*cospi(atom_pos_div[i])^2)
+                g1d = calc_gamma1d_2d(pos[1:2],t)*((1-probe_contrast)+probe_contrast*cospi(atom_pos_div[i])^2)
             elseif spectrum_mode ==2
-                g1d = calc_gamma1d(pos[1:2],t)
+                g1d = calc_gamma1d_2d(pos[1:2],t)
             end
             f_0 = Fields.value(pos[1:2],t,ForceFields::ScalarFieldNode)*(-2.08e4) #*20.8/(-1e-3)
             #vector shift

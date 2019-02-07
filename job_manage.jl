@@ -10,6 +10,7 @@ function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,id
     elseif config["type"] == "double-scan-scaling"
         @assert length(idx) == 2
     end
+    sim_type = config["movie-output"]["simulation-type"]
     function prepare_var()
         if flags["calc_traj_flag"]
             result = calculate_traj()
@@ -37,7 +38,6 @@ function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,id
     end
     if flags["movie_flag"]
         @info "Outputing Movie..."
-        sim_type = config["movie-output"]["simulation-type"]
         if sim_type == "2D"
             movie_range = [promote(config["movie-output"]["range"]...)...]
             @time TrajAnalyzer.output_movie_traj_2d(config["movie-output"],output_prefix*"_traj.mp4")
@@ -49,12 +49,22 @@ function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,id
         end
     end
     if flags["spectrum_flag"]
-        for gm_name in config["spectrum"]["name"]
-            #probe_sfn = Fields.buildAndAlign(config["probe"]["field"]["fields"][gm_name],0,name=gm_name);
-            @info "Initialize TrajAnalyzer..."
-            TrajAnalyzer.init_probe_parallel!(probe_sfn)
-            @info "Calculating Spectrum "*gm_name*"..."
-            TrajAnalyzer.spectrum(output_prefix, gm_name)
+        if sim_type == "2D"
+            for gm_name in config["spectrum"]["name"]
+                @info "Initialize TrajAnalyzer..."
+                TrajAnalyzer.init_probe_parallel!(probe_sfn)
+                @info "Calculating Spectrum for 2D probe "*gm_name*"..."
+                TrajAnalyzer.spectrum2d(output_prefix, gm_name)
+            end
+        elseif sim_type == "3D"
+            for gm_name in config["spectrum"]["name"]
+                @info "Initialize TrajAnalyzer..."
+                TrajAnalyzer.init_probe_parallel!(probe_sfn)
+                @info "Calculating Spectrum for 3D probe "*gm_name*"..."
+                TrajAnalyzer.spectrum3d(output_prefix, gm_name)
+            end            
+        else
+            @error "unrecognized simulation type: "* sim_type            
         end
     end
     if flags["movie_data_flag"]
@@ -88,6 +98,7 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         input_prefix = input_file*string(i)
         output_prefix = output_file*string(i)
         job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,[i])
+        GC.gc()
     end
 end
 

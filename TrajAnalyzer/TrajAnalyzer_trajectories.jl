@@ -28,7 +28,7 @@ import Base.getindex
     t_idx = searchsortedlast(tr.tspan,t)
     @assert t_idx >=1 && t_idx <= length(tr.tspan)
     t_div = tr.t_div::Float64
-    result = Array{Float64}(size(tr.traj,1))
+    result = Array{Float64}(undef,size(tr.traj,1))
     if t_idx != length(tr.tspan)
         r = (t-tr.tspan[t_idx])/t_div
         result[:] = tr.traj[:,t_idx,traj_id].*(1.0-r).+tr.traj[:,t_idx+1,traj_id].*r

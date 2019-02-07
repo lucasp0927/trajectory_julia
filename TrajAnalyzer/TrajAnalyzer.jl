@@ -2,6 +2,8 @@ module TrajAnalyzer
 using Printf
 using Distributed
 using SharedArrays
+using StatsBase
+using Distributions
 using Fields
 using ProgressMeter
 using HDF5
@@ -11,7 +13,9 @@ include("TrajAnalyzer_trajectories.jl")
 include("../TrajSolver/polygon.jl")
 include("TrajAnalyzer_set.jl")
 include("TrajAnalyzer_output.jl")
-include("TrajAnalyzer_spectrum.jl")
+include("TrajAnalyzer_transfermatrix.jl")
+include("TrajAnalyzer_spectrum_2d.jl")
+include("TrajAnalyzer_spectrum_3d.jl")
 include("TrajAnalyzer_ngamma1d.jl")
 include("TrajAnalyzer_trajtype.jl")
 
