@@ -3,8 +3,8 @@ set terminal png size 1500,1000 enhanced font 'Verdana,10'
 set output "data.png"
 set multiplot layout 2,2 columnsfirst
 set datafile separator ","
-set style line 1 lc rgb "red"
-set style line 2 lc rgb "black"
+#set style line 1 lc rgb "red"
+#set style line 2 lc rgb "black"
 set xrange [xstart:xend]
 set yrange [ystart:yend]
 set zrange [zstart:zend]
@@ -23,10 +23,14 @@ set label sprintf("t = %4.4f us",time) at (xstart+(xend-xstart)/10),(ystart+(yen
 #splot "dots.txt" u 1:2:3:($3>0.5?1:2) w points pointtype 7 pointsize 1 lc variable
 
 set view equal xyz
-splot "dots.txt" u 1:2:3 w points pointtype 7 pointsize 0.2
+#splot "dots.txt" u 1:2:3:3 w points pointtype 7 pointsize 0.2
+splot "dots.txt" u 1:2:3:(hsv2rgb($3/370.0,1,1)) w points pointtype 7 pointsize 0.2 lc rgbcolor variable
 set view 0,0
-splot "dots.txt" u 1:2:3 w points pointtype 7 pointsize 0.2
+#splot "dots.txt" u 1:2:3:3 w points pointtype 7 pointsize 0.2
+splot "dots.txt" u 1:2:3:(hsv2rgb($3/370.0,1,1)) w points pointtype 7 pointsize 0.2 lc rgbcolor variable
 set view 90,0
-splot "dots.txt" u 1:2:3 w points pointtype 7 pointsize 0.2
+#splot "dots.txt" u 1:2:3:3 w points pointtype 7 pointsize 0.2
+splot "dots.txt" u 1:2:3:(hsv2rgb($3/370.0,1,1)) w points pointtype 7 pointsize 0.2 lc rgbcolor variable
 set view 90,90
-splot "dots.txt" u 1:2:3 w points pointtype 7 pointsize 0.2
+#splot "dots.txt" u 1:2:3:3 w points pointtype 7 pointsize 0.2
+splot "dots.txt" u 1:2:3:(hsv2rgb($3/370.0,1,1)) w points pointtype 7 pointsize 0.2 lc rgbcolor variable

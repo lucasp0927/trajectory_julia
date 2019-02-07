@@ -1,4 +1,5 @@
 using HDF5
+using SharedArrays
 ComplexOrFloat = Union{Complex{Float64},Float64}
 function copy_to_sharedarray!(arr::Array{T,N}) where {T<:ComplexOrFloat,N}
     return convert(SharedArray,arr)
