@@ -8,26 +8,6 @@ function spectrum3d(filename,gm_name)
                          "transfer_matrix"=>output_matrix
                          )
     dicttoh5(filename*"_spectrum_data_"*gm_name*".h5",spectrum_data)
-    #plot using matplotlib
-    # freq_config = TA_Config["spectrum"]["frequency"]
-    # time_config = TA_Config["spectrum"]["time"]
-    # fstart = Float64(freq_config["start"])
-    # fend   = Float64(freq_config["end"])
-    # tstart = Float64(time_config["start"])
-    # tend = Float64(time_config["end"])
-    # freq_range = fstart:Float64(freq_config["step"]):fend
-    # time_range = tstart:Float64(time_config["step"]):tend
-    # TODO: fix pyimport for julia 1.0
-    # pyimport("matplotlib")[:use]("Agg")
-    # @pyimport matplotlib.pyplot as plt
-    # @pyimport numpy as np
-    # plt.pcolormesh(np.asarray(time_range),np.asarray(freq_range),average_spectrum,cmap="RdBu")
-    # plt.axis([tstart, tend, fstart, fend])
-    # plt.colorbar()
-    # plt.xlabel("time(us)")
-    # plt.ylabel("detuning (MHz)")
-    # plt.savefig(filename*"_spectrum_"*gm_name*".png")
-    # plt.clf()
 end
 
 @inbounds function calculate_transmission3d()
@@ -71,7 +51,11 @@ end
             end
         end
     end
-    return sdata(output), sdata(output_matrix)
+    output_s = sdata(output)
+    output_matrix_s = sdata(output_matrix)
+    finalize_shared_array!(output)
+    finzlize_shared_array!(output_matrix)
+    return output_s, output_matrix_s
 end
 
 function generate_atom_array3d(atom_num,total_atom_num,lattice_scale)

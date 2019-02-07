@@ -48,18 +48,10 @@ function calculate_traj()
         t = float(trajsolver_config["atom-config"]["time"])
         @assert t==tspan[1]
         init_xv = trajectories[t,:]
-        
+
         #cleanup shared array
-        foreach(traj_s.refs) do r
-            @spawnat r.where finalize(fetch(r))
-        end
-        finalize(traj_s.s)
-        finalize(traj_s)        
-        foreach(trajectories.traj.refs) do r
-            @spawnat r.where finalize(fetch(r))
-        end
-        finalize(trajectories.traj.s)
-        finalize(trajectories.traj)
+        finalize_shared_array!(traj_s)
+        finalize_shared_array!(trajectories.traj)
         @everywhere GC.gc()        
     else
         err("Unknown init-type in atom-config.")

@@ -4,6 +4,14 @@ function copy_to_sharedarray!(arr::Array{T,N}) where {T<:ComplexOrFloat,N}
     return convert(SharedArray,arr)
 end
 
+function finalize_shared_array!(shared_array::SharedArray)
+    foreach(shared_array.refs) do r
+        @spawnat r.where finalize(fetch(r))
+    end
+    finalize(shared_array.s)
+    finalize(shared_array)    
+end
+
 function file2sharedarray(filename,variable)
     # var = h5open(filename,"r") do file
     #     read(file,variable)

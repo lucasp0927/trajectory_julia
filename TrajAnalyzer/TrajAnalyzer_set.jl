@@ -65,10 +65,6 @@ end
 
 function cleanup()
     global Trajs
-    foreach(Trajs.traj.refs) do r
-        @spawnat r.where finalize(fetch(r))
-    end
-    finalize(Trajs.traj.s)
-    finalize(Trajs.traj)
+    finalize_shared_array!(Trajs.traj)
     @everywhere GC.gc()
 end

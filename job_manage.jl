@@ -36,6 +36,7 @@ function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,id
         @info "$crashed_num trajectories crashed."
         @info "$gap_num trajectories in gap."
     end
+    result = nothing
     if flags["movie_flag"]
         @info "Outputing Movie..."
         if sim_type == "2D"
