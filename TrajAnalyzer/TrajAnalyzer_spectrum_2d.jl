@@ -124,7 +124,7 @@ function transmission2d(t::Float64,detune::Float64,atom_arr::Array{Int64,2},M_wg
             elseif spectrum_mode ==2
                 g1d = calc_gamma1d_2d(pos[1:2],t)
             end
-            f_0 = Fields.value(pos[1:2],t,ForceFields::ScalarFieldNode)*(-2.08e4) #*20.8/(-1e-3)
+            f_0 = Fields.value(pos[1:2],t)*(-2.08e4) #*20.8/(-1e-3)
             #vector shift
             if vector_shift == 1
                 mf = sample(-3:3)

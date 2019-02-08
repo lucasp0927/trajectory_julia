@@ -30,7 +30,7 @@ function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,id
     if flags["need_traj_flag"]
         @info "Initialize TrajAnalyzer..."
         #probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
-        TrajAnalyzer.init_parallel!(result,probe_sfn,sfn,config)
+        TrajAnalyzer.init_parallel!(result,probe_sfn,config)
         crashed_num = length(TrajAnalyzer.traj_iscrashed())
         gap_num = length(TrajAnalyzer.traj_ingap(false))
         @info "$crashed_num trajectories crashed."

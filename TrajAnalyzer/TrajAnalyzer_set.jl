@@ -14,7 +14,8 @@ function init_probe!(probe_sfn::ScalarFieldNode)
 end
 
 
-function init_parallel!(result::Dict,probe_sfn::ScalarFieldNode,ForceFields_sfn::ScalarFieldNode,config::Dict)
+#function init_parallel!(result::Dict,probe_sfn::ScalarFieldNode,ForceFields_sfn::ScalarFieldNode,config::Dict)
+function init_parallel!(result::Dict,probe_sfn::ScalarFieldNode,config::Dict)    
     #filter trajectories
     filter_traj(result,config["filter"])
     traj_s = copy_to_sharedarray!(result["traj"])
@@ -24,25 +25,27 @@ function init_parallel!(result::Dict,probe_sfn::ScalarFieldNode,ForceFields_sfn:
     @sync begin
         for p = 1:nprocs()
             Fields.clean_scaling!(probe_sfn)
-            Fields.clean_scaling!(ForceFields_sfn)
-            @async remotecall_wait(init!,p,result_wo_traj,traj_s,probe_sfn,ForceFields_sfn,config)
+            #Fields.clean_scaling!(ForceFields_sfn)
+            @async remotecall_wait(init!,p,result_wo_traj,traj_s,probe_sfn,config)
         end
     end
     Fields.eval_scaling!(probe_sfn)
-    Fields.eval_scaling!(ForceFields_sfn)
+    #Fields.eval_scaling!(ForceFields_sfn)
 end
 
-function init!(result::Dict,traj_s::SharedArray{Float64},probe_sfn::ScalarFieldNode,ForceFields_sfn::ScalarFieldNode,config::Dict)
+#function init!(result::Dict,traj_s::SharedArray{Float64},probe_sfn::ScalarFieldNode,ForceFields_sfn::ScalarFieldNode,config::Dict)
+function init!(result::Dict,traj_s::SharedArray{Float64},probe_sfn::ScalarFieldNode,config::Dict)    
     #ploting backend
 #    @info "set gr() as Plots.jl backend."
 #    gr()
     global spectrum_mode, vector_shift
-    global Trajs, Probe, ForceFields, TA_Config
+#    global Trajs, Probe, ForceFields, TA_Config
+    global Trajs, Probe, TA_Config    
     global avg_atom_num,lattice_width,lattice_unit,k_ratio,gamma_1d,gamma_prime,pos_variance,atom_beam_waist, probe_contrast
     global range_i, range_j
     Trajs = Trajectories(result,traj_s)
     Probe = Fields.copyfield(probe_sfn)
-    ForceFields = Fields.copyfield(ForceFields_sfn)
+    #ForceFields = Fields.copyfield(ForceFields_sfn)
     TA_Config = config
     spectrum_mode = Int64(TA_Config["spectrum"]["mode"])
     vector_shift = Int64(TA_Config["spectrum"]["vector-shift"])

@@ -51,10 +51,10 @@ end
             end
         end
     end
-    output_s = sdata(output)
-    output_matrix_s = sdata(output_matrix)
+    output_s = copy(sdata(output))
+    output_matrix_s = copy(sdata(output_matrix))
     finalize_shared_array!(output)
-    finzlize_shared_array!(output_matrix)
+    finalize_shared_array!(output_matrix)
     return output_s, output_matrix_s
 end
 
@@ -95,7 +95,7 @@ function transmission3d(t::Float64,detune::Float64,atom_arr::Array{Int64,2},M_wg
         else
             atom_pos[i] += pos[3]            
             g1d = calc_gamma1d_3d(pos[1:3],t)
-            f_0 = Fields.value(pos[1:3],t,ForceFields::ScalarFieldNode)*(-2.08e4) #*20.8/(-1e-3)
+            f_0 = Fields.value(pos[1:3],t)*(-2.08e4) #*20.8/(-1e-3)
             #vector shift
             if vector_shift == 1
                 mf = sample(-3:3)
