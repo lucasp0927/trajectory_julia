@@ -4,7 +4,7 @@
     return M
 end
 
-@inbounds @fastmath function wg_transfer_matrix(M_wg::Array{Complex{Float64}}, i, k::Float64 , l::Float64 )
+@inline @inbounds @fastmath function wg_transfer_matrix(M_wg::Array{Complex{Float64}}, i, k::Float64 , l::Float64 )
     M_wg[1,1,i] = exp(1im*k*l)
     M_wg[1,2,i] = zero(Complex{Float64})
     M_wg[2,1,i] = zero(Complex{Float64})
@@ -28,7 +28,7 @@ function atom_transfer_matrix(f, f_0, gamma_1d, gamma_prime)
     return M
 end
 
-function atom_transfer_matrix(M_atom, i, f, f_0, gamma_1d, gamma_prime)
+@inline @inbounds function atom_transfer_matrix(M_atom, i, f, f_0, gamma_1d, gamma_prime)
     gamma = gamma_1d::Float64+gamma_prime::Float64
     delta::Float64 = f-f_0
     r::Complex{Float64} = -gamma_1d/(gamma-2.0*im*delta)
