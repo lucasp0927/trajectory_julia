@@ -7,15 +7,13 @@ function allocate_jobs(totaljob)
     return start,stop
 end
 
-function init_parallel(config::Dict,probe_sfn::ScalarFieldNode)
+function init_parallel(config::Dict)
 #    println("start initialization TrajSolver module...")
     @sync begin
         for p = 1:Distributed.nprocs()
-            Fields.clean_scaling!(probe_sfn)
-            @async Distributed.remotecall_wait(init!,p,config,probe_sfn)
+            @async Distributed.remotecall_wait(init!,p,config)
         end
     end
-    Fields.eval_scaling!(probe_sfn)
 end
 
 struct PeriodicCondition
@@ -35,7 +33,7 @@ struct BoundaryCondition
     zmax::Float64
 end
 
-function init!(config::Dict,probe_sfn::ScalarFieldNode)
+function init!(config::Dict)
     #    srand()
     Random.seed!()
     #    println("initialize TrajSolver module on process ", myid())
@@ -49,7 +47,6 @@ function init!(config::Dict,probe_sfn::ScalarFieldNode)
     global trajsolver_config
     global periodic_condition
     global boundary_condition
-#    Probe = Fields.copyfield(probe_sfn)
     trajsolver_config = config
     #simulation-config
     sim_type = config["simulation-type"]::String

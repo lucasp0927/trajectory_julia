@@ -4,7 +4,7 @@ using Optim
 using PyCall
 
 @pyimport scipy.optimize as opt
-function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,idx::Vector)
+function job_inner_loop(config,sfn,input_prefix,output_prefix,flags,idx::Vector)
     if config["type"] == "single-scan-scaling"
         @assert length(idx) == 1
     elseif config["type"] == "double-scan-scaling"
@@ -29,8 +29,7 @@ function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,id
 
     if flags["need_traj_flag"]
         @info "Initialize TrajAnalyzer..."
-        #probe_sfn = Fields.buildAndAlign(config["probe"]["field"],0,name=ascii([k for k in keys(config["probe"])][1]))
-        TrajAnalyzer.init_parallel!(result,probe_sfn,config)
+        TrajAnalyzer.init_parallel!(result,config)
         #crashed_num = length(TrajAnalyzer.traj_iscrashed())
         #gap_num = length(TrajAnalyzer.traj_ingap(false))
         #@info "$crashed_num trajectories crashed."
@@ -52,12 +51,12 @@ function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,id
     if flags["spectrum_flag"]
         if sim_type == "2D"
             for gm_name in config["spectrum"]["name"]
-                Fields.cleanupfield(probe_sfn)
                 probe_sfn = Fields.buildAndAlign(config["probe"]["field"]["fields"][gm_name],0,name=gm_name);                
                 @info "Initialize TrajAnalyzer..."
                 TrajAnalyzer.init_probe_parallel!(probe_sfn)
                 @info "Calculating Spectrum for 2D probe "*gm_name*"..."
                 TrajAnalyzer.spectrum2d(output_prefix, gm_name)
+                Fields.cleanupfield(probe_sfn)
             end
         elseif sim_type == "3D"
             for gm_name in config["spectrum"]["name"]
@@ -67,6 +66,7 @@ function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,id
                 TrajAnalyzer.init_probe_parallel!(probe_sfn)
                 @info "Calculating Spectrum for 3D probe "*gm_name*"..."
                 TrajAnalyzer.spectrum3d(output_prefix, gm_name)
+                Fields.cleanupfield(probe_sfn)                                
             end            
         else
             @error "unrecognized simulation type: "* sim_type            
@@ -85,7 +85,7 @@ function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,id
     # end
 end
 
-function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,probe_sfn::ScalarFieldNode,input_file,output_file,flags)
+function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,input_file,output_file,flags)
     @assert config["type"] == "single-scan-scaling"
     range_i_start = config["range_i_start"]::Int
     range_i_end = config["range_i_end"]::Int
@@ -104,7 +104,7 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
         Fields.init_parallel_potential!(sfn)
         input_prefix = input_file*string(i)
         output_prefix = output_file*string(i)
-        job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,[i])
+        job_inner_loop(config,sfn,input_prefix,output_prefix,flags,[i])
         GC.gc()
     end
 end
