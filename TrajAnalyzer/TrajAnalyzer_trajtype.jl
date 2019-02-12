@@ -51,15 +51,15 @@ function filter_traj(result::Dict,config::Dict)
         selected = collect(1:size(traj,3))
         selected = filter(i->anyPointInPolygon(gap_p,traj[1:2,start_idx:end_idx,i]), selected)
         @info "selected $(length(selected)) trajectories from $(size(traj,3)) trajectories."
-        result["traj"] = cat(3,map(i->traj[:,:,i],selected)...)
+        result["traj"] = cat(map(i->traj[:,:,i],selected)...,dims=3)
     elseif config["type"] == "sides"
         @info "Select side trajectories."
         selected = collect(1:size(traj,3))
         selected1 = filter(i->anyPointInPolygon(side1_p,traj[1:2,start_idx:end_idx,i]), selected)
         selected2 = filter(i->anyPointInPolygon(side2_p,traj[1:2,start_idx:end_idx,i]), selected)
-        selected = cat(1,selected1,selected2)
+        selected = cat(selected1,selected2,dims=1)
         @info "selected $(length(selected)) trajectories from $(size(traj,3)) trajectories."
-        result["traj"] = cat(3,map(i->traj[:,:,i],selected)...)
+        result["traj"] = cat(map(i->traj[:,:,i],selected)...,dims=3)
     elseif config["type"] == "other"
         @info "Select top-bottom trajectories."
         #not in "gap" and not in "sides"
@@ -68,7 +68,7 @@ function filter_traj(result::Dict,config::Dict)
         selected = filter(i->anyPointInPolygon(side1_p,traj[1:2,start_idx:end_idx,i])==false, selected)
         selected = filter(i->anyPointInPolygon(side2_p,traj[1:2,start_idx:end_idx,i])==false, selected)
         @info "selected $(length(selected)) trajectories from $(size(traj,3)) trajectories." 
-        result["traj"] = cat(3,map(i->traj[:,:,i],selected)...)
+        result["traj"] = cat(map(i->traj[:,:,i],selected)...,dims=3)
     end
 
 #     if config["type"] == "none"
