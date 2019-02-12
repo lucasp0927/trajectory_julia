@@ -1,7 +1,7 @@
 #using PyCall
 function spectrum2d(filename,gm_name)
     output,output_matrix = calculate_transmission2d()
-    average_spectrum = dropdims(mean(abs2.(output),dims=3),dims=3)    
+    average_spectrum = dropdims(mean(abs2.(output),dims=3),dims=3)
     spectrum_data = Dict(
                          "spectrum"=>output,
                          "avg_spectrum"=>average_spectrum,
@@ -50,10 +50,8 @@ end
     elseif spectrum_mode == 2
         d = Truncated(Normal(0, sqrt(pos_variance)), -1, 1)
     end
-    @debug "start parllel part!"
-    @time @sync @distributed for i in 1:iter
-#    @time for i in 1:iter        
-        @debug "iteration: $i"
+    @time for i in 1:iter
+        @info i
         lattice_scale::Float64 = lattice_width/lattice_unit
         #TODO: other distribution of atom_num
         atom_num = round(Int,avg_atom_num*(Trajs.atom_num/TA_Config["spectrum"]["total-atom-number"]))
@@ -61,19 +59,18 @@ end
         @assert atom_num <= Trajs.atom_num
         @debug "generating_atom_array..."
         atom_arr::Array{Int64,2} = generate_atom_array2d(atom_num,Trajs.atom_num,lattice_scale)
-        #@sync @parallel for fidx in collect(eachindex(freq_range))
-        #preallocate array
-        M_wg = Array{Complex{Float64}}(undef,2,2,atom_num-1)
-        M_atom::Array{Complex{Float64},3} = Array{Complex{Float64}}(undef,2,2,atom_num)
-        @debug "calculating output_matrix..."        
-        for fidx in collect(eachindex(freq_range))
-            for tidx in eachindex(time_range)
-                @debug "fidx, tix: ", fidx, tidx
-                output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission2d(time_range[tidx],freq_range[fidx],atom_arr,M_wg,M_atom,d)
-            end
+        @debug "calculating output_matrix..."
+        @sync @distributed for idx in CartesianIndices(output_matrix[1,1,:,:,1])
+            fidx = idx[1]
+            tidx = idx[2]
+            output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission2d(time_range[tidx],freq_range[fidx],atom_arr,d)
         end
     end
-    return sdata(output), sdata(output_matrix)
+    output_s = copy(sdata(output))
+    output_matrix_s = copy(sdata(output_matrix))
+    finalize_shared_array!(output)
+    finalize_shared_array!(output_matrix)
+    return output_s, output_matrix_s
 end
 
 function generate_atom_array2d(atom_num,total_atom_num,lattice_scale)
@@ -97,10 +94,14 @@ function calc_gamma1d_2d(pos,t)
     return g1d
 end
 
-function transmission2d(t::Float64,detune::Float64,atom_arr::Array{Int64,2},M_wg::Array{Complex{Float64},3},M_atom::Array{Complex{Float64},3},d)
+#function transmission2d(t::Float64,detune::Float64,atom_arr::Array{Int64,2},M_wg::Array{Complex{Float64},3},M_atom::Array{Complex{Float64},3},d)
+function transmission2d(t::Float64,detune::Float64,atom_arr::Array{Int64,2},d)
     # calculate transmission at time t and detuning detune.
     # put wg from -2*Lattice_unit to first atom, and after last atom to lattice_width+2*lattice_unit
+
     atom_num::Int64 = size(atom_arr,2)
+    M_wg = Array{Complex{Float64}}(undef,2,2,atom_num-1)
+    M_atom::Array{Complex{Float64},3} = Array{Complex{Float64}}(undef,2,2,atom_num)
     x_point_k::Float64 = pi/lattice_unit::Float64
     k::Float64 = x_point_k*k_ratio::Float64
     #generate waveguide transfer matrix

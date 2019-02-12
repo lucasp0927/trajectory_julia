@@ -8,17 +8,17 @@ include("../constant.jl")
 
 @inbounds @fastmath function in_field(f::T, pos::Vector{Float64}) where T <: Union{FieldNode2D, ComplexField2D, FloatField2D}
     return (
-        f.res[1]::Float64<(pos[1]-f.position[1]::Float64)<(f.size[1]::Float64-f.res[1]::Float64) &&
-        f.res[2]::Float64<(pos[2]-f.position[2]::Float64)<(f.size[2]::Float64-f.res[2]::Float64)
+        3*f.res[1]::Float64<(pos[1]-f.position[1]::Float64)<(f.size[1]::Float64-3*f.res[1]::Float64) &&
+        3*f.res[2]::Float64<(pos[2]-f.position[2]::Float64)<(f.size[2]::Float64-3*f.res[2]::Float64)
     )
 end
 
 @inbounds @fastmath function in_field(f::T, pos::Vector{Float64}) where T <: Union{FieldNode3D, ComplexField3D, FloatField3D}
     # periodic in z direction?
     return (
-        f.res[1]::Float64<(pos[1]-f.position[1]::Float64)<(f.size[1]::Float64-f.res[1]::Float64) &&
-        f.res[2]::Float64<(pos[2]-f.position[2]::Float64)<(f.size[2]::Float64-f.res[2]::Float64) &&
-        f.res[3]::Float64<(pos[3]-f.position[3]::Float64)<(f.size[3]::Float64-f.res[3]::Float64)
+        3*f.res[1]::Float64<(pos[1]-f.position[1]::Float64)<(f.size[1]::Float64-3*f.res[1]::Float64) &&
+        3*f.res[2]::Float64<(pos[2]-f.position[2]::Float64)<(f.size[2]::Float64-3*f.res[2]::Float64) &&
+        3*f.res[3]::Float64<(pos[3]-f.position[3]::Float64)<(f.size[3]::Float64-3*f.res[3]::Float64)
     )
 end
 
@@ -273,7 +273,6 @@ end
     end
 #    sample[:] .+= f.sample[:]
 end
-#########################
 
 function value(pos::Vector{Float64},t::Real)
     value(pos,t,fields::ScalarFieldNode)
@@ -281,23 +280,31 @@ end
 
 @generated function value(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode{2})
     quote
-        x = $(Array{Float64}(undef,2))
-        res = $(Array{Float64}(undef,2))
-        res .= (sfn::ScalarFieldNode).res
-        sample2!(sfn::ScalarFieldNode,pos,t)
-        @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
-        return bicubicInterpolate((sfn::ScalarFieldNode).sample,x)
+        if in_field(sfn,pos)
+            x = $(Array{Float64}(undef,2))
+            res = $(Array{Float64}(undef,2))
+            res .= (sfn::ScalarFieldNode).res
+            sample2!(sfn::ScalarFieldNode,pos,t)
+            @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
+            return bicubicInterpolate((sfn::ScalarFieldNode).sample,x)::Float64
+        else
+            return zero(Float64)
+        end
     end
 end
 
 @generated function value(pos::Vector{Float64},t::Real,sfn::ScalarFieldNode{3})
     quote
-        x = $(Array{Float64}(undef,3))
-        res = $(Array{Float64}(undef,3))
-        res[:] = (sfn::ScalarFieldNode).res
-        sample2!(sfn::ScalarFieldNode,pos,t)
-        @nexprs 3 j->x[j] = rem(pos[j],res[j])/res[j]
-        return tricubicInterpolate((sfn::ScalarFieldNode).sample,x)
+        if in_field(sfn,pos)
+            x = $(Array{Float64}(undef,3))
+            res = $(Array{Float64}(undef,3))
+            res[:] = (sfn::ScalarFieldNode).res
+            sample2!(sfn::ScalarFieldNode,pos,t)
+            @nexprs 3 j->x[j] = rem(pos[j],res[j])/res[j]
+            return tricubicInterpolate((sfn::ScalarFieldNode).sample,x)::Float64
+        else
+            return zero(Float64)
+        end
     end
 end
 

@@ -52,6 +52,7 @@ function job_inner_loop(config,sfn,probe_sfn,input_prefix,output_prefix,flags,id
     if flags["spectrum_flag"]
         if sim_type == "2D"
             for gm_name in config["spectrum"]["name"]
+                probe_sfn = Fields.buildAndAlign(config["probe"]["field"]["fields"][gm_name],0,name=gm_name);                
                 @info "Initialize TrajAnalyzer..."
                 TrajAnalyzer.init_probe_parallel!(probe_sfn)
                 @info "Calculating Spectrum for 2D probe "*gm_name*"..."

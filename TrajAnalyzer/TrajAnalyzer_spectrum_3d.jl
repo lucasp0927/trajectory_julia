@@ -26,11 +26,6 @@ end
     iter = TA_Config["spectrum"]["iteration"]
     output = SharedArray{Complex{Float64}}(length(freq_range),length(time_range),iter)
     output_matrix = SharedArray{Complex{Float64}}((2,2,length(freq_range),length(time_range),iter))
-    # if spectrum_mode == 1
-    #     d = Uniform(-1,1)
-    # elseif spectrum_mode == 2
-    #     d = Truncated(Normal(0, sqrt(pos_variance)), -1, 1)
-    # end
     @time for i in 1:iter
         @info i
         lattice_scale::Float64 = lattice_width/lattice_unit
@@ -38,21 +33,11 @@ end
         atom_num = round(Int,avg_atom_num*(Trajs.atom_num/TA_Config["spectrum"]["total-atom-number"]))
         @assert atom_num <= Trajs.atom_num
         atom_arr::Array{Int64,2} = generate_atom_array3d(atom_num,Trajs.atom_num,lattice_scale)
-        #@sync @parallel for fidx in collect(eachindex(freq_range))
-        #preallocate array
-        # M_wg = Array{Complex{Float64}}(undef,2,2,atom_num-1)
-        # M_atom::Array{Complex{Float64},3} = Array{Complex{Float64}}(undef,2,2,atom_num)
         @sync @distributed for idx in CartesianIndices(output_matrix[1,1,:,:,1])
             fidx = idx[1]
             tidx = idx[2]
-#            output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission3d(time_range[tidx],freq_range[fidx],atom_arr,M_wg,M_atom)
-            output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission3d(time_range[tidx],freq_range[fidx],atom_arr)          
+            output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission3d(time_range[tidx],freq_range[fidx],atom_arr)
         end
-        # for fidx in collect(eachindex(freq_range))
-        #     for tidx in eachindex(time_range)
-        #         output_matrix[:,:,fidx,tidx,i],output[fidx,tidx,i] = transmission3d(time_range[tidx],freq_range[fidx],atom_arr,M_wg,M_atom)
-        #     end
-        # end
     end
     output_s = copy(sdata(output))
     output_matrix_s = copy(sdata(output_matrix))
@@ -83,12 +68,12 @@ function calc_gamma1d_3d(pos,t)
 end
 
 #function transmission3d(t::Float64,detune::Float64,atom_arr::Array{Int64,2},M_wg::Array{Complex{Float64},3},M_atom::Array{Complex{Float64},3})
-@inbounds function transmission3d(t::Float64,detune::Float64,atom_arr::Array{Int64,2})    
+@inbounds function transmission3d(t::Float64,detune::Float64,atom_arr::Array{Int64,2})
     # calculate transmission at time t and detuning detune.
     # put wg from -2*Lattice_unit to first atom, and after last atom to lattice_width+2*lattice_unit
     atom_num::Int64 = size(atom_arr,2)
     M_wg = Array{Complex{Float64}}(undef,2,2,atom_num-1)
-    M_atom::Array{Complex{Float64},3} = Array{Complex{Float64}}(undef,2,2,atom_num)    
+    M_atom::Array{Complex{Float64},3} = Array{Complex{Float64}}(undef,2,2,atom_num)
     x_point_k::Float64 = pi/lattice_unit::Float64
     k::Float64 = x_point_k*k_ratio::Float64
     #generate waveguide transfer matrix
@@ -99,7 +84,7 @@ end
         if any(isnan.(pos[1:3]))
             wg_transfer_matrix(M_atom,i,0.0,0.0)
         else
-            atom_pos[i] += pos[3]            
+            atom_pos[i] += pos[3]
             g1d = calc_gamma1d_3d(pos[1:3],t)
             f_0 = Fields.value(pos[1:3],t)*(-2.08e4) #*20.8/(-1e-3)
             #vector shift
@@ -111,10 +96,10 @@ end
             atom_transfer_matrix(M_atom,i,detune,f_0,g1d,gamma_prime::Float64)
         end
     end
-    
+
     @assert all(lattice_width+3*lattice_unit .> atom_pos .> -3*lattice_unit)
     ldiff::Vector{Float64} = diff(atom_pos)
-    
+
     for i = 1:length(ldiff)
         wg_transfer_matrix(M_wg,i,k,ldiff[i])
     end
