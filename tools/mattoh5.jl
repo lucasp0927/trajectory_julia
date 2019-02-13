@@ -14,16 +14,23 @@ function dicttoh5(filename, data)
 end
 
 function write_dataset(fid,name,data::T) where T<:Number
+    @info name
     write(fid,name,data)
 end
 
 function write_dataset(fid,name,data::Array{T}) where T<:Real
-    write(fid,name,data)
+    @info name
+    #write(fid,name,data)
+    fid[name,"shuffle",(),"compress",5] = data    
 end
 
 function write_dataset(fid,name,data::Array{T}) where T<:Complex
-    write(fid,name*"/real",real(data))
-    write(fid,name*"/imag",imag(data))        
+    @info name
+    #write(fid,name*"/real",real(data))
+    #write(fid,name*"/imag",imag(data))
+    g = g_create(fid,name)
+    g["real","shuffle",(),"compress",5] = real(data)
+    g["imag","shuffle",(),"compress",5] = imag(data)    
 end
 
 function h5todict(filename)
@@ -61,7 +68,11 @@ end
 
 function check_data(data1,data2)
     @info "Check data consistency"
-    @assert isequal(data1,data2)
+    if isequal(data1,data2)
+        @info "pass"
+    else
+        @error "data error"
+    end
     # keys1 = keys(data1)
     # keys2 = keys(data2)
     # @info keys1
