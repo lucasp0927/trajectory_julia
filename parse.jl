@@ -92,6 +92,7 @@ function parse_config(filename,parsed_args)
     @debug "fields config:" convert(Dict{Any,Any},copy(fields_config))
     @debug "trajsolver config:" convert(Dict{Any,Any},copy(trajsolver_config))
     @debug "job config:" convert(Dict{Any,Any},copy(job_config))
+    # override job scan range
     if length(parsed_args["irange"]) != 0
         job_config["range_i_start"] = parsed_args["irange"][1]
         job_config["range_i_end"] = parsed_args["irange"][2]

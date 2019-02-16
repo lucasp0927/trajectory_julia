@@ -18,9 +18,9 @@ function prepare()
     config_file,input_file,output_file = parsed_args["config"],parsed_args["infile"],parsed_args["outfile"]
     fields_config,trajsolver_config,job_config,material_config = parse_config(config_file,parsed_args)
     #info("building field $([k for k in keys(fields_config)][1])...")
-    name = ascii([k for k in keys(fields_config)][1])
     @info "building field $name"
-    sfn = Fields.buildAndAlign(fields_config["field"],0,name=ascii([k for k in keys(fields_config)][1]))
+    fname = ascii([k for k in keys(fields_config)][1])    
+    sfn = Fields.buildAndAlign(fields_config["field"],0,name=fname)
 #    Fields.save_field(sfn)
     #probe_sfn = Fields.buildAndAlign(job_config["probe"]["field"],0,name=ascii([k for k in keys(job_config["probe"])][1]))
     mat_sfn = Fields.buildAndAlign(material_config["material"],0,name=ascii([k for k in keys(material_config)][1]))
