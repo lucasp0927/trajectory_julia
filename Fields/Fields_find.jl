@@ -19,9 +19,9 @@ find_field_bool(criteria::Function,f::T) where {T <:Union{ScalarField, VectorFie
 
 function test_find()
     for dim in [2,3]
-        float_sf1 = zero_field(ScalarField{Float64,dim},repmat([100],dim),repmat([0.0],dim),repmat([100.0],dim),name = "float_sf1")
-        float_sf2 = zero_field(ScalarField{Float64,dim},repmat([100],dim),repmat([0.0],dim),repmat([100.0],dim),name = "float_sf2")
-        complex_sf = zero_field(ScalarField{Complex{Float64},dim},repmat([100],dim),repmat([0.0],dim),repmat([100.0],dim),name = "complex_sf")
+        float_sf1 = zero_field(ScalarField{Float64,dim},repeat([100],dim),repeat([0.0],dim),repeat([100.0],dim),name = "float_sf1")
+        float_sf2 = zero_field(ScalarField{Float64,dim},repeat([100],dim),repeat([0.0],dim),repeat([100.0],dim),name = "float_sf2")
+        complex_sf = zero_field(ScalarField{Complex{Float64},dim},repeat([100],dim),repeat([0.0],dim),repeat([100.0],dim),name = "complex_sf")
         sfn1 = ScalarFieldNode{dim}([float_sf1,complex_sf],name = ascii("sfn1"))
         @test find_field(x->x.name==ascii("sfn1"),sfn1) == sfn1
         @test find_field(x->x.name==ascii("float_sf1"),sfn1) == float_sf1
@@ -32,9 +32,9 @@ function test_find()
         @test find_field(x->x.name==ascii("float_sf1"),sfn2) == float_sf1
         @test find_field(x->x.name==ascii("float_sf2"),sfn2) == float_sf2
         @test find_field(x->x.name==ascii("complex_sf"),sfn2) == complex_sf
-        float_vf1 = zero_field(VectorField{Float64,dim},repmat([100],dim),repmat([0.0],dim),repmat([100.0],dim),name="float_vf1")
-        float_vf2 = zero_field(VectorField{Float64,dim},repmat([100],dim),repmat([0.0],dim),repmat([100.0],dim),name="float_vf2")
-        complex_vf = zero_field(VectorField{Complex{Float64},dim},repmat([100],dim),repmat([0.0],dim),repmat([100.0],dim),name="complex_vf")
+        float_vf1 = zero_field(VectorField{Float64,dim},repeat([100],dim),repeat([0.0],dim),repeat([100.0],dim),name="float_vf1")
+        float_vf2 = zero_field(VectorField{Float64,dim},repeat([100],dim),repeat([0.0],dim),repeat([100.0],dim),name="float_vf2")
+        complex_vf = zero_field(VectorField{Complex{Float64},dim},repeat([100],dim),repeat([0.0],dim),repeat([100.0],dim),name="complex_vf")
         vfn1 = VectorFieldNode{dim}([float_vf1,complex_vf],name=ascii("vfn1"))
         @test find_field(x->x.name==ascii("vfn1"),vfn1) == vfn1
         @test find_field(x->x.name==ascii("float_vf1"),vfn1) == float_vf1
