@@ -40,15 +40,17 @@ end
 end
 
 function test_zero_field()
-    res = [rand(2:100),rand(2:100),rand(2:100)]
-    for dim in [2,3]
-        for DT in [Float64, Complex{Float64}]
-            zero_f = zero_field(ScalarField{DT,dim},res[1:dim],repmat([0.0],dim),repmat([100.0],dim))
-            @test size(zero_f.field) == tuple(res[1:dim]...)
-            @test all(map(x->x==0.0,sdata(zero_f.field)))
-            zero_f = zero_field(VectorField{DT,dim},res[1:dim],repmat([0.0],dim),repmat([100.0],dim))
-            @test size(zero_f.field) == (3,res[1:dim]...)
-            @test all(map(x->x==0.0,sdata(zero_f.field)))
+    res = [2,2,2]
+    @testset "test zero_field" begin
+        for dim in [2,3]
+            for DT in [Float64, Complex{Float64}]
+                zero_f = zero_field(ScalarField{DT,dim},res[1:dim],repeat([0.0],dim),repeat([100.0],dim))
+                @test size(zero_f.field) == tuple((repeat([100.0],dim)./res[1:dim])...)
+                @test all(map(x->x==0.0,sdata(zero_f.field)))
+                zero_f = zero_field(VectorField{DT,dim},res[1:dim],repeat([0.0],dim),repeat([100.0],dim))
+                @test size(zero_f.field) == (3,(repeat([100.0],dim)./res[1:dim])...)
+                @test all(map(x->x==0.0,sdata(zero_f.field)))
+            end
         end
     end
 end
