@@ -39,7 +39,7 @@ function init!(sfn::ScalarFieldNode,mat_sfn::ScalarFieldNode)
     fields = copyfield(sfn)
     material = copyfield(mat_sfn)
     #eval_scaling!(fields)
-    #eval_scaling!(material)    
+    #eval_scaling!(material)
     GC.gc()
 end
 
@@ -61,7 +61,7 @@ function init_potential!(sfn::ScalarFieldNode)
     GC.gc()
     fields = copyfield(sfn)
     #eval_scaling!(fields)
-    #eval_scaling!(material)    
+    #eval_scaling!(material)
     GC.gc()
 end
 

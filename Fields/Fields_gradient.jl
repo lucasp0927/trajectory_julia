@@ -26,9 +26,9 @@ end
 @fastmath @inbounds function sample2!(f::ScalarField{T, 2}, pos::Vector{Float64}, t::Real) where T <: ComplexOrFloat
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
     f.rel_pos[2] = pos[2]-f.position[2]::Float64
-    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))-1
+    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))
     f.pidx[2] = f.pidx[1]+3
-    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))-1
+    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))
     f.pidx[4] = f.pidx[3]+3
 #    rel_pos::Vector{Float64} = pos-f.position::Vector{Float64}
 #    pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64}))
@@ -54,13 +54,13 @@ end
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
     f.rel_pos[2] = pos[2]-f.position[2]::Float64
     f.rel_pos[3] = pos[3]-f.position[3]::Float64
-    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))-1
+    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))
     f.pidx[2] = f.pidx[1]+3
-    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))-1
+    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))
     f.pidx[4] = f.pidx[3]+3
-    f.pidx[5] = round(Int64,div(f.rel_pos[3],f.res[3]::Float64))-1
+    f.pidx[5] = round(Int64,div(f.rel_pos[3],f.res[3]::Float64))
     f.pidx[6] = f.pidx[5]+3
-    f.s::Float64 = (f.scaling::Function)(t)::Float64
+    f.s::Float64 = Base.invokelatest(f.scaling::Function,t)::Float64
     sample_field(f,f.pidx,f.s)
 end
 
@@ -74,9 +74,9 @@ end
 @fastmath @inbounds function sample2!(f::VectorField{T, 2}, pos::Vector{Float64}, t::Real) where T <: ComplexOrFloat
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
     f.rel_pos[2] = pos[2]-f.position[2]::Float64
-    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))-1
+    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))
     f.pidx[2] = f.pidx[1]+3
-    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))-1
+    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))
     f.pidx[4] = f.pidx[3]+3
     # rel_pos::Vector{Float64} = pos-f.position::Vector{Float64}
     # pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64}))
@@ -121,11 +121,11 @@ end
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
     f.rel_pos[2] = pos[2]-f.position[2]::Float64
     f.rel_pos[3] = pos[3]-f.position[3]::Float64
-    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))-1
+    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))
     f.pidx[2] = f.pidx[1]+3
-    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))-1
+    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))
     f.pidx[4] = f.pidx[3]+3
-    f.pidx[5] = round(Int64,div(f.rel_pos[3],f.res[3]::Float64))-1
+    f.pidx[5] = round(Int64,div(f.rel_pos[3],f.res[3]::Float64))
     f.pidx[6] = f.pidx[5]+3
     f.s = convert(Complex{Float64},Base.invokelatest(f.scaling::Function,t))::Complex{Float64}
     #f.s::Complex{Float64} = convert(Complex{Float64},(f.scaling::Function)(t))
@@ -243,7 +243,7 @@ end
         end
         add_vector_field!(f.sample,f.vf_sample)
     end
-    f.s = (f.scaling::Function)(t)::Float64
+    f.s = Base.invokelatest(f.scaling::Function,t)::Float64
     #scal!(64,f.s,f.sample,1)
     f.sample .*= f.s
     #    scale_sample!(f.sample,s)
@@ -285,7 +285,7 @@ end
             res = $(Array{Float64}(undef,2))
             res .= (sfn::ScalarFieldNode).res
             sample2!(sfn::ScalarFieldNode,pos,t)
-            @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
+            @nexprs 2 j->x[j] = rem((pos[j]-sfn.position[j]),res[j])/res[j]
             return bicubicInterpolate((sfn::ScalarFieldNode).sample,x)::Float64
         else
             return zero(Float64)
@@ -300,7 +300,7 @@ end
             res = $(Array{Float64}(undef,3))
             res[:] = (sfn::ScalarFieldNode).res
             sample2!(sfn::ScalarFieldNode,pos,t)
-            @nexprs 3 j->x[j] = rem(pos[j],res[j])/res[j]
+            @nexprs 3 j->x[j] = rem(pos[j]-sfn.position[j],res[j])/res[j]
             return tricubicInterpolate((sfn::ScalarFieldNode).sample,x)::Float64
         else
             return zero(Float64)
@@ -323,7 +323,7 @@ end
         pos = $(Array{Float64}(undef,2))
         res[:] = (sfn::ScalarFieldNode).res
         pos[:] = @view posvel[1:2]
-        @nexprs 2 j->x[j] = rem(pos[j],res[j])/res[j]
+        @nexprs 2 j->x[j] = rem((pos[j]-sfn.position[j]),res[j])/res[j]
         sample2!(sfn::ScalarFieldNode,pos,t)
         grad[1] = posvel[3]
         grad[2] = posvel[4]
@@ -338,7 +338,7 @@ end
         pos = $(Array{Float64}(undef,3))
         res[:] = (sfn::ScalarFieldNode).res
         pos[:] = posvel[1:3]
-        @nexprs 3 j->x[j] = rem(pos[j],res[j])/res[j]
+        @nexprs 3 j->x[j] = rem(pos[j]-sfn.position[j],res[j])/res[j]
         sample2!(sfn::ScalarFieldNode,pos,t)
         grad[1] = posvel[4]
         grad[2] = posvel[5]
@@ -351,8 +351,8 @@ end
 #Test
 ################################################
 function sa_init(S::SharedArray)
-    for id in Base.localindexes(S)
-        S[id] = func4_3d2(ind2sub(S,id)...)
+    for id in SharedArrays.localindices(S)
+        S[id] = func4_3d2(Tuple(CartesianIndices(S)[id])...)
     end
 end
 func1_2d(x,y)=(sin(x/40.0)+cos(y/20.0))*exp(-((x-200.0)^2+(y-200.0)^2)/100^2)::Float64
@@ -374,115 +374,119 @@ function func4_3d2(i,x,y,z)
 end
 
 function test_gradient()
-    #test with both scalar and vector field
-    test_num = 10000
-
-    ######################
-    #Test 2D value
-    ######################
-    @info "testing 2D value"
-    #prepare interpolation
-    f1 = convert(Array{Float64},[func1_2d(x,y) for x = 1:1000, y = 1:1000])
-    f2 = convert(Array{Float64},[func2_2d(x,y) for x = 1:1000, y = 1:1000])
-    f3 = convert(Array{Float64},[func3_2d(x,y) for x = 1:1000, y = 1:1000])
-    f4 = convert(Array{Float64},[norm(func4_2d(x,y))^2 for x = 1:1000, y = 1:1000])
-    f2d = f1.+f2.+f3.+f4
-    f_itp_2d = interpolate(f2d, BSpline(Cubic(Line())), OnGrid())
-    #prepare field
-    float_sf1_2d = func2field(ScalarField{Float64,2},func1_2d,repmat([2500],2),repmat([1.0],2),repmat([999.0],2),name = "float_sf1")
-    float_sf2_2d = func2field(ScalarField{Float64,2},func2_2d,repmat([2000],2),repmat([1.0],2),repmat([999.0],2),name = "float_sf2")
-    float_sf3_2d = func2field(ScalarField{Float64,2},func3_2d,repmat([1001],2),repmat([1.0],2),repmat([999.0],2),name = "float_sf3")
-    float_vf1_2d = func2field(VectorField{Complex{Float64},2},func4_2d,repmat([1001],2),repmat([1.0],2),repmat([999.0],2),name = "float_vf1",scaling_expr=parse("t->1.0+0.0im"))
-    sfn1_2d = ScalarFieldNode{2}([float_sf1_2d,float_sf3_2d,float_sf2_2d],name = ascii("sfn1"))
-    sfn2_2d = ScalarFieldNode{2}([float_vf1_2d,sfn1_2d],name = ascii("sfn2"))
-    align_field_tree!(sfn2_2d)
-    sum_err = 0.0
-    @time for i = 1:test_num
-        x = 996.0*rand()+2.0
-        y = 996.0*rand()+2.0
-        ref = f_itp_2d[x,y]
-        result = value([x,y],0.0,sfn2_2d)
-        sum_err += abs(ref-result)/abs(ref)
+    @testset "test field gradient" begin
+        #test with both scalar and vector field
+        test_num = 10000
+        ######################
+        #Test 2D value
+        ######################
+        @info "testing 2D value"
+        #prepare interpolation
+        f1 = convert(Array{Float64},[func1_2d(x,y) for x = 1:1000, y = 1:1000])
+        f2 = convert(Array{Float64},[func2_2d(x,y) for x = 1:1000, y = 1:1000])
+        f3 = convert(Array{Float64},[func3_2d(x,y) for x = 1:1000, y = 1:1000])
+        f4 = convert(Array{Float64},[norm(func4_2d(x,y))^2 for x = 1:1000, y = 1:1000])
+        f2d = f1.+f2.+f3.+f4
+        f_itp_2d = interpolate(f2d, BSpline(Cubic(Line(Interpolations.OnGrid()))))
+        #prepare field
+        float_sf1_2d = func2field(ScalarField{Float64,2},func1_2d,repeat([1.0],2),repeat([0.5],2),repeat([998.0],2),name = "float_sf1")
+        float_sf2_2d = func2field(ScalarField{Float64,2},func2_2d,repeat([2.1],2),repeat([1.0],2),repeat([998.0],2),name = "float_sf2")
+        float_sf3_2d = func2field(ScalarField{Float64,2},func3_2d,repeat([1.5],2),repeat([1.2],2),repeat([998.0],2),name = "float_sf3")
+        float_vf1_2d = func2field(VectorField{Complex{Float64},2},func4_2d,repeat([2.2],2),repeat([0.9],2),repeat([998.0],2),name = "float_vf1",scaling_expr=Meta.parse("t->1.0+0.0im"))
+        sfn1_2d = ScalarFieldNode{2}([float_sf1_2d,float_sf3_2d,float_sf2_2d],name = ascii("sfn1"))
+        sfn2_2d = ScalarFieldNode{2}([float_vf1_2d,sfn1_2d],name = ascii("sfn2"))
+        align_field_tree!(sfn2_2d)
+        sum_err = 0.0
+        for i = 1:test_num
+            x = 979.0*rand()+10.0
+            y = 979.0*rand()+10.0
+            ref = f_itp_2d(x,y)
+            result = value([x,y],0.0,sfn2_2d)
+            sum_err += abs(ref-result)/abs(ref)
+        end
+        err = sum_err/test_num
+        @info "err: "*string(err)
+        @test err<1e-2
+        ######################
+        #Test 3D value
+        ######################
+        @info "testing 3D value"
+        #prepare interpolation
+        @info "init f1_s"
+        f1_s = SharedArray{Float64}((1000,1000,100), init = S -> S[SharedArrays.localindices(S)] = map(x->func1_3d(Tuple(CartesianIndices(S)[x])...),SharedArrays.localindices(S)))
+        @info "init f2_s"
+        f2_s = SharedArray{Float64}((1000,1000,100), init = S -> S[SharedArrays.localindices(S)] = map(x->func2_3d(Tuple(CartesianIndices(S)[x])...),SharedArrays.localindices(S)))
+        @info "init f3_s"
+        f3_s = SharedArray{Float64}((1000,1000,100), init = S -> S[SharedArrays.localindices(S)] = map(x->func3_3d(Tuple(CartesianIndices(S)[x])...),SharedArrays.localindices(S)))
+        @info "init f4_s"
+        f4_s = SharedArray{Complex{Float64}}((3,1000,1000,100), init=sa_init)
+        for i = 1:100
+            x = rand(1:1000)
+            y = rand(1:1000)
+            z = rand(1:100)
+            @assert f4_s[:,x,y,z] == func4_3d(x,y,z)
+        end
+        @info "init f4_norm2_s"
+        f4norm2_s = SharedArray{Float64}((1000,1000,100), init = S -> S[SharedArrays.localindices(S)] = map(x->norm(func4_3d(Tuple(CartesianIndices(S)[x])...))^2,SharedArrays.localindices(S)))
+        f3d = f1_s.+f2_s.+f3_s.+f4norm2_s
+        f_itp_3d = interpolate(f3d, BSpline(Cubic(Line(Interpolations.OnGrid()))))
+        #prepare field
+        #float_sf1_3d = ScalarField{Float64,3}(f1_s,[1.0,1.0,1.0],[999.0,999.0,99.0],name="float_sf1")
+        float_sf1_3d = func2field(ScalarField{Float64,3},func1_3d,repeat([1.0],3),repeat([0.5],3),[999.0,999.0,99.0],name = "float_sf1")
+        #float_sf2_3d = ScalarField{Float64,3}(f2_s,[1.0,1.0,1.0],[999.0,999.0,99.0],name="float_sf2")
+        float_sf2_3d = func2field(ScalarField{Float64,3},func2_3d,repeat([2.1],3),repeat([1.0],3),[999.0,999.0,99.0],name = "float_sf2")
+        #float_sf3_3d = ScalarField{Float64,3}(f3_s,[1.0,1.0,1.0],[999.0,999.0,99.0],name="float_sf3")
+        float_sf3_3d = func2field(ScalarField{Float64,3},func3_3d,repeat([2.5],3),repeat([1.2],3),[999.0,999.0,99.0],name = "float_sf3")
+        #float_vf1_3d = VectorField{Complex{Float64},3}(f4_s,[1.0,1.0,1.0],[999.0,999.0,99.0],name="float_vf1")
+        float_vf1_3d = func2field(VectorField{Complex{Float64},3},func4_3d,repeat([2.2],3),repeat([0.9],3),[999.0,999.0,99.0],name = "float_vf1",scaling_expr=Meta.parse("t->1.0+0.0im"))
+        sfn1_3d = ScalarFieldNode{3}([float_sf1_3d,float_sf3_3d],name = ascii("sfn1"))
+        sfn2_3d = ScalarFieldNode{3}([float_vf1_3d,sfn1_3d,float_sf2_3d],name = ascii("sfn2"))
+        #    sfn2_3d = ScalarFieldNode{3}([float_vf1_3d,sfn1_3d],name = ascii("sfn2"))
+        align_field_tree!(sfn2_3d)
+        sum_err = 0.0
+        for i = 1:test_num
+            x = 970.0*rand()+10.0
+            y = 970.0*rand()+10.0
+            z = 90.0*rand()+5.0
+            ref = f_itp_3d(x,y,z)
+            result = value([x,y,z],0.0,sfn2_3d)
+            sum_err += abs(ref-result)/abs(ref)
+        end
+        err = sum_err/test_num
+        @info "err: "*string(err)
+        @test err<1e-2
+        ######################
+        #Test 2D gradient
+        ######################
+        grad = zeros(Float64,4)
+        sum_err = 0.0
+        for i = 1:test_num
+            x = 970.0*rand()+1.0
+            y = 970.0*rand()+1.0
+            ref = -1.0*Interpolations.gradient(f_itp_2d,x,y)*KB/M_CS
+            gradient!(0.0,[x,y,0.0,0.0],grad,sfn2_2d)
+            result = grad[3:4]
+            sum_err += norm(ref-result)/norm(ref)
+        end
+        err = sum_err/test_num
+        @info "err: "*string(err)
+        @test err<1e-2
+        ######################
+        #Test 3D gradient
+        ######################
+        grad = zeros(Float64,6)
+        sum_err = 0.0
+        for i = 1:test_num
+            x = 970.0*rand()+10.0
+            y = 970.0*rand()+10.0
+            z = 90.0*rand()+5.0
+            ref = -1.0*Interpolations.gradient(f_itp_3d,x,y,z)*KB/M_CS
+            gradient!(0.0,[x,y,z,0.0,0.0,0.0],grad,sfn2_3d)
+            result = grad[4:6]
+            sum_err += norm(ref-result)/norm(ref)
+        end
+        err = sum_err/test_num
+        @info "err: "*string(err)
+        @test err<1e-2
     end
-    err = sum_err/test_num
-    @info "err: "*string(err)
-    @test err<3e-2
-    ######################
-    #Test 3D value
-    ######################
-    @info "testing 3D value"
-    #prepare interpolation
-    f1_s = SharedArray{Float64}((1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->func1_3d(ind2sub(S,x)...),Base.localindexes(S)))
-    f2_s = SharedArray{Float64}((1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->func2_3d(ind2sub(S,x)...),Base.localindexes(S)))
-    f3_s = SharedArray{Float64}( (1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->func3_3d(ind2sub(S,x)...),Base.localindexes(S)))
-    f4_s = SharedArray{Complex{Float64}}((3,1000,1000,100), init=sa_init)
-    for i = 1:100
-        x = rand(1:1000)
-        y = rand(1:1000)
-        z = rand(1:100)
-        @test f4_s[:,x,y,z] == func4_3d(x,y,z)
-    end
-    #=
-    f4_s = SharedArray(Complex{Float64},3,1000,1000,100)
-    @time    for x = 1:1000,y=1:1000,z=1:100
-    f4_s[:,x,y,z] = func4_3d(x,y,z)
-    end
-    =#
-    f4norm2_s = SharedArray{Float64}((1000,1000,100), init = S -> S[Base.localindexes(S)] = map(x->norm(func4_3d(ind2sub(S,x)...))^2,Base.localindexes(S)))
-    f3d = f1_s.+f2_s.+f3_s.+f4norm2_s
-    f_itp_3d = interpolate(f3d, BSpline(Cubic(Line())), OnGrid())
-    #prepare field
-    float_sf1_3d = ScalarField{Float64,3}(f1_s,[1.0,1.0,1.0],[999.0,999.0,99.0],name="float_sf1")
-    float_sf2_3d = ScalarField{Float64,3}(f2_s,[1.0,1.0,1.0],[999.0,999.0,99.0],name="float_sf2")
-    float_sf3_3d = ScalarField{Float64,3}(f3_s,[1.0,1.0,1.0],[999.0,999.0,99.0],name="float_sf3")
-    float_vf1_3d = VectorField{Complex{Float64},3}(f4_s,[1.0,1.0,1.0],[999.0,999.0,99.0],name="float_vf1")
-    sfn1_3d = ScalarFieldNode{3}([float_sf1_3d,float_sf3_3d],name = ascii("sfn1"))
-    sfn2_3d = ScalarFieldNode{3}([float_vf1_3d,sfn1_3d,float_sf2_3d],name = ascii("sfn2"))
-#    sfn2_3d = ScalarFieldNode{3}([float_vf1_3d,sfn1_3d],name = ascii("sfn2"))
-    align_field_tree!(sfn2_3d)
-    sum_err = 0.0
-    @time    for i = 1:test_num
-        x = 996.0*rand()+2.0
-        y = 996.0*rand()+2.0
-        z = 96.0*rand()+2.0
-        ref = f_itp_3d[x,y,z]
-        result = value([x,y,z],0.0,sfn2_3d)
-        sum_err += abs(ref-result)/abs(ref)
-    end
-    err = sum_err/test_num
-    @info "err: "*string(err)
-    @test err<3e-2
-    ######################
-    #Test 2D gradient
-    ######################
-    grad = zeros(Float64,4)
-    sum_err = 0.0
-    @time    for i = 1:test_num
-        x = 996.0*rand()+2.0
-        y = 996.0*rand()+2.0
-        ref = -1.0*gradient(f_itp_2d,x,y)*KB/M_CS
-        gradient!(0.0,[x,y,0.0,0.0],grad,sfn2_2d)
-        result = grad[3:4]
-        sum_err += norm(ref-result)/norm(ref)
-    end
-    err = sum_err/test_num
-    @info "err: "*string(err)
-    @test err<3e-2
-    ######################
-    #Test 3D gradient
-    ######################
-    grad = zeros(Float64,6)
-    sum_err = 0.0
-    @time    for i = 1:test_num
-        x = 998.0*rand()+1.0
-        y = 998.0*rand()+1.0
-        z = 98.0*rand()+1.0
-        ref = -1.0*gradient(f_itp_3d,x,y,z)*KB/M_CS
-        gradient!(0.0,[x,y,z,0.0,0.0,0.0],grad,sfn2_3d)
-        result = grad[4:6]
-        sum_err += norm(ref-result)/norm(ref)
-    end
-    err = sum_err/test_num
-    @info "err: "*string(err)
-    @test err<3e-2
 end

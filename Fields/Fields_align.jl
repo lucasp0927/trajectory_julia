@@ -114,7 +114,7 @@ end
     N::Int64 = ndims(new_field)
     quote
 #        old_field_itp = interpolate(old_field, BSpline(Cubic(Flat())), OnGrid())
-        old_field_itp = interpolate(old_field, BSpline(Cubic(Periodic(Interpolations.OnGrid()))))
+        old_field_itp = extrapolate(interpolate(old_field, BSpline(Cubic(Flat(Interpolations.OnGrid())))),Line())
         apos::Vector{Float64} = align_geo["pos"]
         ares::Vector{Float64} = align_geo["res"]
         uapos::Vector{Float64} = unalign_geo["pos"]
@@ -130,22 +130,17 @@ end
     end
 end
 
-function test_align()
-    #2D
-    #=
-    sfn2
-    |_____
-    |    |
-    fsf2  sfn1
-    |_____
-    |    |
-    fsf1   csf
-    =#
-    function test_on_grid(f,fn)
+##### test functions
+    function test_on_grid(f,fn,res)
         sizerem = map(rem,(f.position .- fn.position),res)
-        @test all(map(≈,sizerem,res) | map(x->x<1e-10,sizerem))
+        if !(all(map(≈,sizerem,res) .| map(x->x<1e-10,sizerem)))
+            return false
+        end
         sizerem = map(rem,(f.position .+ f.size .- fn.position),res)
-        @test all(map(≈,sizerem,res) | map(x->x<1e-10,sizerem))
+        if !(all(map(≈,sizerem,res) .| map(x->x<1e-10,sizerem)))
+            return false
+        end
+        return true
     end
 
     function test_interpolate(f::ScalarField{T, 2}, func) where T <: ComplexOrFloat
@@ -162,43 +157,7 @@ function test_align()
             end
         end
         err = sum/(sz[1]*sz[2])
-        @info string(err)
-        return err
-    end
-    function test_interpolate(f::ScalarField{T, 3}, func) where T <: ComplexOrFloat
-        @info "testing $(f.name)"
-        sz = size(f.field)
-        pos = f.position
-        res = f.res
-        sum = 0.0
-        for i = 1:sz[1], j = 1:sz[2], k = 1:sz[3]
-            x_test = (i-1)*res[1]+pos[1]
-            y_test = (j-1)*res[2]+pos[2]
-            z_test = (k-1)*res[3]+pos[3]
-            if abs(func(x_test,y_test,z_test)) != 0.0
-                sum += abs(func(x_test,y_test,z_test) - f.field[i,j,k])/abs(func(x_test,y_test,z_test))
-            end
-        end
-        err = sum/(sz[1]*sz[2]*sz[3])
-        @info string(err)
-        return err
-    end
-    function test_interpolate(f::VectorField{T, 3}, func) where T <: ComplexOrFloat
-        @info "testing $(f.name)"
-        sz = size(f.field)
-        pos = f.position
-        res = f.res
-        sum = 0.0
-        for i = 1:sz[2], j = 1:sz[3], k = 1:sz[4]
-            x_test = (i-1)*res[1]+pos[1]
-            y_test = (j-1)*res[2]+pos[2]
-            z_test = (k-1)*res[3]+pos[3]
-            if norm(func(x_test,y_test,z_test)) != 0.0
-                sum += norm(func(x_test,y_test,z_test) .- f.field[:,i,j,k])/norm(func(x_test,y_test,z_test))
-            end
-        end
-        err = sum/(sz[1]*sz[2]*sz[3]*3)
-        @info string(err)
+        @info "err: "*string(err)
         return err
     end
 
@@ -215,104 +174,155 @@ function test_align()
                 sum += norm(func(x_test,y_test) .- f.field[:,i,j])/norm(func(x_test,y_test))
             end
         end
-        err = sum/(3*sz[1]*sz[2])
-        @info string(err)
+        err = sum/(3*sz[2]*sz[3])
+        @info "err: "*string(err)
         return err
     end
 
+    function test_interpolate(f::ScalarField{T, 3}, func) where T <: ComplexOrFloat
+        @info "testing $(f.name)"
+        sz = size(f.field)
+        pos = f.position
+        res = f.res
+        sum = 0.0
+        for i = 1:sz[1], j = 1:sz[2], k = 1:sz[3]
+            x_test = (i-1)*res[1]+pos[1]
+            y_test = (j-1)*res[2]+pos[2]
+            z_test = (k-1)*res[3]+pos[3]
+            if abs(func(x_test,y_test,z_test)) != 0.0
+                sum += abs(func(x_test,y_test,z_test) - f.field[i,j,k])/abs(func(x_test,y_test,z_test))
+            end
+        end
+        err = sum/(sz[1]*sz[2]*sz[3])
+        @info "err: "*string(err)
+        return err
+    end
+
+    function test_interpolate(f::VectorField{T, 3}, func) where T <: ComplexOrFloat
+        @info "testing $(f.name)"
+        sz = size(f.field)
+        pos = f.position
+        res = f.res
+        sum = 0.0
+        for i = 1:sz[2], j = 1:sz[3], k = 1:sz[4]
+            x_test = (i-1)*res[1]+pos[1]
+            y_test = (j-1)*res[2]+pos[2]
+            z_test = (k-1)*res[3]+pos[3]
+            if norm(func(x_test,y_test,z_test)) != 0.0
+                sum += norm(func(x_test,y_test,z_test) .- f.field[:,i,j,k])/norm(func(x_test,y_test,z_test))
+            end
+        end
+        err = sum/(sz[2]*sz[3]*sz[4]*3)
+        @info "err: "*string(err)
+        return err
+    end
+
+function test_align()
+    #2D
+    #=
+    sfn2
+    |_____
+    |    |
+    fsf2  sfn1
+    |_____
+    |    |
+    fsf1   csf
+    =#
     #2D scalar
-    @info "2D Scalar"
-    func1 = (x,y)->(sin(x/10.0)+cos(y/10.0))*exp(-((x-75.0)^2+(y-75.0)^2)/20^2)
-    func2 = (x,y)->(sin(x/10.0)+cos(y/10.0))*exp(-((x-50.0)^2+(y-50.0)^2)/30^2)
-    func3 = (x,y)->(sin(x/10.0)+cos(y/10.0))*exp(-((x-50.0)^2+(y-50.0)^2)/20^2)
-    float_sf1 = func2field(ScalarField{Float64,2},func1,repeat([1000],2), repeat([50.1],2),repeat([50.0],2),name = "float_sf1")
-    float_sf2 = func2field(ScalarField{Float64,2},func2,repeat([101],2),repeat([0.0],2),repeat([100.0],2),name = "float_sf2")
-    complex_sf = func2field(ScalarField{Complex{Float64},2},func3,repeat([1000],2),repeat([19.9],2),repeat([60.0],2),name = "complex_sf")
-    sfn1 = ScalarFieldNode{2}([float_sf1,complex_sf],name = ascii("sfn1"))
-    sfn2 = ScalarFieldNode{2}([float_sf2,sfn1],name = ascii("sfn2"))
-    align_field_tree!(sfn2)
-    # test if all points ar on grid
-    @test float_sf1.res ≈ float_sf2.res ≈ complex_sf.res ≈ sfn1.res ≈ sfn2.res
-    res = sfn2.res
-    test_on_grid(float_sf1,sfn2)
-    test_on_grid(float_sf2,sfn2)
-    test_on_grid(complex_sf,sfn2)
-    test_on_grid(sfn1,sfn2)
-    test_on_grid(sfn2,sfn2)
-    # test interpolation result
-    @test test_interpolate(float_sf1,func1) <= 1e-2
-    @test test_interpolate(float_sf2,func2) <= 1e-2
-    @test test_interpolate(complex_sf,func3)<= 1e-2
+    @testset "test Fields align" begin
+        @info "2D Scalar"
+        func1 = (x,y)->(sin(x/10.0)+cos(y/10.0))*exp(-((x-75.0)^2+(y-75.0)^2)/20^2)
+        func2 = (x,y)->(sin(x/10.0)+cos(y/10.0))*exp(-((x-50.0)^2+(y-50.0)^2)/30^2)
+        func3 = (x,y)->(sin(x/10.0)+cos(y/10.0))*exp(-((x-50.0)^2+(y-50.0)^2)/20^2)
+        float_sf1 = func2field(ScalarField{Float64,2},func1,repeat([0.05],2), repeat([50.1],2),repeat([50.0],2),name = "float_sf1")
+        float_sf2 = func2field(ScalarField{Float64,2},func2,repeat([1.0],2),repeat([0.0],2),repeat([100.0],2),name = "float_sf2")
+        complex_sf = func2field(ScalarField{Complex{Float64},2},func3,repeat([0.06],2),repeat([19.9],2),repeat([60.0],2),name = "complex_sf")
+        sfn1 = ScalarFieldNode{2}([float_sf1,complex_sf],name = ascii("sfn1"))
+        sfn2 = ScalarFieldNode{2}([float_sf2,sfn1],name = ascii("sfn2"))
+        align_field_tree!(sfn2)
+        # test if all points are on grid
+        @test float_sf1.res ≈ float_sf2.res ≈ complex_sf.res ≈ sfn1.res ≈ sfn2.res
+        res = sfn2.res
+        @test test_on_grid(float_sf1,sfn2,res)
+        @test test_on_grid(float_sf2,sfn2,res)
+        @test test_on_grid(complex_sf,sfn2,res)
+        @test test_on_grid(sfn1,sfn2,res)
+        @test test_on_grid(sfn2,sfn2,res)
+        # test interpolation result
+        @test test_interpolate(float_sf1,func1) <= 1e-2
+        @test test_interpolate(float_sf2,func2) <= 1e-2
+        @test test_interpolate(complex_sf,func3)<= 1e-2
 
 
-    #2D vector
-    @info "2D Vector"
-    func1 = (x,y)->repeat([(sin(x/10.0)+cos(y/10.0))*exp(-((x-75.0)^2+(y-75.0)^2)/20^2)],3)
-    func2 = (x,y)->repeat([(sin(x/10.0)+cos(y/10.0))*exp(-((x-50.0)^2+(y-50.0)^2)/30^2)],3)
-    func3 = (x,y)->repeat([(sin(x/10.0)+cos(y/10.0))*exp(-((x-50.0)^2+(y-50.0)^2)/20^2)],3)
-    float_vf1 = func2field(VectorField{Float64,2},func1,repeat([1000],2), repeat([50.1],2),repeat([50.0],2),name = "float_vf1")
-    float_vf2 = func2field(VectorField{Float64,2},func2,repeat([101],2),repeat([0.0],2),repeat([100.0],2),name = "float_vf2")
-    complex_vf = func2field(VectorField{Complex{Float64},2},func3,repeat([1000],2),repeat([19.9],2),repeat([60.0],2),name = "complex_vf")
-    vfn1 = VectorFieldNode{2}([float_vf1,complex_vf],name = ascii("vfn1"))
-    vfn2 = VectorFieldNode{2}([float_vf2,vfn1],name = ascii("vfn2"))
-    align_field_tree!(vfn2)
-    # test if all points ar on grid
-    @test float_vf1.res ≈ float_vf2.res ≈ complex_vf.res ≈ vfn1.res ≈ vfn2.res
-    res = vfn2.res
-    test_on_grid(float_vf1,vfn2)
-    test_on_grid(float_vf2,vfn2)
-    test_on_grid(complex_vf,vfn2)
-    test_on_grid(vfn1,vfn2)
-    test_on_grid(vfn2,vfn2)
-    # test interpolation result
-    @test test_interpolate(float_vf1,func1) <= 1e-2
-    @test test_interpolate(float_vf2,func2) <= 1e-2
-    @test test_interpolate(complex_vf,func3)<= 1e-2
+        #2D vector
+        @info "2D Vector"
+        func1 = (x,y)->repeat([(sin(x/10.0)+cos(y/10.0))*exp(-((x-75.0)^2+(y-75.0)^2)/20^2)],3)
+        func2 = (x,y)->repeat([(sin(x/10.0)+cos(y/10.0))*exp(-((x-50.0)^2+(y-50.0)^2)/30^2)],3)
+        func3 = (x,y)->repeat([(sin(x/10.0)+cos(y/10.0))*exp(-((x-50.0)^2+(y-50.0)^2)/20^2)],3)
+        float_vf1 = func2field(VectorField{Float64,2},func1,repeat([0.05],2), repeat([50.1],2),repeat([50.0],2),name = "float_vf1")
+        float_vf2 = func2field(VectorField{Float64,2},func2,repeat([1.0],2),repeat([0.0],2),repeat([100.0],2),name = "float_vf2")
+        complex_vf = func2field(VectorField{Complex{Float64},2},func3,repeat([0.06],2),repeat([19.9],2),repeat([60.0],2),name = "complex_vf")
+        vfn1 = VectorFieldNode{2}([float_vf1,complex_vf],name = ascii("vfn1"))
+        vfn2 = VectorFieldNode{2}([float_vf2,vfn1],name = ascii("vfn2"))
+        align_field_tree!(vfn2)
+        # test if all points ar on grid
+        @test float_vf1.res ≈ float_vf2.res ≈ complex_vf.res ≈ vfn1.res ≈ vfn2.res
+        res = vfn2.res
+        @test test_on_grid(float_vf1,vfn2,res)
+        @test test_on_grid(float_vf2,vfn2,res)
+        @test test_on_grid(complex_vf,vfn2,res)
+        @test test_on_grid(vfn1,vfn2,res)
+        @test test_on_grid(vfn2,vfn2,res)
+        # test interpolation result
+        @test test_interpolate(float_vf1,func1) <= 1e-2
+        @test test_interpolate(float_vf2,func2) <= 1e-2
+        @test test_interpolate(complex_vf,func3)<= 1e-2
 
-    #3D Scalar
-    @info "3D Scalar"
-    func1 = (x,y,z)->(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-75.0)^2+(y-75.0)^2)/20^2)*exp(-(z-5.0)^2/(2.0^2))
-    func2 = (x,y,z)->(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-50.0)^2+(y-50.0)^2)/30^2)*exp(-(z-5.0)^2/(2.0^2))
-    func3 = (x,y,z)->(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-50.0)^2+(y-50.0)^2)/20^2)*exp(-(z-5.0)^2/(2.0^2))
-    float_sf1 = func2field(ScalarField{Float64,3},func1,[1000,1000,11],[50.0,50.0,0.0],[50.0,50.0,10.0],name = "float_sf1")
-    float_sf2 = func2field(ScalarField{Float64,3},func2,[101,101,11],[0.0,0.0,0.0],[100.0,100.0,10.0],name = "float_sf2")
-    complex_sf = func2field(ScalarField{Complex{Float64},3},func3,[1000,1000,11],[20.0,20.0,0.0],[60.0,60.0,10.0],name = "complex_sf")
-    sfn1 = ScalarFieldNode{3}([float_sf1,complex_sf],name = ascii("sfn1"))
-    sfn2 = ScalarFieldNode{3}([float_sf2,sfn1],name = ascii("sfn2"))
-    align_field_tree!(sfn2)
-    # test if all points ar on grid
-    @test float_sf1.res ≈ float_sf2.res ≈ complex_sf.res ≈ sfn1.res ≈ sfn2.res
-    res = sfn2.res
-    test_on_grid(float_sf1,sfn2)
-    test_on_grid(float_sf2,sfn2)
-    test_on_grid(complex_sf,sfn2)
-    test_on_grid(sfn1,sfn2)
-    test_on_grid(sfn2,sfn2)
-    # test interpolation result
-    @test test_interpolate(float_sf1,func1) <= 1e-2
-    @test test_interpolate(float_sf2,func2) <= 1e-2
-    @test test_interpolate(complex_sf,func3)<= 1e-2
-    #3D Vector
-    @info "3D Vector"
-    func1 = (x,y,z)->repeat([(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-75.0)^2+(y-75.0)^2)/20^2)*exp(-(z-5.0)^2/(2.0^2))],3)
-    func2 = (x,y,z)->repeat([(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-50.0)^2+(y-50.0)^2)/30^2)*exp(-(z-5.0)^2/(2.0^2))],3)
-    func3 = (x,y,z)->repeat([(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-50.0)^2+(y-50.0)^2)/20^2)*exp(-(z-5.0)^2/(2.0^2))],3)
-    float_vf1 = func2field(VectorField{Float64,3},func1,[1000,1000,11],[50.0,50.0,0.0],[50.0,50.0,10.0],name = "float_vf1")
-    float_vf2 = func2field(VectorField{Float64,3},func2,[101,101,11],[0.0,0.0,0.0],[100.0,100.0,10.0],name = "float_vf2")
-    complex_vf = func2field(VectorField{Complex{Float64},3},func3,[1000,1000,11],[19.9,19.9,0.0],[60.0,60.0,10.0],name = "complex_vf")
-    vfn1 = VectorFieldNode{3}([float_vf1,complex_vf],name = ascii("vfn1"))
-    vfn2 = VectorFieldNode{3}([float_vf2,vfn1],name = ascii("vfn2"))
-    align_field_tree!(vfn2)
-    # test if all points ar on grid
-    @test float_vf1.res ≈ float_vf2.res ≈ complex_vf.res ≈ vfn1.res ≈ vfn2.res
-    res = vfn2.res
-    test_on_grid(float_vf1,vfn2)
-    test_on_grid(float_vf2,vfn2)
-    test_on_grid(complex_vf,vfn2)
-    test_on_grid(vfn1,vfn2)
-    test_on_grid(vfn2,vfn2)
-    # test interpolation result
-    @test test_interpolate(float_vf1,func1) <= 1e-2
-    @test test_interpolate(float_vf2,func2) <= 1e-2
-    @test test_interpolate(complex_vf,func3)<= 1e-2
+        #3D Scalar
+        @info "3D Scalar"
+        func1 = (x,y,z)->(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-75.0)^2+(y-75.0)^2)/20^2)*exp(-(z-5.0)^2/(2.0^2))
+        func2 = (x,y,z)->(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-50.0)^2+(y-50.0)^2)/30^2)*exp(-(z-5.0)^2/(2.0^2))
+        func3 = (x,y,z)->(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-50.0)^2+(y-50.0)^2)/20^2)*exp(-(z-5.0)^2/(2.0^2))
+        float_sf1 = func2field(ScalarField{Float64,3},func1,[0.05,0.05,1.0],[50.0,50.0,0.0],[50.0,50.0,10.0],name = "float_sf1")
+        float_sf2 = func2field(ScalarField{Float64,3},func2,[1.0,1.0,1.0],[0.0,0.0,0.0],[100.0,100.0,10.0],name = "float_sf2")
+        complex_sf = func2field(ScalarField{Complex{Float64},3},func3,[0.06,0.06,1.0],[20.0,20.0,0.0],[60.0,60.0,10.0],name = "complex_sf")
+        sfn1 = ScalarFieldNode{3}([float_sf1,complex_sf],name = ascii("sfn1"))
+        sfn2 = ScalarFieldNode{3}([float_sf2,sfn1],name = ascii("sfn2"))
+        align_field_tree!(sfn2)
+        # test if all points ar on grid
+        @test float_sf1.res ≈ float_sf2.res ≈ complex_sf.res ≈ sfn1.res ≈ sfn2.res
+        res = sfn2.res
+        @test test_on_grid(float_sf1,sfn2,res)
+        @test test_on_grid(float_sf2,sfn2,res)
+        @test test_on_grid(complex_sf,sfn2,res)
+        @test test_on_grid(sfn1,sfn2,res)
+        @test test_on_grid(sfn2,sfn2,res)
+        # test interpolation result
+        @test test_interpolate(float_sf1,func1) <= 1e-2
+        @test test_interpolate(float_sf2,func2) <= 1e-2
+        @test test_interpolate(complex_sf,func3)<= 1e-2
+        #3D Vector
+        @info "3D Vector"
+        func1 = (x,y,z)->repeat([(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-75.0)^2+(y-75.0)^2)/20^2)*exp(-(z-5.0)^2/(2.0^2))],3)
+        func2 = (x,y,z)->repeat([(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-50.0)^2+(y-50.0)^2)/30^2)*exp(-(z-5.0)^2/(2.0^2))],3)
+        func3 = (x,y,z)->repeat([(sin(x/10.0)+cos(y/10.0)+sin(z/1.0))*exp(-((x-50.0)^2+(y-50.0)^2)/20^2)*exp(-(z-5.0)^2/(2.0^2))],3)
+        float_vf1 = func2field(VectorField{Float64,3},func1,[0.05,0.05,1.0],[50.0,50.0,0.0],[50.0,50.0,10.0],name = "float_vf1")
+        float_vf2 = func2field(VectorField{Float64,3},func2,[1.0,1.0,1.0],[0.0,0.0,0.0],[100.0,100.0,10.0],name = "float_vf2")
+        complex_vf = func2field(VectorField{Complex{Float64},3},func3,[0.06,0.06,1.0],[19.9,19.9,0.0],[60.0,60.0,10.0],name = "complex_vf")
+        vfn1 = VectorFieldNode{3}([float_vf1,complex_vf],name = ascii("vfn1"))
+        vfn2 = VectorFieldNode{3}([float_vf2,vfn1],name = ascii("vfn2"))
+        align_field_tree!(vfn2)
+        # test if all points ar on grid
+        @test float_vf1.res ≈ float_vf2.res ≈ complex_vf.res ≈ vfn1.res ≈ vfn2.res
+        res = vfn2.res
+        @test test_on_grid(float_vf1,vfn2,res)
+        @test test_on_grid(float_vf2,vfn2,res)
+        @test test_on_grid(complex_vf,vfn2,res)
+        @test test_on_grid(vfn1,vfn2,res)
+        @test test_on_grid(vfn2,vfn2,res)
+        # test interpolation result
+        @test test_interpolate(float_vf1,func1) <= 1e-2
+        @test test_interpolate(float_vf2,func2) <= 1e-2
+        @test test_interpolate(complex_vf,func3)<= 1e-2
+    end
 end

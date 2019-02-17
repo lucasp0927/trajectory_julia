@@ -92,55 +92,65 @@ end
 end
 
 function test_interpolate()
-    @info "2D interpolation test"
-    x_grid = linspace(0.0,1.0,11)
-    y_grid = linspace(0.0,1.0,11)
-    # sample = [1.0 1.1 1.2 1.3;
-    #           1.1 1.2 1.4 1.5;
-    #           1.2 1.5 1.7 1.8;
-    #           1.5 1.8 1.9 2.1]
-    # sample = sample + 0.2*rand(4,4)
-    sample = [1.0+x/8+x^2/10+y/8+y^2/12 for x=1:4,y=1:4]
-    sample_itp = interpolate(sample, BSpline(Cubic(Line())), OnGrid())
-    sum_err = 0.0
-    for x in x_grid,y in y_grid
-        my_itp = bicubicInterpolate(sample,[x,y])
-        sum_err += abs(sample_itp[2.0+x,2.0+y]-my_itp)/my_itp
-    end
-    err = sum_err/(length(x_grid)*length(y_grid))
-    @info "err: "*string(err)
-    @test err < 3e-2
-    #test gradient
-    sum_err = 0.0
-    for x in x_grid,y in y_grid
-        my_itp = itp_bicubic_grad(sample,[x,y],[1.0,1.0])
-        sum_err += norm(gradient(sample_itp,2.0+x,2.0+y)-my_itp)/norm(my_itp)
-    end
-    err = sum_err/(length(x_grid)*length(y_grid))
-    @info "err: "*string(err)
-    @test err < 3e-2
+    @testset "test interpolation" begin
+        @info "2D interpolation test"
+        x_grid = range(0.0,stop=1.0,length=11)
+        y_grid = range(0.0,stop=1.0,length=11)
+        # sample = [1.0 1.1 1.2 1.3;
+        #           1.1 1.2 1.4 1.5;
+        #           1.2 1.5 1.7 1.8;
+        #           1.5 1.8 1.9 2.1]
+        # sample = sample + 0.2*rand(4,4)
+        sample = [1.0+x/8+x^2/10+y/8+y^2/12 for x=1:4,y=1:4]
+        large_sample = [1.0+x/8+x^2/10+y/8+y^2/12 for x=0:5,y=0:5]
+        #sample_itp = interpolate(sample, BSpline(Cubic(Line())), OnGrid())
+        sample_itp = extrapolate(interpolate(large_sample, BSpline(Cubic(Line(Interpolations.OnGrid())))),Line())
+        sum_err = 0.0
+        for x in x_grid,y in y_grid
+            my_itp = bicubicInterpolate(sample,[x,y])
+            itp_result = sample_itp(3.0+x,3.0+y)
+            sum_err += abs(itp_result-my_itp)/abs(itp_result)
+        end
+        err = sum_err/(length(x_grid)*length(y_grid))
+        @info "err: "*string(err)
+        @test err < 1e-2
+        #test gradient
+        sum_err = 0.0
+        for x in x_grid,y in y_grid
+            my_itp = itp_bicubic_grad(sample,[x,y],[1.0,1.0])
+            itp_result = Interpolations.gradient(sample_itp,3.0+x,3.0+y)
+            sum_err += norm(itp_result-my_itp)/norm(itp_result)
+        end
+        err = sum_err/(length(x_grid)*length(y_grid))
+        @info "err: "*string(err)
+        @test err < 1e-2
 
-    @info "3D interpolation test"
-    x_grid = linspace(0.0,1.0,11)
-    y_grid = linspace(0.0,1.0,11)
-    z_grid = linspace(0.0,1.0,11)
-    sample = [1.0+x/8+y/8+z/8+x^2/10+y^2/10+z^2/10 for x=1:4,y=1:4,z=1:4]
-    sample_itp = interpolate(sample, BSpline(Cubic(Line())), OnGrid())
-    sum_err = 0.0
-    for x in x_grid,y in y_grid, z in z_grid
-        my_itp = tricubicInterpolate(sample,[x,y,z])
-        sum_err += abs(sample_itp[2.0+x,2.0+y,2.0+z]-my_itp)/my_itp
-    end
-    err = sum_err/(length(x_grid)*length(y_grid)*length(z_grid))
-    @info "err: "*string(err)
-    @test err < 3e-2
+        @info "3D interpolation test"
+        x_grid = range(0.0,stop=1.0,length=11)
+        y_grid = range(0.0,stop=1.0,length=11)
+        z_grid = range(0.0,stop=1.0,length=11)
+        sample = [1.0+x/8+y/8+z/8+x^2/10+y^2/10+z^2/10 for x=1:4,y=1:4,z=1:4]
+        large_sample = [1.0+x/8+y/8+z/8+x^2/10+y^2/10+z^2/10 for x=0:5,y=0:5,z=0:5]
+        #sample_itp = interpolate(sample, BSpline(Cubic(Line())), OnGrid())
+        sample_itp = extrapolate(interpolate(large_sample, BSpline(Cubic(Line(Interpolations.OnGrid())))),Line())
+        sum_err = 0.0
+        for x in x_grid,y in y_grid, z in z_grid
+            my_itp = tricubicInterpolate(sample,[x,y,z])
+            itp_result = sample_itp(3.0+x,3.0+y,3.0+z)
+            sum_err += abs(itp_result-my_itp)/abs(itp_result)
+        end
+        err = sum_err/(length(x_grid)*length(y_grid)*length(z_grid))
+        @info "err: "*string(err)
+        @test err < 1e-2
 
-    sum_err = 0.0
-    for x in x_grid,y in y_grid, z in z_grid
-        my_itp = itp_tricubic_grad(sample,[x,y,z],[1.0,1.0,1.0])
-        sum_err += norm(gradient(sample_itp,2.0+x,2.0+y,2.0+z)-my_itp)/norm(my_itp)
+        sum_err = 0.0
+        for x in x_grid,y in y_grid, z in z_grid
+            my_itp = itp_tricubic_grad(sample,[x,y,z],[1.0,1.0,1.0])
+            itp_result = Interpolations.gradient(sample_itp,3.0+x,3.0+y,3.0+z)
+            sum_err += norm(itp_result-my_itp)/norm(itp_result)
+        end
+        err = sum_err/(length(x_grid)*length(y_grid)*length(z_grid))
+        @info "err: "*string(err)
+        @test err < 1e-2
     end
-    err = sum_err/(length(x_grid)*length(y_grid)*length(z_grid))
-    @info "err: "*string(err)
-    @test err < 3e-2
 end
