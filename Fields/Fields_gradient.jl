@@ -26,9 +26,9 @@ end
 @fastmath @inbounds function sample2!(f::ScalarField{T, 2}, pos::Vector{Float64}, t::Real) where T <: ComplexOrFloat
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
     f.rel_pos[2] = pos[2]-f.position[2]::Float64
-    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))
+    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))-1
     f.pidx[2] = f.pidx[1]+3
-    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))
+    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))-1
     f.pidx[4] = f.pidx[3]+3
 #    rel_pos::Vector{Float64} = pos-f.position::Vector{Float64}
 #    pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64}))
@@ -54,11 +54,11 @@ end
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
     f.rel_pos[2] = pos[2]-f.position[2]::Float64
     f.rel_pos[3] = pos[3]-f.position[3]::Float64
-    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))
+    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))-1
     f.pidx[2] = f.pidx[1]+3
-    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))
+    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))-1
     f.pidx[4] = f.pidx[3]+3
-    f.pidx[5] = round(Int64,div(f.rel_pos[3],f.res[3]::Float64))
+    f.pidx[5] = round(Int64,div(f.rel_pos[3],f.res[3]::Float64))-1
     f.pidx[6] = f.pidx[5]+3
     f.s::Float64 = (f.scaling::Function)(t)::Float64
     sample_field(f,f.pidx,f.s)
@@ -74,9 +74,9 @@ end
 @fastmath @inbounds function sample2!(f::VectorField{T, 2}, pos::Vector{Float64}, t::Real) where T <: ComplexOrFloat
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
     f.rel_pos[2] = pos[2]-f.position[2]::Float64
-    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))
+    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))-1
     f.pidx[2] = f.pidx[1]+3
-    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))
+    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))-1
     f.pidx[4] = f.pidx[3]+3
     # rel_pos::Vector{Float64} = pos-f.position::Vector{Float64}
     # pidx::Vector{Int64} = round(Int64,div(rel_pos,f.res::Vector{Float64}))
@@ -121,11 +121,11 @@ end
     f.rel_pos[1] = pos[1]-f.position[1]::Float64
     f.rel_pos[2] = pos[2]-f.position[2]::Float64
     f.rel_pos[3] = pos[3]-f.position[3]::Float64
-    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))
+    f.pidx[1] = round(Int64,div(f.rel_pos[1],f.res[1]::Float64))-1
     f.pidx[2] = f.pidx[1]+3
-    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))
+    f.pidx[3] = round(Int64,div(f.rel_pos[2],f.res[2]::Float64))-1
     f.pidx[4] = f.pidx[3]+3
-    f.pidx[5] = round(Int64,div(f.rel_pos[3],f.res[3]::Float64))
+    f.pidx[5] = round(Int64,div(f.rel_pos[3],f.res[3]::Float64))-1
     f.pidx[6] = f.pidx[5]+3
     f.s = convert(Complex{Float64},Base.invokelatest(f.scaling::Function,t))::Complex{Float64}
     #f.s::Complex{Float64} = convert(Complex{Float64},(f.scaling::Function)(t))
