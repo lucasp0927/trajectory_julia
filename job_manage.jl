@@ -51,25 +51,25 @@ function job_inner_loop(config,sfn,input_prefix,output_prefix,flags,idx::Vector)
     if flags["spectrum_flag"]
         if sim_type == "2D"
             for gm_name in config["spectrum"]["name"]
-                probe_sfn = Fields.buildAndAlign(config["probe"]["field"]["fields"][gm_name],0,name=gm_name);                
+                probe_sfn = Fields.buildAndAlign(config["probe"]["field"]["fields"][gm_name],0,name=gm_name);
                 @info "Initialize TrajAnalyzer..."
                 TrajAnalyzer.init_probe_parallel!(probe_sfn)
                 @info "Calculating Spectrum for 2D probe "*gm_name*"..."
                 TrajAnalyzer.spectrum2d(output_prefix, gm_name)
-                Fields.cleanupfield(probe_sfn)
+                Fields.cleanupfield!(probe_sfn)
             end
         elseif sim_type == "3D"
             for gm_name in config["spectrum"]["name"]
-                Fields.cleanupfield(probe_sfn)                
+                Fields.cleanupfield!(probe_sfn)
                 probe_sfn = Fields.buildAndAlign(config["probe"]["field"]["fields"][gm_name],0,name=gm_name);
                 @info "Initialize TrajAnalyzer..."
                 TrajAnalyzer.init_probe_parallel!(probe_sfn)
                 @info "Calculating Spectrum for 3D probe "*gm_name*"..."
                 TrajAnalyzer.spectrum3d(output_prefix, gm_name)
-                Fields.cleanupfield(probe_sfn)                                
-            end            
+                Fields.cleanupfield!(probe_sfn)
+            end
         else
-            @error "unrecognized simulation type: "* sim_type            
+            @error "unrecognized simulation type: "* sim_type
         end
     end
     if flags["movie_data_flag"]

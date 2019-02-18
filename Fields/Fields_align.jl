@@ -1,3 +1,7 @@
+function align_field_arr!(f_arr::Vector{ScalarFieldNode{N}}) where N
+    map(align_field_tree!,f_arr)
+end
+
 function align_field_tree!(f::T) where T<:FieldNode
     set_geometry!(f)
     #debug("align top field node $(f.name)")

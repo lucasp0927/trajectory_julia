@@ -4,12 +4,12 @@ using Interpolations
 using Base.Cartesian
 using Test
 using Logging
-#TODO: align use Flat() boundary condition, add more
 #TODO: getindex overload for fields.
-#TODO: support different resolution for different area
-global fields
+#global fields
+#global value
+global fields_arr
 global material
-global value
+
 include("../fileio.jl")
 include("Fields_type.jl")
 
