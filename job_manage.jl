@@ -1,9 +1,9 @@
 include("flux.jl")
 #include("benchmark.jl")
 using Optim
-using PyCall
+#using PyCall
 
-@pyimport scipy.optimize as opt
+#@pyimport scipy.optimize as opt
 function job_inner_loop(config,sfn,input_prefix,output_prefix,flags,idx::Vector)
     if config["type"] == "single-scan-scaling"
         @assert length(idx) == 1
@@ -154,14 +154,14 @@ function optimize_ngamma1d_func(x,knobs,config::Dict,sfn::ScalarFieldNode)
     return ngamma1d
 end
 
-function optimize_ngamma1d(config::Dict,sfn::ScalarFieldNode)
+#function optimize_ngamma1d(config::Dict,sfn::ScalarFieldNode)
 #    result = optimize(f,[0.5,0.5],store_trace = true,extended_trace = true)
-    knobs = config["knobs"]
+#    knobs = config["knobs"]
 #    result = optimize(x->optimize_ngamma1d_func(x,knobs,config,sfn),zeros(length(knobs)), NelderMead(),OptimizationOptions(store_trace = true,extended_trace = true))
-    result = opt.basinhopping(x->optimize_ngamma1d_func(x,knobs,config,sfn),zeros(length(knobs)),niter=5,stepsize=1,minimizer_kwargs=Dict("method"=>"Powell"));
-    println(result)
+#    result = opt.basinhopping(x->optimize_ngamma1d_func(x,knobs,config,sfn),zeros(length(knobs)),niter=5,stepsize=1,minimizer_kwargs=Dict("method"=>"Powell"));
+#    println(result)
     #result = optimize(x->optimize_ngamma1d_func(x,knobs,config,sfn),[1.0,-1.0,5.0], NelderMead(),OptimizationOptions(store_trace = true,extended_trace = true))
-end
+#end
 
 function get_large_init_range(init_range)
     #find the largest area that contain the whole init_range
