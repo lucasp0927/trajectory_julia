@@ -1,4 +1,4 @@
-function find_field(criteria::Function,f_arr::Vector{ScalarFieldNode})
+function find_field(criteria::Function,f_arr::Vector{ScalarFieldNode{N}}) where N
     #currently only find one result
     for sfn in f_arr
         try

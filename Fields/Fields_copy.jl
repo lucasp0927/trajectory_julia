@@ -1,3 +1,7 @@
+function copyfield(f_arr::Vector{ScalarFieldNode{N}}) where N
+    return map(copyfield, f_arr)
+end
+
 function copyfield(f::ScalarField{T,N}) where {T <: ComplexOrFloat, N}
     @debug "copy ScalarField "*f.name
     return ScalarField{T,N}(f.field,f.position,f.size,scaling_expr=f.scaling_expr,name=f.name)

@@ -279,7 +279,7 @@ end
 end
 
 function value(pos::Vector{Float64},t::Real)
-    value(pos,t,fields::ScalarFieldNode)
+    value(pos,t,fields_arr)
 end
 
 function value(pos::Vector{Float64},t::Real,f_arr::Vector{ScalarFieldNode{N}}) where N
@@ -317,11 +317,13 @@ end
 end
 
 function gradient!(t::Float64,posvel::Vector{Float64},grad::Vector{Float64})
-    gradient!(t,posvel,grad,fields)
+    #gradient!(t,posvel,grad,fields_arr::Vector{ScalarFieldNode})
+    gradient!(t,posvel,grad,fields_arr)
 end
 
 function gradient_odejl!(grad::Vector{Float64},posvel::Vector{Float64},p,t::Float64,)
-    gradient!(t,posvel,grad,fields)
+    #gradient!(t,posvel,grad,fields_arr::Vector{ScalarFieldNode})
+    gradient!(t,posvel,grad,fields_arr)
 end
 
 function gradient!(t::Float64,posvel::Vector{Float64},grad::Vector{Float64},f_arr::Vector{ScalarFieldNode{N}}) where N
@@ -340,8 +342,8 @@ end
         pos[:] = @view posvel[1:2]
         @nexprs 2 j->x[j] = rem((pos[j]-sfn.position[j]),res[j])/res[j]
         sample2!(sfn::ScalarFieldNode,pos,t)
-        grad[1] += posvel[3]
-        grad[2] += posvel[4]
+        grad[1] = posvel[3]
+        grad[2] = posvel[4]
         grad[3:4] += -1.0*itp_bicubic_grad((sfn::ScalarFieldNode).sample,x,res)*KB/M_CS
     end
 end
@@ -355,9 +357,9 @@ end
         pos[:] = posvel[1:3]
         @nexprs 3 j->x[j] = rem(pos[j]-sfn.position[j],res[j])/res[j]
         sample2!(sfn::ScalarFieldNode,pos,t)
-        grad[1] += posvel[4]
-        grad[2] += posvel[5]
-        grad[3] += posvel[6]
+        grad[1] = posvel[4]
+        grad[2] = posvel[5]
+        grad[3] = posvel[6]
         grad[4:6] += -1.0*itp_tricubic_grad((sfn::ScalarFieldNode).sample,x,res)*KB/M_CS
     end
 end

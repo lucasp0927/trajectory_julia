@@ -52,7 +52,7 @@ function calculate_traj()
         #cleanup shared array
         finalize_shared_array!(traj_s)
         finalize_shared_array!(trajectories.traj)
-        @everywhere GC.gc()        
+        @everywhere GC.gc()
     else
         err("Unknown init-type in atom-config.")
     end
@@ -75,8 +75,8 @@ function calculate_traj()
     result = Dict(
                   "traj"=>traj_save,
                   "tspan"=>tspan_save,
-                  "pos"=>Fields.fields.position,
-                  "siz"=>Fields.fields.size,
+                  # "pos"=>Fields.fields.position,
+                  # "siz"=>Fields.fields.size,
                   "reltol"=>reltol,
                   "abstol"=>abstol
     )
@@ -185,7 +185,7 @@ function solve_eq_of_motion_3d(f::Function, y0::Vector{Float64}, t::Vector{Float
     #t_diff = mean(diff(t));
     #cb_material = PeriodicCallback(check_material_boundary!,t_diff) #not working
     cb_material = DiscreteCallback(condition_material,affect_material!)
-    cb = cb_material    
+    cb = cb_material
     #periodic boundary condition with callback
     prob = ODEProblem(f,y0,(t[1],t[end]))
     if (periodic_condition::PeriodicCondition).periodic_condition::Bool
@@ -201,7 +201,7 @@ function solve_eq_of_motion_3d(f::Function, y0::Vector{Float64}, t::Vector{Float
         cb_boundary = DiscreteCallback(condition_boundary,affect_boundary!)
         cb = CallbackSet(cb_boundary,cb)
     end
-    
+
     sol = solve(prob, solver_alg; abstol=abstol,reltol=reltol,callback=cb,saveat=t)
     #copy results to yout
     j = 1

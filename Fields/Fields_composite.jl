@@ -1,6 +1,7 @@
 #####composition: for FieldNode object return composite field at time t, replace scaling with x->1.0
 function composite(range::Vector{Float64},t::Float64)
-    res = (fields::ScalarFieldNode).res
+    #res = (fields::ScalarFieldNode).res
+    res = get_field_arr_res()
     @assert range[2]-range[1] > res[1] "composition range too small"
     @assert range[4]-range[3] > res[2] "composition range too small"
     xx = range[1]:res[1]:range[2]
@@ -40,9 +41,9 @@ function composite_with_position(range::Vector{Float64},t::Float64,res::Vector{F
     return output
 end
 
-function composite(f::T, t::Real) where T <: Union{VectorField, ScalarField}
-    return T(f.field*f.scaling(t),f.position,f.size,scaling = t->1.0)
-end
+#function composite(f::T, t::Real) where T <: Union{VectorField, ScalarField}
+#    return T(f.field*f.scaling(t),f.position,f.size,scaling = t->1.0)
+#end
 
 #=
 function composite{N}(f::VectorFieldNode{N},t::Real)

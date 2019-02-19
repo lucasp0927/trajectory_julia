@@ -40,6 +40,10 @@ function setscaling!(f::Field,scaling_expr::Expr)
     f.scaling = eval(scaling_expr)
 end
 
+function clean_scaling!(f_arr::Vector{ScalarFieldNode{N}}) where N
+    map(clean_scaling!, f_arr)
+end
+
 function clean_scaling!(f::ScalarField{T,N}) where {T <: ComplexOrFloat, N}
     f.scaling = t->0.0
 end
@@ -56,6 +60,10 @@ end
 function clean_scaling!(f::VectorFieldNode{N}) where N
     f.scaling=t->0.0
     map(clean_scaling!,f.fields)
+end
+
+function eval_scaling!(f_arr::Vector{ScalarFieldNode{N}}) where N
+    map(eval_scaling!, f_arr)
 end
 
 function eval_scaling!(f::ScalarField{T,N}) where {T <: ComplexOrFloat, N}

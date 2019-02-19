@@ -16,6 +16,55 @@ include("Fields_type.jl")
 # include all Fields files.
 include("Fields_function.jl")
 
+function init_parallel!(sfn_arr::Vector{ScalarFieldNode{N}}, mat_sfn::ScalarFieldNode) where N
+    @info "initializing Fields module..."
+    @sync begin
+        for p = 1:Distributed.nprocs()     #initialize Fields module on each processe
+            #set all scaling to t->0.0
+            clean_scaling!(sfn_arr)
+            clean_scaling!(mat_sfn)
+            @async Distributed.remotecall_fetch(init!,p,sfn_arr,mat_sfn)
+        end
+    end
+    eval_scaling!(sfn_arr)
+    eval_scaling!(mat_sfn)
+end
+
+function init!(sfn_arr::Vector{ScalarFieldNode{N}},mat_sfn::ScalarFieldNode) where N
+    global fields_arr
+    global material
+    fields_arr = 0
+    material= 0
+    GC.gc()
+    fields_arr = copyfield(sfn_arr)
+    material = copyfield(mat_sfn)
+    eval_scaling!(fields_arr)
+    eval_scaling!(material)
+    GC.gc()
+end
+
+function init_parallel_potential!(sfn_arr::Vector{ScalarFieldNode{N}}) where N
+    @info "initializing Fields module potential only..."
+    @sync begin
+        for p = 1:Distributed.nprocs()     #initialize Fields module on each processe
+            #set all scaling to t->0.0
+            clean_scaling!(sfn_arr)
+            @async Distributed.remotecall_fetch(init_potential!,p,sfn_arr)
+        end
+    end
+    eval_scaling!(sfn_arr)
+end
+
+function init_potential!(sfn_arr::Vector{ScalarFieldNode{N}}) where N
+    global fields_arr
+    fields_arr = 0
+    GC.gc()
+    fields_arr = copyfield(sfn_arr)
+    eval_scaling!(fields_arr)
+#    eval_scaling!(material)
+    GC.gc()
+end
+#=
 function init_parallel!(sfn::ScalarFieldNode, mat_sfn::ScalarFieldNode)
     @info "initializing Fields module..."
     @sync begin
@@ -64,6 +113,9 @@ function init_potential!(sfn::ScalarFieldNode)
     #eval_scaling!(material)
     GC.gc()
 end
+=#
+
+
 
 function reset!()
     global fields

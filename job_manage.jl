@@ -4,7 +4,7 @@ using Optim
 #using PyCall
 
 #@pyimport scipy.optimize as opt
-function job_inner_loop(config,sfn,input_prefix,output_prefix,flags,idx::Vector)
+function job_inner_loop(config,input_prefix,output_prefix,flags,idx::Vector)
     if config["type"] == "single-scan-scaling"
         @assert length(idx) == 1
     elseif config["type"] == "double-scan-scaling"
@@ -85,7 +85,7 @@ function job_inner_loop(config,sfn,input_prefix,output_prefix,flags,idx::Vector)
     # end
 end
 
-function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFieldNode,input_file,output_file,flags)
+function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn_arr::Vector{ScalarFieldNode{N}},input_file,output_file,flags) where N
     @assert config["type"] == "single-scan-scaling"
     range_i_start = config["range_i_start"]::Int
     range_i_end = config["range_i_end"]::Int
@@ -99,12 +99,12 @@ function single_scan_scaling(trajsolver_config::Dict,config::Dict,sfn::ScalarFie
             s = replace(s,"@i"=>float(i))
             @info "change scaling of field $field_name to ",s
             s_exp = Meta.parse(s)
-            Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn),s_exp)
+            Fields.setscaling!(Fields.find_field(x->x.name==ascii(field_name),sfn_arr),s_exp)
         end
-        Fields.init_parallel_potential!(sfn)
+        Fields.init_parallel_potential!(sfn_arr)
         input_prefix = input_file*string(i)
         output_prefix = output_file*string(i)
-        job_inner_loop(config,sfn,input_prefix,output_prefix,flags,[i])
+        job_inner_loop(config,input_prefix,output_prefix,flags,[i])
         GC.gc()
     end
 end

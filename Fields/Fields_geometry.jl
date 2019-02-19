@@ -1,3 +1,7 @@
+function get_field_arr_res()
+    vec(maximum(cat(map(x->vec(x.res), fields_arr)...,dims=2),dims=2))
+end
+
 function set_geometry!(f::T) where {T <: FieldNode}
     #memoize geo parameters
     geo = geometry(f)

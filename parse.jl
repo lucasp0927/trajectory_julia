@@ -80,11 +80,11 @@ function parse_config(filename,parsed_args)
             Dict{Any,Any}(
             "scaling"    => "t->0.0",
             "field-type" => "ScalarFieldNode",
-            "fields"     => Dict{Any,Any}("sphere"=>Dict{Any,Any}("scaling"=>"t->0.0","field-type"=>"ScalarField","D-type"=>"Float","init-type"=>"zero","dim"=>2,"pos"=>[0,0],"size"=>[10,10],"res"=>[1,1])),
+            "fields"     => Dict{Any,Any}("sphere"=>Dict{Any,Any}("scaling"=>"t->0.0","field-type"=>"ScalarField","D-type"=>"Float","init-type"=>"zero","dim"=>2,"pos"=>[0,0],"size"=>[10,10],"res"=>[1.0,1.0])),
             "dim"        => 2
         ))
     end
-    @assert length(keys(fields_config)) == 1 "more than 1 top level fieldnode!"
+    @info "Number of top field nodes: " * string(length(keys(fields_config)))
     trajsolver_config = config["trajsolver-config"]
     trajsolver_config["simulation-type"] = sim_type
     job_config = config["job-config"]
