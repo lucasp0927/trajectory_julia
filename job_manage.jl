@@ -60,7 +60,7 @@ function job_inner_loop(config,input_prefix,output_prefix,flags,idx::Vector)
             end
         elseif sim_type == "3D"
             for gm_name in config["spectrum"]["name"]
-                Fields.cleanupfield!(probe_sfn)
+                #Fields.cleanupfield!(probe_sfn)
                 probe_sfn = Fields.buildAndAlign(config["probe"]["field"]["fields"][gm_name],0,name=gm_name);
                 @info "Initialize TrajAnalyzer..."
                 TrajAnalyzer.init_probe_parallel!(probe_sfn)
