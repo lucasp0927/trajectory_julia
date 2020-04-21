@@ -54,7 +54,8 @@ end
 @inbounds function sample2!(f::ScalarFieldFunc{T, 2}, pos::Vector{Float64}, t::Real) where T <: ComplexOrFloat
     f.s::Float64 = Base.invokelatest(f.scaling, t)::Float64
     f.gradx_result::Float64 = Base.invokelatest(f.gradx,pos[1],pos[2],t)*f.s
-    f.grady_result::Float64 = Base.invokelatest(f.grady,pos[2],pos[2],t)*f.s
+    f.grady_result::Float64 = Base.invokelatest(f.grady,pos[1],pos[2],t)*f.s
+    f.func_result::Float64 = Base.invokelatest(f.func,pos[1],pos[2],t)*f.s
 #    @info "gradx_result $(f.gradx_result)"
 #    @info "grady_result $(f.gradys_result)"    
 end
@@ -196,7 +197,8 @@ end
 @inbounds function sample2!(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real)
     fill!((f.sample)::Array{Float64,2},zero(Float64))
     f.gradx_result = 0.0
-    f.grady_result = 0.0    
+    f.grady_result = 0.0
+    f.func_result = 0.0
     if f.one_vf_flag
         if in_field(f.fields[1],pos)
             sample2!(f.fields[1],pos,t)
@@ -210,7 +212,8 @@ end
                add_fields!(ff,f.sample,f.vf_sample)
                if (ff isa ScalarFieldFunc) | (ff isa ScalarFieldNode)
                    f.gradx_result += ff.gradx_result
-                   f.grady_result += ff.grady_result            
+                   f.grady_result += ff.grady_result
+                   f.func_result += ff.func_result
                end               
            end
        end
@@ -220,7 +223,8 @@ end
     f.s = Base.invokelatest(f.scaling, t)::Float64
     f.sample .*= f.s
     f.gradx_result *=f.s
-    f.grady_result *=f.s    
+    f.grady_result *=f.s
+    f.func_result *= f.s
     #scale!(f.sample,f.s)
 #        scal!(16,f.s,f.sample,1)
     #    scale_sample!(f.sample,s)
@@ -315,7 +319,8 @@ end
             res .= (sfn::ScalarFieldNode).res
             sample2!(sfn::ScalarFieldNode,pos,t)
             @nexprs 2 j->x[j] = rem((pos[j]-sfn.position[j]),res[j])/res[j]
-            return bicubicInterpolate((sfn::ScalarFieldNode).sample,x)::Float64
+            result = bicubicInterpolate((sfn::ScalarFieldNode).sample,x)::Float64 + sfn.func_result::Float64
+            return result
         else
             return zero(Float64)
         end
