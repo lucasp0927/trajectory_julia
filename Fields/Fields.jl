@@ -61,7 +61,6 @@ function init_potential!(sfn_arr::Vector{ScalarFieldNode{N}}) where N
     GC.gc()
     fields_arr = copyfield(sfn_arr)
     eval_scaling!(fields_arr)
-#    eval_scaling!(material)
     GC.gc()
 end
 #=

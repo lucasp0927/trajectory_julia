@@ -30,10 +30,13 @@ end) where {T <: ComplexOrFloat, N}
     f.dim = N
 end
 
-# function setscaling!(f::Field,scaling::Function)
-#     Base.error("scaling_expr not changed.")
-#     f.scaling = scaling
-# end
+function setscaling!(f::ScalarFieldFunc,scaling_expr::Expr)
+    f.scaling_expr = scaling_expr
+    f.scaling = eval(scaling_expr)
+    # f.func = eval(f.func_expr)
+    # f.gradx = eval(f.gradx_expr)
+    # f.grady = eval(f.grady_expr)        
+end
 
 function setscaling!(f::Field,scaling_expr::Expr)
     f.scaling_expr = scaling_expr
@@ -46,6 +49,13 @@ end
 
 function clean_scaling!(f::ScalarField{T,N}) where {T <: ComplexOrFloat, N}
     f.scaling = t->0.0
+end
+
+function clean_scaling!(f::ScalarFieldFunc{T,N}) where {T <: ComplexOrFloat, N}
+    f.scaling = t->0.0
+    f.func = t->0.0
+    f.gradx = t->0.0
+    f.grady = t->0.0    
 end
 
 function clean_scaling!(f::VectorField{T,N}) where {T <: ComplexOrFloat, N}
@@ -68,6 +78,13 @@ end
 
 function eval_scaling!(f::ScalarField{T,N}) where {T <: ComplexOrFloat, N}
     f.scaling = eval(f.scaling_expr)
+end
+
+function eval_scaling!(f::ScalarFieldFunc{T,N}) where {T <: ComplexOrFloat, N}
+    f.scaling = eval(f.scaling_expr)
+    f.func = eval(f.func_expr)
+    f.gradx = eval(f.gradx_expr)
+    f.grady = eval(f.grady_expr)    
 end
 
 function eval_scaling!(f::VectorField{T,N}) where {T <: ComplexOrFloat, N}

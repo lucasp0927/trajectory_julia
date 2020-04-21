@@ -15,7 +15,7 @@ function zero_field(::Type{VectorField{T, N}},res::Vector{Float64},pos::Vector{F
     return VectorField{T,N}(copy_to_sharedarray!(zeros(T,(3,arr_size...))),pos,f_size,scaling_expr = scaling_expr,name=ascii(name))
 end
 
-@generated function func2field(::Type{ScalarField{T, N}}, func::Function, res::Vector{Float64}, pos::Vector{Float64}, size::Vector{Float64}; scaling_expr::Expr = Meta.parse("t->1.0"), name::String = "scalarfield") where {T <: ComplexOrFloat, N}
+@generated function func2field(::Type{ScalarField{T, N}}, func::Expr, gradx::Expr, grady::Expr, res::Vector{Float64}, pos::Vector{Float64}, size::Vector{Float64}; scaling_expr::Expr = Meta.parse("t->1.0"), name::String = "scalarfield") where {T <: ComplexOrFloat, N}
     quote
         @assert length(res)==length(pos)==length(size)==N
         arr_size = @. floor(Int64,size/res)+1
@@ -25,15 +25,17 @@ end
         end
         @nexprs $N j->(x_j = range(pos[j],stop=pos[j]+f_size[j],length=arr_size[j]))
         f = zeros(T,arr_size...)
-        @nloops $N i j->1:length(x_j) begin
-            v = func((@ntuple $N k->x_k[i_k])...)
-            f[(@ntuple $N k->i_k)...] = v
-        end
-        return ScalarField{T,$N}(copy_to_sharedarray!(f::Array{T,$N}),pos,f_size,scaling_expr=scaling_expr,name=ascii(name))
+	# func_eval = eval(func)
+        # @nloops $N i j->1:length(x_j) begin
+        #     v = Base.invokelatest(func_eval,(@ntuple $N k->x_k[i_k])...)
+        #     f[(@ntuple $N k->i_k)...] = v
+        # end
+        return ScalarFieldFunc{T,$N}(copy_to_sharedarray!(f::Array{T,$N}),pos,res,f_size,func,gradx,grady,scaling_expr=scaling_expr,name=ascii(name))
+#        return ScalarField{T,$N}(copy_to_sharedarray!(f::Array{T,$N}),pos,f_size,scaling_expr=scaling_expr,name=ascii(name))        
     end
 end
 
-@generated function func2field(::Type{VectorField{T, N}}, func::Function, res::Vector{Float64}, pos::Vector{Float64}, size::Vector{Float64}; scaling_expr::Expr = Meta.parse("t->1.0"), name::String = "vectorfield") where {T <: ComplexOrFloat, N}
+@generated function func2field(::Type{VectorField{T, N}}, func::Expr, res::Vector{Float64}, pos::Vector{Float64}, size::Vector{Float64}; scaling_expr::Expr = Meta.parse("t->1.0"), name::String = "vectorfield") where {T <: ComplexOrFloat, N}
 
     quote
         @assert length(res)==length(pos)==length(size)==N
@@ -45,8 +47,9 @@ end
 
         @nexprs $N j->(x_j = range(pos[j],stop=pos[j]+f_size[j],length=arr_size[j]))
         f = zeros(T,(3,arr_size...))
+	func_eval = eval(func)
         @nloops $N i j->1:length(x_j) begin
-            v = func((@ntuple $N k->x_k[i_k])...)
+            v = func_eval((@ntuple $N k->x_k[i_k])...)
             f[:,(@ntuple $N k->i_k)...] = v
         end
         return VectorField{T,$N}(copy_to_sharedarray!(f::Array{T,$N+1}),pos,f_size,scaling_expr=scaling_expr,name=ascii(name))

@@ -41,12 +41,22 @@ end
     sample_field(f,f.pidx,f.s)
 end
 
+
 @inbounds function sample_field(f::ScalarField{T, 2}, pidx::Vector{Int64}, s::K) where {T <: ComplexOrFloat, K <: ComplexOrFloat}
     #f.sample[:,:] = view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]).*s
     copyto!(f.sample::Array{T,2},view(f.field,pidx[1]:pidx[2],pidx[3]:pidx[4]))
     LinearAlgebra.BLAS.scal!(16,s,f.sample,1)
     #scale!(f.sample::Array{T,2},s)
 #    scal!(16,s,f.sample,1)
+end
+
+#2D Scalar sample
+@inbounds function sample2!(f::ScalarFieldFunc{T, 2}, pos::Vector{Float64}, t::Real) where T <: ComplexOrFloat
+    f.s::Float64 = Base.invokelatest(f.scaling, t)::Float64
+    f.gradx_result::Float64 = Base.invokelatest(f.gradx,pos[1],pos[2],t)*f.s
+    f.grady_result::Float64 = Base.invokelatest(f.grady,pos[2],pos[2],t)*f.s
+#    @info "gradx_result $(f.gradx_result)"
+#    @info "grady_result $(f.gradys_result)"    
 end
 
 #3D scalar sample
@@ -185,6 +195,8 @@ end
 #2D Scalar Field Node
 @inbounds function sample2!(f::ScalarFieldNode{2},pos::Vector{Float64},t::Real)
     fill!((f.sample)::Array{Float64,2},zero(Float64))
+    f.gradx_result = 0.0
+    f.grady_result = 0.0    
     if f.one_vf_flag
         if in_field(f.fields[1],pos)
             sample2!(f.fields[1],pos,t)
@@ -196,6 +208,10 @@ end
            if in_field(ff,pos)
                sample2!(ff,pos,t)
                add_fields!(ff,f.sample,f.vf_sample)
+               if (ff isa ScalarFieldFunc) | (ff isa ScalarFieldNode)
+                   f.gradx_result += ff.gradx_result
+                   f.grady_result += ff.grady_result            
+               end               
            end
        end
        add_vector_field!(f.sample,f.vf_sample)
@@ -203,9 +219,14 @@ end
     #f.s = (f.scaling::Function)(t)::Float64
     f.s = Base.invokelatest(f.scaling, t)::Float64
     f.sample .*= f.s
+    f.gradx_result *=f.s
+    f.grady_result *=f.s    
     #scale!(f.sample,f.s)
 #        scal!(16,f.s,f.sample,1)
-#    scale_sample!(f.sample,s)
+    #    scale_sample!(f.sample,s)
+    #analytic
+    # @info "f.gradx_result $(f.name) $(f.gradx_result)"
+    # @info "f.grady_result $(f.name) $(f.grady_result)"    
 end
 
 @fastmath @inbounds function add_vector_field!(sample::Array{Float64, 2}, vf_sample::Array{T, 3}) where T <: ComplexOrFloat
@@ -345,6 +366,10 @@ end
         grad[1] = posvel[3]
         grad[2] = posvel[4]
         grad[3:4] += -1.0*itp_bicubic_grad((sfn::ScalarFieldNode).sample,x,res)*KB/M_CS
+        grad[3] += -1.0*sfn.gradx_result*KB/M_CS
+        grad[4] += -1.0*sfn.grady_result*KB/M_CS
+        # @info "sfn.gradx_result $(sfn.gradx_result)"
+        # @info "sfn.grady_result $(sfn.grady_result)"        
     end
 end
 

@@ -66,17 +66,21 @@ function build_field_func(field_config::Dict,level::Integer;name::String="field"
     res = convert(Vector{Float64},field_config["res"])
     pos = convert(Vector{Float64},field_config["pos"])
     sz = convert(Vector{Float64},field_config["size"])
-    func = eval(Meta.parse(field_config["func"]))
-    scaling_expr = eval(Meta.parse(field_config["scaling"]))
+    func = Meta.parse(field_config["func"])
+    gradx = Meta.parse(field_config["gradx"])
+    grady = Meta.parse(field_config["grady"])    
+    scaling_expr = Meta.parse(field_config["scaling"])    
     @info padding(level)*"building "*field_config["field-type"]*" "*name*" type: func"
     @info padding(level)*"----datatype: $dt"
     @info padding(level)*"----dimension: $dim"
     @info padding(level)*"----function: "*field_config["func"]
+    @info padding(level)*"----gradx: "*field_config["gradx"]
+    @info padding(level)*"----grady: "*field_config["grady"]    
     @info padding(level)*"----resolution: $res"
     @info padding(level)*"----position: $pos"
     @info padding(level)*"----size: $sz"
     @info padding(level)*"----scaling: "*field_config["scaling"]
-    return Fields.func2field(ft{dt,dim},func,res,pos,sz,scaling_expr=scaling_expr,name=name)
+    return Fields.func2field(ft{dt,dim},func,gradx,grady,res,pos,sz,scaling_expr=scaling_expr,name=name)
 end
 
 function build_field(field_config::Dict,level::Integer;name::String = "field")

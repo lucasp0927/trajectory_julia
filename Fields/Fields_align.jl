@@ -31,6 +31,11 @@ function align_field!(f::T,res::Vector{Float64},pos::Vector{Float64}) where T<:F
     end
 end
 
+function align_field!(f::ScalarFieldFunc{T, N}, res::Vector{Float64}, pos::Vector{Float64}) where {T <: ComplexOrFloat, N}
+    @info "align ScalarFieldFunc $(f.name)"
+end
+
+
 function align_field!(f::ScalarField{T, N}, res::Vector{Float64}, pos::Vector{Float64}) where {T <: ComplexOrFloat, N}
     @info "align ScalarField $(f.name)"
     @assert length(res) == length(pos) "dimension mismatch!"

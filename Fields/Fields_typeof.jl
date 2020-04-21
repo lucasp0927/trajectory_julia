@@ -3,6 +3,8 @@ typeoffield(f::VectorField{T,N}) where {T<:ComplexOrFloat,N}= T
 
 typeoffield(f::ScalarField{T,N}) where {T<:ComplexOrFloat,N} = T
 
+typeoffield(f::ScalarFieldFunc{T,N}) where {T<:ComplexOrFloat,N} = T
+
 function typeoffield(f::VectorFieldNode)
     f_member_type = map(typeoffield,f.fields)
     @assert all(x->x<:ComplexOrFloat,f_member_type) "Fields have to be either Complex{Float64} or Float64"

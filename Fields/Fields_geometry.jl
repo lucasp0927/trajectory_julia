@@ -18,15 +18,21 @@ end
 function geometry(f::T;lowest_res=false) where {T <: FieldNode}
     #find the new optimal position and size
     #minimum(cat(2,[1,2,3],[2,3,4]),2)
-    minpos::Vector{Float64} = vec(minimum(cat(map(x->geometry(x)["pos"],f.fields)...,dims=2),dims=2))
-    maxpos::Vector{Float64} = vec(maximum(cat(map(x->geometry(x)["pos"].+geometry(x)["size"],f.fields)...,dims=2),dims=2))
+    pos_array = filter(x->!isnothing(x), map(x->geometry(x)["pos"],f.fields))
+    siz_array = filter(x->!isnothing(x), map(x->geometry(x)["size"],f.fields))
+    res_array = filter(x->!isnothing(x), map(x->geometry(x)["res"],f.fields))
+    minpos::Vector{Float64} = vec(minimum(cat(pos_array...,dims=2),dims=2))
+#    maxpos::Vector{Float64} = vec(maximum(cat(map(x->geometry(x)["pos"].+geometry(x)["size"],f.fields)...,dims=2),dims=2))
+    maxpos::Vector{Float64} = vec(maximum(cat((pos_array+siz_array)...,dims=2),dims=2))    
     myminmax = (lowest_res ? maximum : minimum)::Function
-    res::Vector{Float64} = vec(myminmax(cat(map(x->geometry(x)["res"],f.fields)...,dims=2),dims=2))
-    @assert all(x->x!=0,res) "zero resolution!"
+    res::Vector{Float64} = vec(myminmax(cat(res_array...,dims=2),dims=2))
+#    @assert all(x->x!=0,res) "zero resolution!"
     return Dict("pos"=>minpos, "size"=>(maxpos-minpos), "res"=>res)
 end
 
-geometry(f::T) where {T <: Union{VectorField,ScalarField}}= Dict("pos"=>f.position,"size"=>f.size,"res"=>f.res)
+geometry(f::T) where {T <: Union{VectorField,ScalarField,ScalarFieldFunc}}= Dict("pos"=>f.position,"size"=>f.size,"res"=>f.res)
+
+#geometry(f::T) where {T <: ScalarFieldFunc}= Dict("pos"=>nothing,"size"=>nothing,"res"=>nothing)
 
 function geometry()
     Dict("pos"=>fields.position,"size"=>fields.size,"res"=>fields.res)
