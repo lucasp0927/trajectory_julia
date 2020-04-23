@@ -19,7 +19,7 @@ function iso_temp_prob_dist(data,temp)
     xx = data[1,:,:]
     yy = data[2,:,:]
     uu = data[3,:,:]
-    uu_norm = uu-minimum(uu)
+    uu_norm = uu .- minimum(uu)
     prob = exp(-uu_norm/temp)
     prob = prob/(maximum(prob)*1.01)
     xstart = xx[1,1]

@@ -69,6 +69,9 @@ function calculate_traj()
     #truncate save time range
     t_idx_start = searchsortedlast(tspan,trajsolver_config["save-range"]["tstart"])
     t_idx_end = searchsortedfirst(tspan,trajsolver_config["save-range"]["tend"])
+    @info "t_idx_start: $(t_idx_start)"
+    @info "t_idx_end: $(t_idx_end)"
+    @info "traj: $(size(traj))"
     traj_save = traj[:,t_idx_start:t_idx_end,:]
     tspan_save = tspan[t_idx_start:t_idx_end]
     traj=nothing

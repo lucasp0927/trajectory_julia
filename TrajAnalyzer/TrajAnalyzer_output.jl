@@ -32,6 +32,7 @@ end
 function output_movie_2d(mov_tspan,range,res,filename;traj=false)
     @assert occursin(".mp4",filename)
     #pre render potential to find v_min and v_max
+    @info "range: $(range)"
     output_pre = pmap(t->Fields.composite(range,t),mov_tspan)
     v_min = minimum(map(minimum,output_pre))
     v_max = maximum(map(maximum,output_pre))
