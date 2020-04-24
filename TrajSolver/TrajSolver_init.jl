@@ -109,10 +109,11 @@ end
 
 function range2sfn(range)
     @info "in range2sfn range: $(range)"
-    #    init_U_data = Fields.composite_with_position(range,tspan[1],Fields.fields.res)
     res = [(range[2]-range[1])/1000,(range[4]-range[3])/1000]
-    @info "in range2sfn res: $(res)"    
-    init_U_data = Fields.composite_with_position(range,tspan[1],res)    
+    #@info "in range2sfn res: $(res)"    
+    init_U_data = Fields.composite_with_position(range,tspan[1],res)
+    #TODO: init with all fields_arr
+    #init_U_data = Fields.composite_with_position(range,tspan[1],Fields.fields_arr[1].res)
     prob,xstart,xend,ystart,yend = fit_trap(init_U_data,axial_temperature,radial_temperature)
     prob_s = copy_to_sharedarray!(prob)
     prob_f = ScalarFieldNode{2}([ScalarField{Float64,2}(prob_s,[xstart,ystart],[xend-xstart,yend-ystart])])
@@ -163,9 +164,9 @@ function distribute_atoms()
     # @assert sum(traj_num) == my_trajnum
     presult = pmap(i->distribute_atoms_one_shot(),1:trajnum)
     init_xv = cat(presult...,dims=2)
-    @info "presult: $(presult)"        
-    @info "init_xv size: $(size(init_xv))"    
-    @info "init_xv: $(init_xv)"
+    # @info "presult: $(presult)"        
+    # @info "init_xv size: $(size(init_xv))"    
+    # @info "init_xv: $(init_xv)"
     return init_xv
 #    init_xvs = map(i->distribute_atoms_inner(U_prob[i],traj_num[i]),1:pancake_num)
 #    init_xv = cat(2,init_xvs...)
@@ -184,6 +185,7 @@ function distribute_atoms_inner(sfn::ScalarFieldNode{2},traj_num::Int64)
         while true
             x = (x_range[2]-x_range[1])*rand()+x_range[1]
             y = (y_range[2]-y_range[1])*rand()+y_range[1]
+            # @info "x: $(x) y: $(y)"
             p_pos = Fields.value([x,y],t,sfn)
 
             vx = -4.0*vp_a+8.0*vp_a*rand()
@@ -197,8 +199,8 @@ function distribute_atoms_inner(sfn::ScalarFieldNode{2},traj_num::Int64)
             if p<0.0 || p > 1.0
                 if abs(p)<1e-5
                     p = 0.0
-                else
-                    @warn "p=$p: out of range!"
+                # else
+                #     @warn "p=$p: out of range!"
                 end
             end
             init_xv[1,i] = x
