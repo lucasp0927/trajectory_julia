@@ -20,6 +20,7 @@ function composite_with_position(range::Vector{Float64},t::Float64,res::Vector{F
     yy = range[3]:res[2]:range[4]
     output = zeros(Float64,(3,length(xx),length(yy)))
     for x in enumerate(xx), y in enumerate(yy)
+        @info "$(x)"
         output[1,x[1],y[1]] = x[2]
         output[2,x[1],y[1]] = y[2]
         output[3,x[1],y[1]] = Fields.value([x[2],y[2]],t)

@@ -109,11 +109,13 @@ end
 
 function range2sfn(range)
     @info "in range2sfn range: $(range)"
-    res = [(range[2]-range[1])/1000,(range[4]-range[3])/1000]
+    #res = [(range[2]-range[1])/10000,(range[4]-range[3])/10000]
     #@info "in range2sfn res: $(res)"    
-    init_U_data = Fields.composite_with_position(range,tspan[1],res)
+    #init_U_data = Fields.composite_with_position(range,tspan[1],res)
     #TODO: init with all fields_arr
-    #init_U_data = Fields.composite_with_position(range,tspan[1],Fields.fields_arr[1].res)
+    res = Fields.fields_arr[1].res
+    @info "res: $(res)"
+    init_U_data = Fields.composite_with_position(range,tspan[1],res)
     prob,xstart,xend,ystart,yend = fit_trap(init_U_data,axial_temperature,radial_temperature)
     prob_s = copy_to_sharedarray!(prob)
     prob_f = ScalarFieldNode{2}([ScalarField{Float64,2}(prob_s,[xstart,ystart],[xend-xstart,yend-ystart])])
