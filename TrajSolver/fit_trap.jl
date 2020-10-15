@@ -8,8 +8,9 @@ function fit_trap(data,axial_t,radial_t)
         @info "axial temperature = radial temperature, no need for matlab."
 #        prob,xstart,xend,ystart,yend = mxcall(:fit_trap,5,data,axial_t,radial_t)
         prob,xstart,xend,ystart,yend = iso_temp_prob_dist(data,axial_t)
+        @info "done."
     else
-        err("please enable MATLAB.jl")
+        error("please enable MATLAB.jl")
         #prob,xstart,xend,ystart,yend = mxcall(:fit_trap,5,data,axial_t,radial_t)
     end
     return prob,xstart,xend,ystart,yend

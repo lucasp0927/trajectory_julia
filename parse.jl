@@ -2,7 +2,7 @@ using ArgParse
 using YAML
 function parse_commandline()
     s = ArgParseSettings()
-    @add_arg_table s begin
+    @add_arg_table! s begin
         "--config", "-C"
         help = "Configuration file."
         required = true

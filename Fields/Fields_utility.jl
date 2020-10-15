@@ -24,14 +24,15 @@ end
             @assert(isapprox(mean(diff(range(pos[j],stop=pos[j]+f_size[j],length=arr_size[j]))),res[j]))
         end
         @nexprs $N j->(x_j = range(pos[j],stop=pos[j]+f_size[j],length=arr_size[j]))
-        f = zeros(T,arr_size...)
+#        f = zeros(T,arr_size...)
 	# func_eval = eval(func)
         # @nloops $N i j->1:length(x_j) begin
         #     v = Base.invokelatest(func_eval,(@ntuple $N k->x_k[i_k])...)
         #     f[(@ntuple $N k->i_k)...] = v
         # end
-        return ScalarFieldFunc{T,$N}(copy_to_sharedarray!(f::Array{T,$N}),pos,res,f_size,func,gradx,grady,scaling_expr=scaling_expr,name=ascii(name))
-#        return ScalarField{T,$N}(copy_to_sharedarray!(f::Array{T,$N}),pos,f_size,scaling_expr=scaling_expr,name=ascii(name))        
+#        return ScalarFieldFunc{T,$N}(copy_to_sharedarray!(f::Array{T,$N}),pos,res,f_size,func,gradx,grady,scaling_expr=scaling_expr,name=ascii(name))
+        return ScalarFieldFunc{T,$N}(pos,res,f_size,func,gradx,grady,scaling_expr=scaling_expr,name=ascii(name))
+#        return ScalarField{T,$N}(copy_to_sharedarray!(f::Array{T,$N}),pos,f_size,scaling_expr=scaling_expr,name=ascii(name))
     end
 end
 

@@ -32,11 +32,13 @@ include("fit_trap.jl")
 include("../TrajAnalyzer/TrajAnalyzer_output.jl")
 include("../TrajAnalyzer/TrajAnalyzer_trajectories.jl")
 function calculate_traj()
-    @info "distribute atoms..."
+    @info "distributing atoms..."
     #init trajnum initial xv pairs
     if trajsolver_config["atom-config"]["init-type"] == "fit-trap"
         @info "fitting trap..."
+        @info "calculating probability map"
         prepare_U_prob()
+        @info "distributing atoms"
         init_xv = distribute_atoms()
     elseif trajsolver_config["atom-config"]["init-type"] == "from-file"
         @info "reading initial condition from "*trajsolver_config["atom-config"]["filename"]*"..."
@@ -53,8 +55,9 @@ function calculate_traj()
         finalize_shared_array!(traj_s)
         finalize_shared_array!(trajectories.traj)
         @everywhere GC.gc()
+        @info "finishing init atoms from-file"
     else
-        err("Unknown init-type in atom-config.")
+        error("Unknown init-type in atom-config.")
     end
     #preallocate result according to dim
     if sim_type == "2D"
@@ -89,17 +92,18 @@ end
 
 function calculate_traj_inner_parallel_2d(init_xv,traj)
     i = 1
-    pm = Progress(trajnum,1)
+#    pm = Progress(trajnum,1)
     @sync begin
         for p = 2:nprocs()
             @async begin
                 while true
-                    next!(pm)
+#                    next!(pm)
                     idx=i
                     i+=1
                     if idx>trajnum
                         break
                     end
+                    @info "idx: $(idx)"
                     traj[:,:,idx] = remotecall_fetch(solve_traj_one_shot_2d,p,init_xv[:,idx])
                 end
             end
@@ -109,12 +113,10 @@ end
 
 function calculate_traj_inner_parallel_3d(init_xv,traj)
     i = 1
-    pm = Progress(trajnum,1)
     @sync begin
         for p = 2:nprocs()
             @async begin
                 while true
-                    next!(pm)
                     idx=i
                     i+=1
                     if idx>trajnum

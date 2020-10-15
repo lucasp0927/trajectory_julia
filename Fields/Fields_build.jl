@@ -68,14 +68,14 @@ function build_field_func(field_config::Dict,level::Integer;name::String="field"
     sz = convert(Vector{Float64},field_config["size"])
     func = Meta.parse(field_config["func"])
     gradx = Meta.parse(field_config["gradx"])
-    grady = Meta.parse(field_config["grady"])    
-    scaling_expr = Meta.parse(field_config["scaling"])    
+    grady = Meta.parse(field_config["grady"])
+    scaling_expr = Meta.parse(field_config["scaling"])
     @info padding(level)*"building "*field_config["field-type"]*" "*name*" type: func"
     @info padding(level)*"----datatype: $dt"
     @info padding(level)*"----dimension: $dim"
     @info padding(level)*"----function: "*field_config["func"]
     @info padding(level)*"----gradx: "*field_config["gradx"]
-    @info padding(level)*"----grady: "*field_config["grady"]    
+    @info padding(level)*"----grady: "*field_config["grady"]
     @info padding(level)*"----resolution: $res"
     @info padding(level)*"----position: $pos"
     @info padding(level)*"----size: $sz"
@@ -118,9 +118,9 @@ function build_field(field_config::Dict,level::Integer;name::String = "field")
         elseif field_config["init-type"] == "func"
             return build_field_func(field_config,level,name=name)
         else
-            err("Unrecognized init-type")
+            error("Unrecognized init-type")
         end
     else
-        err("Unrecognized field-type")
+        error("Unrecognized field-type")
     end
 end

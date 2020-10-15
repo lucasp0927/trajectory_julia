@@ -110,11 +110,12 @@ end
 function range2sfn(range)
     @info "in range2sfn range: $(range)"
     #res = [(range[2]-range[1])/10000,(range[4]-range[3])/10000]
-    #@info "in range2sfn res: $(res)"    
+    #@info "in range2sfn res: $(res)"
     #init_U_data = Fields.composite_with_position(range,tspan[1],res)
     #TODO: init with all fields_arr
     res = Fields.fields_arr[1].res
     @info "res: $(res)"
+    @info "range: $(range)"
     init_U_data = Fields.composite_with_position(range,tspan[1],res)
     prob,xstart,xend,ystart,yend = fit_trap(init_U_data,axial_temperature,radial_temperature)
     prob_s = copy_to_sharedarray!(prob)
@@ -164,10 +165,10 @@ function distribute_atoms()
     # traj_num[:] = d
     # traj_num[end] += r
     # @assert sum(traj_num) == my_trajnum
-    presult = pmap(i->distribute_atoms_one_shot(),1:trajnum)
+    presult = @showprogress pmap(i->distribute_atoms_one_shot(),1:trajnum)
     init_xv = cat(presult...,dims=2)
-    # @info "presult: $(presult)"        
-    # @info "init_xv size: $(size(init_xv))"    
+    # @info "presult: $(presult)"
+    # @info "init_xv size: $(size(init_xv))"
     # @info "init_xv: $(init_xv)"
     return init_xv
 #    init_xvs = map(i->distribute_atoms_inner(U_prob[i],traj_num[i]),1:pancake_num)

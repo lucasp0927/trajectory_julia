@@ -11,6 +11,7 @@ end
 
 function find_field(criteria::Function,f::T) where {T <: FieldNode}
     #currently only find one result
+    @info "$(f.name)"
     if criteria(f)
         return f
     else

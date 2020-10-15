@@ -1,7 +1,10 @@
 #####composition: for FieldNode object return composite field at time t, replace scaling with x->1.0
 function composite(range::Vector{Float64},t::Float64)
     #res = (fields::ScalarFieldNode).res
-    res = get_field_arr_res()
+    #res = get_field_arr_res()
+    res = [0.0,0.0]
+    res[1] = (range[2]-range[1])/500
+    res[2] = (range[4]-range[3])/500
     @assert range[2]-range[1] > res[1] "composition range too small"
     @assert range[4]-range[3] > res[2] "composition range too small"
     xx = range[1]:res[1]:range[2]
@@ -20,7 +23,6 @@ function composite_with_position(range::Vector{Float64},t::Float64,res::Vector{F
     yy = range[3]:res[2]:range[4]
     output = zeros(Float64,(3,length(xx),length(yy)))
     for x in enumerate(xx), y in enumerate(yy)
-        @info "$(x)"
         output[1,x[1],y[1]] = x[2]
         output[2,x[1],y[1]] = y[2]
         output[3,x[1],y[1]] = Fields.value([x[2],y[2]],t)

@@ -33,7 +33,7 @@ mutable struct ScalarField{T <: ComplexOrFloat,N} <: AbstractScalarField
 end
 
 mutable struct ScalarFieldFunc{T <: ComplexOrFloat,N} <: AbstractScalarField
-    field::SharedArray{T}
+#    field::SharedArray{T}
     position::Vector{Float64}
     size::Vector{Float64}
     res::Vector{Float64}
@@ -51,15 +51,16 @@ mutable struct ScalarFieldFunc{T <: ComplexOrFloat,N} <: AbstractScalarField
     grady::Function
     func_expr::Expr
     gradx_expr::Expr
-    grady_expr::Expr    
+    grady_expr::Expr
     func_result::Float64
     gradx_result::Float64
     grady_result::Float64
-    function ScalarFieldFunc{T,N}(f::SharedArray{T,N},pos::Vector{Float64},res::Vector{Float64},sz::Vector{Float64},func::Expr,gradx::Expr,grady::Expr;scaling_expr::Expr = Meta.parse("t->1.0"), name::String = "ScalarField")  where {T <: ComplexOrFloat,N}
+#    function ScalarFieldFunc{T,N}(f::SharedArray{T,N},pos::Vector{Float64},res::Vector{Float64},sz::Vector{Float64},func::Expr,gradx::Expr,grady::Expr;scaling_expr::Expr = Meta.parse("t->1.0"), name::String = "ScalarField")  where {T <: ComplexOrFloat,N}
+    function ScalarFieldFunc{T,N}(pos::Vector{Float64},res::Vector{Float64},sz::Vector{Float64},func::Expr,gradx::Expr,grady::Expr;scaling_expr::Expr = Meta.parse("t->1.0"), name::String = "ScalarField")  where {T <: ComplexOrFloat,N}
         @assert all(x->x!=0,res) "zero resolution!"
-        @assert length(pos)==length(sz)==N==ndims(f)
+        @assert length(pos)==length(sz)==N
 #        new(f,pos,sz,res,eval(scaling_expr),scaling_expr,N,zeros(T,repmat([4],N)...),repmat([0.0],N),repmat([0],N*2),zero(Float64),ascii(name))
-        new(f,pos,sz,res,eval(scaling_expr),scaling_expr,N,zeros(T,repeat([4],N)...),repeat([0.0],N),repeat([0],N*2),zero(Float64),ascii(name),eval(func),eval(gradx),eval(grady),func,gradx,grady,0.0,0.0,0.0)
+        new(pos,sz,res,eval(scaling_expr),scaling_expr,N,zeros(T,repeat([4],N)...),repeat([0.0],N),repeat([0],N*2),zero(Float64),ascii(name),eval(func),eval(gradx),eval(grady),func,gradx,grady,0.0,0.0,0.0)
     end
 end
 
@@ -120,7 +121,7 @@ mutable struct ScalarFieldNode{N} <: AbstractScalarField
     vf_sample::Array{Complex{Float64}}
     func_result::Float64
     gradx_result::Float64
-    grady_result::Float64    
+    grady_result::Float64
     s::Float64
     one_vf_flag::Bool
     name::String

@@ -33,21 +33,22 @@ function output_movie_2d(mov_tspan,range,res,filename;traj=false)
     @assert occursin(".mp4",filename)
     #pre render potential to find v_min and v_max
     @info "range: $(range)"
-    output_pre = pmap(t->Fields.composite(range,t),mov_tspan)
+    @info "res: $(res)"
+    output_pre = @showprogress pmap(t->Fields.composite(range,t),mov_tspan[1:50:end])
     v_min = minimum(map(minimum,output_pre))
     v_max = maximum(map(maximum,output_pre))
     current_folder = pwd()
     movie_folder = mktempdir(tempdir())
     if traj==false
 #        @sync @parallel for t in collect(enumerate(mov_tspan))
-        @sync @distributed for t in collect(enumerate(mov_tspan))
+        @sync @showprogress @distributed for t in collect(enumerate(mov_tspan))
             output_image_gp_2d(t[2],range,movie_folder*"/img"*@sprintf("%04d",t[1])*".png",v_min=v_min,v_max=v_max)
         end
     else
         res_x = res[1]
         res_y = res[2]
         tdiv = mean(diff(mov_tspan))
-        @sync @distributed for t in collect(enumerate(mov_tspan))
+        @sync @showprogress @distributed for t in collect(enumerate(mov_tspan))
             output_image_gp_traj_2d(t[2],range,res_x,res_y,movie_folder*"/img"*@sprintf("%04d",t[1])*".png",v_min=v_min,v_max=v_max,tdiv=tdiv)
         end
     end

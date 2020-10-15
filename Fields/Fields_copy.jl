@@ -9,7 +9,7 @@ end
 
 function copyfield(f::ScalarFieldFunc{T,N}) where {T <: ComplexOrFloat, N}
     @debug "copy ScalarFieldFunc "*f.name
-    return ScalarFieldFunc{T,N}(f.field,f.position,f.res,f.size,f.func_expr,f.gradx_expr,f.grady_expr,scaling_expr=f.scaling_expr,name=f.name)
+    return ScalarFieldFunc{T,N}(f.position,f.res,f.size,f.func_expr,f.gradx_expr,f.grady_expr,scaling_expr=f.scaling_expr,name=f.name)
 end
 
 
